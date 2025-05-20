@@ -1,28 +1,60 @@
-# SAP Repository Template
+[![REUSE status](https://api.reuse.software/badge/github.com/openkcm/build)](https://api.reuse.software/info/github.com/openkcm/build)
 
-Default templates for SAP open source repositories, including LICENSE, .reuse/dep5, Code of Conduct, etc... All repositories on github.com/SAP will be created based on this template.
-
-## To-Do
-
-In case you are the maintainer of a new SAP open source project, these are the steps to do with the template files:
-
-- Check if the default license (Apache 2.0) also applies to your project. A license change should only be required in exceptional cases. If this is the case, please change the [license file](LICENSE).
-- Enter the correct metadata for the REUSE tool. See our [wiki page](https://wiki.one.int.sap/wiki/display/ospodocs/Using+the+Reuse+Tool+of+FSFE+for+Copyright+and+License+Information) for details how to do it. You can find an initial .reuse/dep5 file to build on. Please replace the parts inside the single angle quotation marks < > by the specific information for your repository and be sure to run the REUSE tool to validate that the metadata is correct.
-- Adjust the contribution guidelines (e.g. add coding style guidelines, pull request checklists, different license if needed etc.)
-- Add information about your project to this README (name, description, requirements etc). Especially take care for the <your-project> placeholders - those ones need to be replaced with your project name. See the sections below the horizontal line and [our guidelines on our wiki page](https://wiki.one.int.sap/wiki/pages/viewpage.action?pageId=3564976048#GuidelinesforGitHubHealthfiles(Readme,Contributing,CodeofConduct)-Readme.md) what is required and recommended.
-- Remove all content in this README above and including the horizontal line ;)
-
-***
-
-# Our new open source project
+# Open Key Chain Manager Build and CI Scripts
 
 ## About this project
 
-*Insert a short description of your project here...*
+OpenKCM Build and CI scripts
 
-## Requirements and Setup
+The scripts that are shared between the different repositories have been moved into this repository, which is intended to be used as a git submodule in the actual operator repositories.
 
-*Insert a short description what is required to get your project running...*
+Instead of `make`, we have decided to use the [task](https://taskfile.dev/) tool.
+
+## Requirements
+
+It is strongly recommended to include this submodule under the `hack/common` path in the operator repositories. While most of the coding is designed to work from anywhere within the including repository, there are some workarounds for bugs in `task` which rely on the assumption that this repo is a submodule under `hack/common` in the including repository.
+
+## Setup
+
+To use this repository, first check it out via
+```shell
+git submodule add https://github.com/openkcm/build.git hack/common
+```
+and ensure that it is checked-out via
+```shell
+git submodule init
+```
+
+### Taskfile
+
+To use the generic Taskfile contained in this repository, create a `Taskfile.yaml` in the including repository. It should look something like this:
+
+```yaml
+version: 3
+
+vars:
+  CODE_DIRS: '{{.ROOT_DIR}}/pkg/...'
+
+includes:
+  shared:
+    taskfile: hack/common/Taskfile_library.yaml
+    flatten: true
+```
+
+
+### Makefile
+
+This repo contains a dummy Makefile that for any command prints the instructions for installing `task`:
+```
+This repository uses task (https://taskfile.dev) instead of make.
+Run 'go install github.com/go-task/task/v3/cmd/task@latest' to install the latest version.
+Then run 'task -l' to list available tasks.
+```
+
+To re-use it, simply create a symbolic link from the importing repo:
+```shell
+ln -s ./hack/common/Makefile Makefile
+```
 
 ## Support, Feedback, Contributing
 
