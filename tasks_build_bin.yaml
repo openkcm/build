@@ -38,21 +38,6 @@ tasks:
         OS: '{{.OS}}'
         ARCH: '{{.ARCH}}'
 
-  list-files:
-    desc: "  List the files."
-    summary: |
-      This task list all files.
-    requires:
-      vars:
-        - COMPONENTS
-    cmds:
-      - cmd: 'ls -l {{.ROOT_DIR2}}}'
-      - cmd: 'ls -l {{.ROOT_DIR2}}}/cmd'
-      - for:
-          var: COMPONENTS
-          as: COMPONENT
-        cmd: 'ls -l {{.ROOT_DIR2}}/cmd/{{.COMPONENT}}'
-
   build-raw:
     desc: "  Build the binary. Opposed to the regular build, this one just builds and skips code generation/validation tasks."
     summary: |
@@ -65,6 +50,12 @@ tasks:
       - OS
       - ARCH
     cmds:
+    - cmd: 'ls -l {{.ROOT_DIR2}}}'
+    - cmd: 'ls -l {{.ROOT_DIR2}}}/cmd'
+    - for:
+        var: COMPONENTS
+        as: COMPONENT
+      cmd: 'ls -l {{.ROOT_DIR2}}/cmd/{{.COMPONENT}}'
     - for:
         var: COMPONENTS
         as: COMPONENT
