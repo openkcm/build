@@ -50,12 +50,10 @@ tasks:
       - OS
       - ARCH
     cmds:
-    - cmd: 'ls -l {{.ROOT_DIR2}}}'
-    - cmd: 'ls -l {{.ROOT_DIR2}}}/cmd'
     - for:
         var: COMPONENTS
         as: COMPONENT
-      cmd: 'ls -l {{.ROOT_DIR2}}/cmd/{{.COMPONENT}}'
+      cmd: 'ls -l {{.ROOT_DIR2}}} 2> /dev/null; ls -l {{.ROOT_DIR2}}}/cmd 2> /dev/null; ls -l {{.ROOT_DIR2}}/cmd/{{.COMPONENT}} 2> /dev/null'
     - for:
         var: COMPONENTS
         as: COMPONENT
