@@ -53,10 +53,6 @@ tasks:
     - for:
         var: COMPONENTS
         as: COMPONENT
-      cmd: 'ls -l {{.ROOT_DIR2}}} 2> /dev/null; ls -l {{.ROOT_DIR2}}}/cmd 2> /dev/null; ls -l {{.ROOT_DIR2}}/cmd/{{.COMPONENT}} 2> /dev/null'
-    - for:
-        var: COMPONENTS
-        as: COMPONENT
       cmd: 'CGO_ENABLED=0 GOOS={{.OS}} GOARCH={{.ARCH}} go build -a -o {{.ROOT_DIR2}}/bin/{{.COMPONENT}}.{{.OS}}-{{.ARCH}} {{.ROOT_DIR2}}/cmd/{{.COMPONENT}}/main.go'
 
   build-multi-raw:
