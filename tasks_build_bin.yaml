@@ -64,7 +64,7 @@ tasks:
     - for:
         matrix:
           OS: ["linux"]
-          ARCH: ["amd64"]
+          ARCH: ["amd64", "arm64"]
       vars:
         OS: '{{.ITEM.OS}}'
         ARCH: '{{.ITEM.ARCH}}'
@@ -81,7 +81,7 @@ tasks:
     - for:
         matrix:
           OS: ["linux"]
-          ARCH: ["amd64"]
+          ARCH: ["amd64", "arm64"]
       vars:
         OS: '{{.ITEM.OS}}'
         ARCH: '{{.ITEM.ARCH}}'
