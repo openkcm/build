@@ -98,8 +98,8 @@ tasks:
     cmds:
     - for:
         matrix:
-          OS: [linux] # distroless base image only supports linux
-          ARCH: [amd64]
+          OS: ["linux"] # distroless base image only supports linux
+          ARCH: ["amd64"]
       vars:
         OS: '{{.ITEM.OS}}'
         ARCH: '{{.ITEM.ARCH}}'
@@ -113,8 +113,8 @@ tasks:
     cmds:
     - for:
         matrix:
-          OS: [linux] # distroless base image only supports linux
-          ARCH: [amd64]
+          OS: ["linux"] # distroless base image only supports linux
+          ARCH: ["amd64"]
       vars:
         OS: '{{.ITEM.OS}}'
         ARCH: '{{.ITEM.ARCH}}'
@@ -168,8 +168,8 @@ tasks:
     cmds:
     - for:
         matrix:
-          OS: [linux] # distroless base image only supports linux
-          ARCH: [amd64]
+          OS: ["linux"] # distroless base image only supports linux
+          ARCH: ["amd64"]
       vars:
         OS: '{{.ITEM.OS}}'
         ARCH: '{{.ITEM.ARCH}}'
@@ -189,8 +189,8 @@ tasks:
     cmds:
     - for:
         matrix:
-          OS: [linux] # distroless base image only supports linux
-          ARCH: [amd64]
+          OS: ["linux"] # distroless base image only supports linux
+          ARCH: ["amd64"]
       cmd: 'docker manifest create {{.IMG}} --amend {{.IMG}}-{{.ITEM.OS}}-{{.ITEM.ARCH}}'
     - 'echo "Pushing image {{.IMG}}"'
     - 'docker manifest push {{.IMG}}'
