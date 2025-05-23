@@ -64,7 +64,7 @@ tasks:
     - for:
         matrix:
           OS: [linux, darwin, openbsd, freebsd]
-          ARCH: [amd64, arm64]
+          ARCH: [amd64]
       vars:
         OS: '{{.ITEM.OS}}'
         ARCH: '{{.ITEM.ARCH}}'
@@ -81,7 +81,7 @@ tasks:
     - for:
         matrix:
           OS: [linux, darwin, openbsd, freebsd]
-          ARCH: [amd64, arm64]
+          ARCH: [amd64]
       vars:
         OS: '{{.ITEM.OS}}'
         ARCH: '{{.ITEM.ARCH}}'

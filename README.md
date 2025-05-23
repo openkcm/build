@@ -22,7 +22,7 @@ git submodule add https://github.com/openkcm/build.git hack/common
 ```
 and ensure that it is checked-out via
 ```shell
-git submodule init
+git submodule init; git submodule update --recursive --remote
 ```
 
 ### Taskfile
