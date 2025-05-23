@@ -63,7 +63,7 @@ tasks:
     cmds:
     - for:
         matrix:
-          OS: [linux, darwin]
+          OS: [linux, darwin, openbsd, freebsd]
           ARCH: [amd64, arm64]
       vars:
         OS: '{{.ITEM.OS}}'
@@ -80,7 +80,7 @@ tasks:
     cmds:
     - for:
         matrix:
-          OS: [linux, darwin]
+          OS: [linux, darwin, openbsd, freebsd]
           ARCH: [amd64, arm64]
       vars:
         OS: '{{.ITEM.OS}}'
