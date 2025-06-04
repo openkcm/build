@@ -21,7 +21,11 @@ tasks:
       for:
         var: COMPONENTS
       vars:
+        COMPONENTS: '{{.COMPONENTS}}'
         COMPONENT: '{{.ITEM}}'
+        VERSION: '{{.VERSION}}'
+        MODULE_NAME: '{{.MODULE_NAME}}'
+        REPO_URL: '{{.REPO_URL}}'
     - task: push
 
   build:
