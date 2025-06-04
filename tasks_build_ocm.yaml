@@ -18,6 +18,10 @@ tasks:
     run: once
     cmds:
     - task: build
+      for:
+        var: COMPONENTS
+      vars:
+        COMPONENT: '{{.ITEM}}'
     - task: push
 
   build:
@@ -29,6 +33,7 @@ tasks:
     requires:
       vars:
       - COMPONENTS
+      - COMPONENT
       - VERSION
       - MODULE_NAME
       - REPO_URL
@@ -37,6 +42,8 @@ tasks:
         sh: 'PROJECT_ROOT="{{.ROOT_DIR2}}" {{.TASKFILE_DIR2}}/get-registry.sh --helm'
       IMAGE_REGISTRY:
         sh: 'PROJECT_ROOT="{{.ROOT_DIR2}}" {{.TASKFILE_DIR2}}/get-registry.sh --image'
+      CHART_VERSION:
+        sh: "grep '^version:' {{.ROOT_DIR2}}/charts/{{.COMPONENT}}/Chart.yaml | awk '{print $2}'"
       COMMIT:
         sh: '( cd "{{.ROOT_DIR2}}"; git rev-parse HEAD )'
       compdir: '{{.LOCALTMP}}/component'
