@@ -96,6 +96,75 @@ tasks:
           VERSION: '{{.VERSION}}'
         task: update-repo-version-internal
 
+  update-charts-version:
+    desc: '  Updates charts version to the specified version. Usage: task {{.TASK}} -- <version>'
+    summary: |
+      This task is called by the release tasks automatically.
+      It sets the following versions to the one provided as argument:
+      - 'version' in the Chart.yaml file of each component's helm chart
+    run: once
+    requires:
+      vars:
+        - MODULE_NAME
+    preconditions:
+      - sh: 'test "{{len .CLI_ARGS}}" -gt 0'
+        msg: 'This task requires a version argument. Usage: task {{.TASK}} -- <version>'
+    vars:
+      VERSION: '{{.CLI_ARGS | splitList " " | first}}'
+    cmds:
+      - for:
+          var: COMPONENTS
+        vars:
+          COMPONENT: '{{.ITEM}}'
+          VERSION: '{{.VERSION}}'
+        task: update-chart-version-only-internal
+
+  update-charts-appVersion:
+    desc: '  Updates charts appVersion to the specified version. Usage: task {{.TASK}} -- <version>'
+    summary: |
+      This task is called by the release tasks automatically.
+      It sets the following versions to the one provided as argument:
+      - 'appVersion' in the Chart.yaml file of each component's helm chart
+    run: once
+    requires:
+      vars:
+        - MODULE_NAME
+    preconditions:
+      - sh: 'test "{{len .CLI_ARGS}}" -gt 0'
+        msg: 'This task requires a version argument. Usage: task {{.TASK}} -- <version>'
+    vars:
+      VERSION: '{{.CLI_ARGS | splitList " " | first}}'
+    cmds:
+      - for:
+          var: COMPONENTS
+        vars:
+          COMPONENT: '{{.ITEM}}'
+          VERSION: '{{.VERSION}}'
+        task: update-chart-appVersion-internal
+
+  update-charts-values-image-tag:
+    desc: '  Updates charts value tag to the specified version. Usage: task {{.TASK}} -- <version>'
+    summary: |
+      This task is called by the release tasks automatically.
+      It sets the following versions to the one provided as argument:
+      - 'tag' in the values.yaml file of each component's helm chart
+    run: once
+    requires:
+      vars:
+        - MODULE_NAME
+    preconditions:
+      - sh: 'test "{{len .CLI_ARGS}}" -gt 0'
+        msg: 'This task requires a version argument. Usage: task {{.TASK}} -- <version>'
+    vars:
+      VERSION: '{{.CLI_ARGS | splitList " " | first}}'
+    cmds:
+      - for:
+          var: COMPONENTS
+        vars:
+          COMPONENT: '{{.ITEM}}'
+          VERSION: '{{.VERSION}}'
+        task: update-chart-values-image-tag-internal
+
   set-version:
     desc: '  Updates all versions to the specified version. Usage: task {{.TASK}} -- <version>'
     summary: |
@@ -154,6 +223,39 @@ tasks:
     - '{{.TASKFILE_DIR2}}/sed.sh -E "s@version: v?[[:digit:]]+\.[[:digit:]]+\.[[:digit:]]+.*@version: {{.VERSION}}@1" "{{.ROOT_DIR2}}/charts/{{.COMPONENT}}/Chart.yaml"'
     - '{{.TASKFILE_DIR2}}/sed.sh -E "s@appVersion: v?[[:digit:]]+\.[[:digit:]]+\.[[:digit:]]+.*@appVersion: {{.VERSION}}@1" "{{.ROOT_DIR2}}/charts/{{.COMPONENT}}/Chart.yaml"'
     - '{{.TASKFILE_DIR2}}/sed.sh -E "s@  tag: .*@  tag: {{.VERSION}}@" "{{.ROOT_DIR2}}/charts/{{.COMPONENT}}/values.yaml"'
+    internal: true
+
+  update-chart-version-only-internal:
+    desc: "  Sets the version in the helm chart for a specific component."
+    run: always
+    requires:
+      vars:
+        - VERSION
+        - COMPONENT
+    cmds:
+      - '{{.TASKFILE_DIR2}}/sed.sh -E "s@version: v?[[:digit:]]+\.[[:digit:]]+\.[[:digit:]]+.*@version: {{.VERSION}}@1" "{{.ROOT_DIR2}}/charts/{{.COMPONENT}}/Chart.yaml"'
+    internal: true
+
+  update-chart-appVersion-internal:
+    desc: "  Sets the appVersion in the helm chart values for a specific component."
+    run: always
+    requires:
+      vars:
+        - VERSION
+        - COMPONENT
+    cmds:
+      - '{{.TASKFILE_DIR2}}/sed.sh -E "s@appVersion: v?[[:digit:]]+\.[[:digit:]]+\.[[:digit:]]+.*@appVersion: {{.VERSION}}@1" "{{.ROOT_DIR2}}/charts/{{.COMPONENT}}/Chart.yaml"'
+    internal: true
+
+  update-chart-values-image-tag-internal:
+    desc: "  Sets the appVersion in the helm chart values for a specific component."
+    run: always
+    requires:
+      vars:
+        - VERSION
+        - COMPONENT
+    cmds:
+      - '{{.TASKFILE_DIR2}}/sed.sh -E "s@  tag: .*@  tag: {{.VERSION}}@" "{{.ROOT_DIR2}}/charts/{{.COMPONENT}}/values.yaml"'
     internal: true
 
   set-module-version-internal:
