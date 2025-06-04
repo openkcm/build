@@ -9,7 +9,7 @@ while [[ "$#" -gt 0 ]]; do
           echo "Chart using version {{.CHART_VERSION}} already exist, do not push again."
         else
           echo "Chart using version {{.CHART_VERSION}} do not exist, continue pushing."
-          $HELM push "${LOCALTMP}/${CHART_NAME}-${CHART_VERSION}.tgz" "oci://${HELM_REGISTRY}"; rm -f "${LOCALTMP}/${CHART_NAME}-${CHART_VERSION}.tgz"
+          $HELM push "${LOCALTMP}/${CHART_NAME}-${CHART_VERSION}.tgz" "oci://${HELM_REGISTRY}"
           rm -f "${LOCALTMP}/${CHART_NAME}-${CHART_VERSION}.tgz"
         fi
       ;;
