@@ -32,7 +32,7 @@ tasks:
         - HELM_REGISTRY
     vars:
       CHART_VERSION:
-        sh: '{{.TASKFILE_DIR2}}/get-chart-version.sh {{.ROOT_DIR2}}/charts/{{.COMPONENT}}/Chart.yaml'
+        sh: '{{.YQ}} ".version" {{.ROOT_DIR2}}/charts/{{.COMPONENT}}/Chart.yaml'
     preconditions:
       - sh: 'if "{{.HELM}}" pull "oci://{{.HELM_REGISTRY}}/{{.COMPONENT}}" --version "{{.CHART_VERSION}}" >/dev/null 2>&1; then exit 0; else exit 1; fi'
 
@@ -49,8 +49,8 @@ tasks:
     deps:
       - task: fail-helm-version-not-exist
         vars:
-          OS: '{{.COMPONENT}}'
-          ARCH: '{{.HELM_REGISTRY}}'
+          COMPONENT: '{{.COMPONENT}}'
+          HELM_REGISTRY: '{{.HELM_REGISTRY}}'
     cmds:
     - for:
         var: COMPONENTS
@@ -88,8 +88,8 @@ tasks:
     deps:
       - task: fail-helm-version-not-exist
         vars:
-          OS: '{{.COMPONENT}}'
-          ARCH: '{{.HELM_REGISTRY}}'
+          COMPONENT: '{{.COMPONENT}}'
+          HELM_REGISTRY: '{{.HELM_REGISTRY}}'
     cmds:
     - for:
         var: COMPONENTS
