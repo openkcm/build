@@ -56,7 +56,7 @@ tasks:
       CHART_VERSION:
         sh: "grep '^version:' {{.ROOT_DIR2}}/charts/{{.COMPONENT}}/Chart.yaml | awk '{print $2}'"
     cmds:
-      - '{{.TASKFILE_DIR2}}/helm-actions.sh --build'
+      - 'HELM={{.HELM}} HELM_REGISTRY="{{.HELM_REGISTRY}}" COMPONENT="{{.COMPONENT}}" CHART_VERSION="{{.CHART_VERSION}}" LOCALTMP="{{.LOCALTMP}}" CHART_NAME="{{.CHART_NAME}}" {{.TASKFILE_DIR2}}/helm-actions.sh --build'
     internal: true
 
   push:
@@ -93,6 +93,6 @@ tasks:
       CHART_VERSION:
         sh: "grep '^version:' {{.ROOT_DIR2}}/charts/{{.COMPONENT}}/Chart.yaml | awk '{print $2}'"
     cmds:
-      - '{{.TASKFILE_DIR2}}/helm-actions.sh --push'
+      - 'HELM={{.HELM}} HELM_REGISTRY="{{.HELM_REGISTRY}}" COMPONENT="{{.COMPONENT}}" CHART_VERSION="{{.CHART_VERSION}}" LOCALTMP="{{.LOCALTMP}}" CHART_NAME="{{.CHART_NAME}}" {{.TASKFILE_DIR2}}/helm-actions.sh --push'
     internal: true
 
