@@ -48,7 +48,6 @@ tasks:
     deps:
     - tools:localtmp
     - tools:helm
-    - tools:yq
     requires:
       vars:
       - COMPONENT
