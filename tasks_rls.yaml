@@ -55,7 +55,7 @@ tasks:
     prompt:
     - 'There are uncommitted changes in the working directory:{{"\n"}}{{.changes}}{{"\n\n"}}These changes will be included in the release commit, unless you stash, commit, or remove them otherwise before. Do you want to continue?'
     internal: true
-  
+
   release-internal:
     desc: "  Prepares a new release by creating a commit that will result in a release when pushed."
     run: once
@@ -95,7 +95,9 @@ tasks:
     vars:
       VERSION: '{{.CLI_ARGS | splitList " " | first}}'
     cmds:
-    - 'echo -n "{{.VERSION}}" > "{{.ROOT_DIR2}}/VERSION"'
+    - vars:
+        VERSION: '{{.VERSION}}'
+      task: update-repo-version
     - for:
         var: COMPONENTS
       vars:
@@ -109,6 +111,15 @@ tasks:
         VERSION: '{{.VERSION}}'
         MODULE_NAME: '{{.MODULE_NAME}}'
       task: set-module-version-internal
+
+  update-repo-version:
+    desc: "  Sets the version in the repo version file."
+    run: once
+    requires:
+      vars:
+        - VERSION
+    cmds:
+      - 'echo -n "{{.VERSION}}" > "{{.ROOT_DIR2}}/VERSION"'
 
   set-chart-version-internal:
     desc: "  Sets the versions in the helm chart for a specific component."
