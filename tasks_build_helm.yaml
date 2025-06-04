@@ -28,7 +28,6 @@ tasks:
     requires:
       vars:
       - COMPONENTS
-      - VERSION
     vars:
       HELM_REGISTRY:
         sh: 'PROJECT_ROOT="{{.ROOT_DIR2}}" {{.TASKFILE_DIR2}}/get-registry.sh --helm'
@@ -38,7 +37,6 @@ tasks:
         var: COMPONENTS
       vars:
         COMPONENT: '{{.ITEM}}'
-        VERSION: '{{.VERSION}}'
         HELM_REGISTRY: '{{.HELM_REGISTRY}}'
       task: build-internal
 
@@ -51,7 +49,6 @@ tasks:
     requires:
       vars:
       - COMPONENT
-      - VERSION
       - HELM_REGISTRY
     status:
     - 'test ! -f "{{.ROOT_DIR2}}/charts/{{.COMPONENT}}/Chart.yaml"'
@@ -60,7 +57,7 @@ tasks:
         sh: "grep '^version:' {{.ROOT_DIR2}}/charts/{{.COMPONENT}}/Chart.yaml | awk '{print $2}'"
     cmds:
       - 'if "{{.HELM}}" pull "oci://{{.HELM_REGISTRY}}/{{.COMPONENT}}" --version "{{.CHART_VERSION}}" >/dev/null 2>&1; then echo "Chart using version {{.CHART_VERSION}} already exist, do not build again."; exit 0; else echo "Chart using version {{.CHART_VERSION}} do not exist, continue building."; fi'
-      - '"{{.HELM}}" package "{{.ROOT_DIR2}}/charts/{{.COMPONENT}}" -d "{{.LOCALTMP}}" --version "{{.VERSION}}"'
+      - '"{{.HELM}}" package "{{.ROOT_DIR2}}/charts/{{.COMPONENT}}" -d "{{.LOCALTMP}}" --version "{{.CHART_VERSION}}"'
     internal: true
 
   push:
@@ -69,7 +66,6 @@ tasks:
     requires:
       vars:
       - COMPONENTS
-      - VERSION
     vars:
       HELM_REGISTRY:
         sh: 'PROJECT_ROOT="{{.ROOT_DIR2}}" {{.TASKFILE_DIR2}}/get-registry.sh --helm'
@@ -78,7 +74,6 @@ tasks:
         var: COMPONENTS
       vars:
         COMPONENT: '{{.ITEM}}'
-        VERSION: '{{.VERSION}}'
         HELM_REGISTRY: '{{.HELM_REGISTRY}}'
       task: push-internal
 
@@ -90,7 +85,6 @@ tasks:
     requires:
       vars:
       - COMPONENT
-      - VERSION
       - HELM_REGISTRY
       - LOCALTMP
     status:
@@ -102,6 +96,6 @@ tasks:
     cmds:
       - 'if "{{.HELM}}" pull "oci://{{.HELM_REGISTRY}}/{{.COMPONENT}}" --version "{{.CHART_VERSION}}" >/dev/null 2>&1; then echo "Chart using version {{.CHART_VERSION}} already exist, do not push again."; exit 0; else echo "Chart using version {{.CHART_VERSION}} do not exist, continue pushing."; fi'
       - '"{{.HELM}}" push "{{.LOCALTMP}}/{{.CHART_NAME}}-{{.VERSION}}.tgz" "oci://{{.HELM_REGISTRY}}"'
-      - 'rm -f "{{.LOCALTMP}}/{{.CHART_NAME}}-{{.VERSION}}.tgz"'
+      - 'rm -f "{{.LOCALTMP}}/{{.CHART_NAME}}-{{.CHART_VERSION}}.tgz"'
     internal: true
 
