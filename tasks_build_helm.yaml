@@ -56,7 +56,7 @@ tasks:
     - 'test ! -f "{{.ROOT_DIR2}}/charts/{{.COMPONENT}}/Chart.yaml"'
     vars:
       CHART_VERSION:
-        sh: '"{{.YQ}}" \'.version\' "{{.ROOT_DIR2}}/charts/{{.COMPONENT}}/Chart.yaml"'
+        sh: "grep '^version:' {{.ROOT_DIR2}}/charts/{{.COMPONENT}}/Chart.yaml | | awk '{print $2}'"
     preconditions:
       - sh: 'if "{{.HELM}}" pull "oci://{{.HELM_REGISTRY}}/{{.COMPONENT}}" --version "{{.CHART_VERSION}}" >/dev/null 2>&1; then exit 0; else exit 1; fi'
     cmds:
@@ -99,7 +99,7 @@ tasks:
     vars:
       CHART_NAME: '{{.COMPONENT}}' # this requires the chart name to be the same as the component name
       CHART_VERSION:
-        sh: '"{{.YQ}}" \'.version\' "{{.ROOT_DIR2}}/charts/{{.COMPONENT}}/Chart.yaml"'
+        sh: "grep '^version:' {{.ROOT_DIR2}}/charts/{{.COMPONENT}}/Chart.yaml | | awk '{print $2}'"
     preconditions:
       - sh: 'if "{{.HELM}}" pull "oci://{{.HELM_REGISTRY}}/{{.COMPONENT}}" --version "{{.CHART_VERSION}}" >/dev/null 2>&1; then exit 0; else exit 1; fi'
     cmds:
