@@ -93,7 +93,7 @@ tasks:
     - localbin
     vars:
       # renovate: datasource=github-releases depName=jq packageName=jqlang/jq
-      JQ_VERSION: '{{ env "JQ_VERSION" | default ( .JQ_VERSION | default "v1.7.1" ) }}'
+      JQ_VERSION: '{{ env "JQ_VERSION" | default ( .JQ_VERSION | default "v1.8.0" ) }}'
       JQ_OS:
         sh: 'if [[ "{{.OS}}" == "darwin" ]]; then echo "macos"; else echo "{{.OS}}"; fi' # jq uses 'macos' instead of 'darwin'
     status:
@@ -102,6 +102,26 @@ tasks:
     cmds:
     - 'curl -sfL "https://github.com/jqlang/jq/releases/download/jq-{{.JQ_VERSION | trimPrefix "v"}}/jq-{{.JQ_OS}}-{{.ARCH}}" --output "{{.JQ}}"'
     - 'chmod +x "{{.JQ}}"'
+    internal: true
+
+  yq:
+    desc: "  Ensure that yq is installed."
+    run: once
+    requires:
+      vars:
+        - YQ
+    deps:
+      - localbin
+    vars:
+      YQ_VERSION: '{{ env "YQ_VERSION" | default ( .YQ_VERSION | default "v4.45.4" ) }}'
+      YQ_OS:
+        sh: 'if [[ "{{.OS}}" == "darwin" ]]; then echo "macos"; else echo "{{.OS}}"; fi' # jq uses 'macos' instead of 'darwin'
+    status:
+      - test -x {{.YQ}}
+      - '{{.YQ}} --version | grep -q "{{.YQ_VERSION | trimPrefix "v"}}"'
+    cmds:
+      - 'curl -sfL "https://github.com/mikefarah/yq/releases/download/{{.YQ_VERSION | trimPrefix "v"}}/yq_{{.YQ_OS}}_{{.ARCH}}" --output "{{.YQ}}"'
+      - 'chmod +x "{{.YQ}}"'
     internal: true
 
   helm:

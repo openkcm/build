@@ -22,6 +22,20 @@ tasks:
     - task: build
     - task: push
 
+  fail-helm-version-not-exist:
+    deps:
+      - tools:helm
+      - tools:yq
+    requires:
+      vars:
+        - COMPONENT
+        - HELM_REGISTRY
+    vars:
+      CHART_VERSION:
+        sh: '{{.TASKFILE_DIR2}}/get-chart-version.sh {{.ROOT_DIR2}}/charts/{{.COMPONENT}}/Chart.yaml'
+    preconditions:
+      - sh: 'if "{{.HELM}}" pull "oci://{{.HELM_REGISTRY}}/{{.COMPONENT}}" --version "{{.CHART_VERSION}}" >/dev/null 2>&1; then exit 0; else exit 1; fi'
+
   build:
     desc: "  Packages the helm chart to prepare it for being pushed to the registry."
     run: once
@@ -29,6 +43,8 @@ tasks:
       vars:
       - COMPONENTS
       - VERSION
+    deps:
+      - fail-helm-version-not-exist
     cmds:
     - for:
         var: COMPONENTS
@@ -36,7 +52,7 @@ tasks:
         COMPONENT: '{{.ITEM}}'
         VERSION: '{{.VERSION}}'
       task: build-internal
-  
+
   build-internal:
     desc: "  Packages the helm chart of a specific component to prepare it for being pushed to the registry."
     run: when_changed
@@ -63,6 +79,8 @@ tasks:
     vars:
       HELM_REGISTRY:
         sh: 'PROJECT_ROOT="{{.ROOT_DIR2}}" {{.TASKFILE_DIR2}}/get-registry.sh --helm'
+    deps:
+      - fail-helm-version-not-exist
     cmds:
     - for:
         var: COMPONENTS
