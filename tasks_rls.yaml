@@ -75,6 +75,27 @@ tasks:
     - '( cd "{{.ROOT_DIR2}}"; git add --all; git commit -m "release {{.RELEASE_VERSION}}" )'
     internal: true
 
+  update-repo-version:
+    desc: '  Updates repo version to the specified version. Usage: task {{.TASK}} -- <version>'
+    summary: |
+      This task is called by the release tasks automatically.
+      It sets the following versions to the one provided as argument:
+      - the VERSION file in the root directory
+      - the imported version of each nested module in the root go.mod file
+    run: once
+    requires:
+      vars:
+        - MODULE_NAME
+    preconditions:
+      - sh: 'test "{{len .CLI_ARGS}}" -gt 0'
+        msg: 'This task requires a version argument. Usage: task {{.TASK}} -- <version>'
+    vars:
+      VERSION: '{{.CLI_ARGS | splitList " " | first}}'
+    cmds:
+      - vars:
+          VERSION: '{{.VERSION}}'
+        task: update-repo-version-internal
+
   set-version:
     desc: '  Updates all versions to the specified version. Usage: task {{.TASK}} -- <version>'
     summary: |
@@ -97,7 +118,7 @@ tasks:
     cmds:
     - vars:
         VERSION: '{{.VERSION}}'
-      task: update-repo-version
+      task: update-repo-version-internal
     - for:
         var: COMPONENTS
       vars:
@@ -112,7 +133,7 @@ tasks:
         MODULE_NAME: '{{.MODULE_NAME}}'
       task: set-module-version-internal
 
-  update-repo-version:
+  update-repo-version-internal:
     desc: "  Sets the version in the repo version file."
     run: once
     requires:
@@ -120,6 +141,7 @@ tasks:
         - VERSION
     cmds:
       - 'echo -n "{{.VERSION}}" > "{{.ROOT_DIR2}}/VERSION"'
+    internal: true
 
   set-chart-version-internal:
     desc: "  Sets the versions in the helm chart for a specific component."
