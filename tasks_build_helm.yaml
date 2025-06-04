@@ -54,7 +54,7 @@ tasks:
     - 'test ! -f "{{.ROOT_DIR2}}/charts/{{.COMPONENT}}/Chart.yaml"'
     vars:
       CHART_VERSION:
-        sh: "grep '^version:' {{.ROOT_DIR2}}/charts/{{.COMPONENT}}/Chart.yaml | awk '{print $2}'"
+        sh: "echo v$(grep '^version:' {{.ROOT_DIR2}}/charts/{{.COMPONENT}}/Chart.yaml | awk '{print $2}')"
     cmds:
       - 'if "{{.HELM}}" pull "oci://{{.HELM_REGISTRY}}/{{.COMPONENT}}" --version "{{.CHART_VERSION}}" >/dev/null 2>&1; then echo "Chart using version {{.CHART_VERSION}} already exist, do not build again."; exit 0; else echo "Chart using version {{.CHART_VERSION}} do not exist, continue building."; fi'
       - '"{{.HELM}}" package "{{.ROOT_DIR2}}/charts/{{.COMPONENT}}" -d "{{.LOCALTMP}}" --version "{{.CHART_VERSION}}"'
@@ -92,7 +92,7 @@ tasks:
     vars:
       CHART_NAME: '{{.COMPONENT}}' # this requires the chart name to be the same as the component name
       CHART_VERSION:
-        sh: "grep '^version:' {{.ROOT_DIR2}}/charts/{{.COMPONENT}}/Chart.yaml | awk '{print $2}'"
+        sh: "echo v$(grep '^version:' {{.ROOT_DIR2}}/charts/{{.COMPONENT}}/Chart.yaml | awk '{print $2}')"
     cmds:
       - 'if "{{.HELM}}" pull "oci://{{.HELM_REGISTRY}}/{{.COMPONENT}}" --version "{{.CHART_VERSION}}" >/dev/null 2>&1; then echo "Chart using version {{.CHART_VERSION}} already exist, do not push again."; exit 0; else echo "Chart using version {{.CHART_VERSION}} do not exist, continue pushing."; fi'
       - '"{{.HELM}}" push "{{.LOCALTMP}}/{{.CHART_NAME}}-{{.CHART_VERSION}}.tgz" "oci://{{.HELM_REGISTRY}}"'
