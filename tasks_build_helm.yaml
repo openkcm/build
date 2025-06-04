@@ -28,15 +28,18 @@ tasks:
     requires:
       vars:
       - COMPONENTS
-      - VERSION
+    vars:
+      HELM_REGISTRY:
+        sh: 'PROJECT_ROOT="{{.ROOT_DIR2}}" {{.TASKFILE_DIR2}}/get-registry.sh --helm'
+    deps:
     cmds:
     - for:
         var: COMPONENTS
       vars:
         COMPONENT: '{{.ITEM}}'
-        VERSION: '{{.VERSION}}'
+        HELM_REGISTRY: '{{.HELM_REGISTRY}}'
       task: build-internal
-  
+
   build-internal:
     desc: "  Packages the helm chart of a specific component to prepare it for being pushed to the registry."
     run: when_changed
@@ -46,11 +49,14 @@ tasks:
     requires:
       vars:
       - COMPONENT
-      - VERSION
+      - HELM_REGISTRY
     status:
     - 'test ! -f "{{.ROOT_DIR2}}/charts/{{.COMPONENT}}/Chart.yaml"'
+    vars:
+      CHART_VERSION:
+        sh: "grep '^version:' {{.ROOT_DIR2}}/charts/{{.COMPONENT}}/Chart.yaml | awk '{print $2}'"
     cmds:
-    - '"{{.HELM}}" package "{{.ROOT_DIR2}}/charts/{{.COMPONENT}}" -d "{{.LOCALTMP}}" --version "{{.VERSION}}"'
+      - 'HELM={{.HELM}} HELM_REGISTRY="{{.HELM_REGISTRY}}" COMPONENT="{{.COMPONENT}}" CHART_VERSION="{{.CHART_VERSION}}" LOCALTMP="{{.LOCALTMP}}" CHART_NAME="{{.CHART_NAME}}" ROOT_DIR2="{{.ROOT_DIR2}}" {{.TASKFILE_DIR2}}/helm-actions.sh --build'
     internal: true
 
   push:
@@ -59,7 +65,6 @@ tasks:
     requires:
       vars:
       - COMPONENTS
-      - VERSION
     vars:
       HELM_REGISTRY:
         sh: 'PROJECT_ROOT="{{.ROOT_DIR2}}" {{.TASKFILE_DIR2}}/get-registry.sh --helm'
@@ -68,7 +73,6 @@ tasks:
         var: COMPONENTS
       vars:
         COMPONENT: '{{.ITEM}}'
-        VERSION: '{{.VERSION}}'
         HELM_REGISTRY: '{{.HELM_REGISTRY}}'
       task: push-internal
 
@@ -80,15 +84,15 @@ tasks:
     requires:
       vars:
       - COMPONENT
-      - VERSION
       - HELM_REGISTRY
       - LOCALTMP
     status:
     - 'test ! -f "{{.ROOT_DIR2}}/charts/{{.COMPONENT}}/Chart.yaml"'
     vars:
       CHART_NAME: '{{.COMPONENT}}' # this requires the chart name to be the same as the component name
+      CHART_VERSION:
+        sh: "grep '^version:' {{.ROOT_DIR2}}/charts/{{.COMPONENT}}/Chart.yaml | awk '{print $2}'"
     cmds:
-    - '"{{.HELM}}" push "{{.LOCALTMP}}/{{.CHART_NAME}}-{{.VERSION}}.tgz" "oci://{{.HELM_REGISTRY}}"'
-    - 'rm -f "{{.LOCALTMP}}/{{.CHART_NAME}}-{{.VERSION}}.tgz"'
+      - 'HELM={{.HELM}} HELM_REGISTRY="{{.HELM_REGISTRY}}" COMPONENT="{{.COMPONENT}}" CHART_VERSION="{{.CHART_VERSION}}" LOCALTMP="{{.LOCALTMP}}" CHART_NAME="{{.CHART_NAME}}" ROOT_DIR2="{{.ROOT_DIR2}}" {{.TASKFILE_DIR2}}/helm-actions.sh --push'
     internal: true
 
