@@ -22,20 +22,6 @@ tasks:
     - task: build
     - task: push
 
-  fail-helm-version-not-exist:
-    deps:
-      - tools:helm
-      - tools:yq
-    requires:
-      vars:
-        - COMPONENT
-        - HELM_REGISTRY
-    vars:
-      CHART_VERSION:
-        sh: '{{.YQ}} ".version" {{.ROOT_DIR2}}/charts/{{.COMPONENT}}/Chart.yaml'
-    preconditions:
-      - sh: 'if "{{.HELM}}" pull "oci://{{.HELM_REGISTRY}}/{{.COMPONENT}}" --version "{{.CHART_VERSION}}" >/dev/null 2>&1; then exit 0; else exit 1; fi'
-
   build:
     desc: "  Packages the helm chart to prepare it for being pushed to the registry."
     run: once
@@ -47,10 +33,6 @@ tasks:
       HELM_REGISTRY:
         sh: 'PROJECT_ROOT="{{.ROOT_DIR2}}" {{.TASKFILE_DIR2}}/get-registry.sh --helm'
     deps:
-      - task: fail-helm-version-not-exist
-        vars:
-          COMPONENT: '{{.COMPONENT}}'
-          HELM_REGISTRY: '{{.HELM_REGISTRY}}'
     cmds:
     - for:
         var: COMPONENTS
@@ -65,12 +47,18 @@ tasks:
     deps:
     - tools:localtmp
     - tools:helm
+    - tools:yq
     requires:
       vars:
       - COMPONENT
       - VERSION
     status:
     - 'test ! -f "{{.ROOT_DIR2}}/charts/{{.COMPONENT}}/Chart.yaml"'
+    vars:
+      CHART_VERSION:
+        sh: '{{.YQ}} ".version" {{.ROOT_DIR2}}/charts/{{.COMPONENT}}/Chart.yaml'
+    preconditions:
+      - sh: 'if "{{.HELM}}" pull "oci://{{.HELM_REGISTRY}}/{{.COMPONENT}}" --version "{{.CHART_VERSION}}" >/dev/null 2>&1; then exit 0; else exit 1; fi'
     cmds:
     - '"{{.HELM}}" package "{{.ROOT_DIR2}}/charts/{{.COMPONENT}}" -d "{{.LOCALTMP}}" --version "{{.VERSION}}"'
     internal: true
@@ -85,11 +73,6 @@ tasks:
     vars:
       HELM_REGISTRY:
         sh: 'PROJECT_ROOT="{{.ROOT_DIR2}}" {{.TASKFILE_DIR2}}/get-registry.sh --helm'
-    deps:
-      - task: fail-helm-version-not-exist
-        vars:
-          COMPONENT: '{{.COMPONENT}}'
-          HELM_REGISTRY: '{{.HELM_REGISTRY}}'
     cmds:
     - for:
         var: COMPONENTS
@@ -104,6 +87,7 @@ tasks:
     run: when_changed
     deps:
     - tools:helm
+    - tools:yq
     requires:
       vars:
       - COMPONENT
@@ -114,6 +98,10 @@ tasks:
     - 'test ! -f "{{.ROOT_DIR2}}/charts/{{.COMPONENT}}/Chart.yaml"'
     vars:
       CHART_NAME: '{{.COMPONENT}}' # this requires the chart name to be the same as the component name
+      CHART_VERSION:
+        sh: '{{.YQ}} ".version" {{.ROOT_DIR2}}/charts/{{.COMPONENT}}/Chart.yaml'
+    preconditions:
+      - sh: 'if "{{.HELM}}" pull "oci://{{.HELM_REGISTRY}}/{{.COMPONENT}}" --version "{{.CHART_VERSION}}" >/dev/null 2>&1; then exit 0; else exit 1; fi'
     cmds:
     - '"{{.HELM}}" push "{{.LOCALTMP}}/{{.CHART_NAME}}-{{.VERSION}}.tgz" "oci://{{.HELM_REGISTRY}}"'
     - 'rm -f "{{.LOCALTMP}}/{{.CHART_NAME}}-{{.VERSION}}.tgz"'
