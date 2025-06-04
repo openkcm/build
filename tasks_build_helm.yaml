@@ -43,8 +43,14 @@ tasks:
       vars:
       - COMPONENTS
       - VERSION
+    vars:
+      HELM_REGISTRY:
+        sh: 'PROJECT_ROOT="{{.ROOT_DIR2}}" {{.TASKFILE_DIR2}}/get-registry.sh --helm'
     deps:
-      - fail-helm-version-not-exist
+      - task: fail-helm-version-not-exist
+        vars:
+          OS: '{{.COMPONENT}}'
+          ARCH: '{{.HELM_REGISTRY}}'
     cmds:
     - for:
         var: COMPONENTS
@@ -80,7 +86,10 @@ tasks:
       HELM_REGISTRY:
         sh: 'PROJECT_ROOT="{{.ROOT_DIR2}}" {{.TASKFILE_DIR2}}/get-registry.sh --helm'
     deps:
-      - fail-helm-version-not-exist
+      - task: fail-helm-version-not-exist
+        vars:
+          OS: '{{.COMPONENT}}'
+          ARCH: '{{.HELM_REGISTRY}}'
     cmds:
     - for:
         var: COMPONENTS
