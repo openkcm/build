@@ -6,18 +6,18 @@ while [[ "$#" -gt 0 ]]; do
   case ${1:-} in
     "-p"|"--push")
         if $HELM pull "oci://${HELM_REGISTRY}/${COMPONENT}" --version "${CHART_VERSION}" >/dev/null 2>&1; then
-          echo "Chart using version ${CHART_VERSION} already exist, do not push again."
+          echo "Chart ${COMPONENT}-${CHART_VERSION} version already exist, do not push again."
         else
-          echo "Chart using version ${CHART_VERSION} do not exist, continue pushing."
+          echo "Chart ${COMPONENT}-${CHART_VERSION} version does not exist, continue pushing."
           $HELM push "${LOCALTMP}/${CHART_NAME}-${CHART_VERSION}.tgz" "oci://${HELM_REGISTRY}"
           rm -f "${LOCALTMP}/${CHART_NAME}-${CHART_VERSION}.tgz"
         fi
       ;;
     "-b"|"--build")
         if $HELM pull "oci://${HELM_REGISTRY}/${COMPONENT}" --version "${CHART_VERSION}" >/dev/null 2>&1; then
-          echo "Chart using version ${CHART_VERSION} already exist, do not build again."
+          echo "Chart ${COMPONENT}-${CHART_VERSION} version already exist, do not build again."
         else
-          echo "Chart using version ${CHART_VERSION} do not exist, continue building."
+          echo "Chart ${COMPONENT}-${CHART_VERSION} version does not exist, continue building."
           $HELM package "${ROOT_DIR2}/charts/${COMPONENT}" -d "${LOCALTMP}" --version "${CHART_VERSION}"
         fi
       ;;
