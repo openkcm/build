@@ -17,11 +17,10 @@ tasks:
     desc: "  Build the SBOM considering the go.mod."
     run: once
     deps:
-      - tools:cyclonedx-gomod
+      - tools:cyclonedxgomod
       - tools:localtmp
     vars:
       compdir: '{{.LOCALTMP}}'
-      CYCLONEDXGOMOD: '{{.CYCLONEDXGOMOD}}'
     cmds:
       - '"{{.CYCLONEDXGOMOD}}" mod -licenses -output {{.compdir}}/sbom.json'
 
@@ -37,13 +36,12 @@ tasks:
 
   app-internal:
     desc: " Build the SBOM for a specific component."
-    run: always
+    run: when_changed
     deps:
-      - tools:cyclonedx-gomod
+      - tools:cyclonedxgomod
       - tools:localtmp
     vars:
       compdir: '{{.LOCALTMP}}'
-      CYCLONEDXGOMOD: '{{.CYCLONEDXGOMOD}}'
     requires:
       vars:
         - COMPONENT
