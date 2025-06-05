@@ -18,11 +18,8 @@ tasks:
     run: once
     deps:
       - tools:cyclonedxgomod
-      - tools:localtmp
-    vars:
-      compdir: '{{.LOCALTMP}}'
     cmds:
-      - '"{{.CYCLONEDXGOMOD}}" mod -licenses -output {{.compdir}}/sbom.json'
+      - '"{{.CYCLONEDXGOMOD}}" mod -licenses -output sbom.json'
 
   app:
     desc: '  Build the SBOM for each component'
@@ -39,12 +36,9 @@ tasks:
     run: when_changed
     deps:
       - tools:cyclonedxgomod
-      - tools:localtmp
-    vars:
-      compdir: '{{.LOCALTMP}}'
     requires:
       vars:
         - COMPONENT
     cmds:
-      - '"{{.CYCLONEDXGOMOD}}" app -json -output {{.compdir}}/{{.COMPONENT}}-app.bom.json -packages -files -licenses -main {{.ROOT_DIR2}}/cmd/{{.COMPONENT}}'
+      - '"{{.CYCLONEDXGOMOD}}" app -json -output {{.COMPONENT}}-app.bom.json -packages -files -licenses -main cmd/{{.COMPONENT}}'
     internal: true
