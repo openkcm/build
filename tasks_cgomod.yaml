@@ -1,0 +1,44 @@
+version: 3
+
+includes:
+  tools:
+    taskfile: tasks_tools.yaml
+    internal: true
+
+tasks:
+  # This is a dummy task that serves as a separator between task namespaces in the 'task -l' output.
+  "---":
+    desc: "{{.CYCLONEDXGOMOD_SEP}}"
+    cmds:
+    - cmd: echo "{{.SEP_MSG}}"
+      silent: true
+
+  mod:
+    desc: "  Build the SBOM considering the go.mod."
+    run: once
+    deps:
+      - tools:cyclonedx-gomod
+    cmds:
+      - '{{.CYCLONEDXGOMOD}} mod -licenses -output sbom.json'
+
+  app:
+    desc: '  Build the SBOM for each component'
+    run: once
+    cmds:
+      - for:
+          var: COMPONENTS
+        vars:
+          COMPONENT: '{{.ITEM}}'
+        task: app-internal
+
+  app-internal:
+    desc: " Build the SBOM for a specific component."
+    run: always
+    deps:
+      - tools:cyclonedx-gomod
+    requires:
+      vars:
+        - COMPONENT
+    cmds:
+      - '{{.CYCLONEDXGOMOD}} app -json -output {{.COMPONENT}}-app.bom.json -packages -files -licenses -main {{.ROOT_DIR2}}/cmd/{{.COMPONENT}}'
+    internal: true

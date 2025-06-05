@@ -67,6 +67,7 @@ vars:
   BLD_HLM_SEP: "HELM CHART BUILD --- helm ------------------------------------------------------"
   BLD_OCM_SEP: "OCM COMPONENT BUILD --- ocm ----------------------------------------------------"
   RLS_SEP:     "RELEASE MANAGEMENT ### release / rls / r #######################################"
+  CYCLONEDXGOMOD_SEP: "CycloneDX Software Bill of Materials (SBOM) from Go modules ### cyclonedxgomod / cgomod / c #######################################"
 
 tasks:
 

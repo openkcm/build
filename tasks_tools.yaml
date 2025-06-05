@@ -83,6 +83,22 @@ tasks:
     - 'curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b {{.LOCALBIN}} {{.LINTER_VERSION}}'
     internal: true
 
+  cyclonedx-gomod:
+    desc: "  Ensure that cyclonedx-gomod is installed."
+    run: once
+    requires:
+      vars:
+        - CYCLONEDXGOMOD
+    deps:
+      - localbin
+    vars:
+      FORMATTER_VERSION: '{{ env "CYCLONEDXGOMOD_VERSION" | default ( .CYCLONEDXGOMOD_VERSION | default "latest" ) }}'
+    status:
+      - test -x {{.CYCLONEDXGOMOD}}
+    cmds:
+      - 'GOBIN="{{.LOCALBIN}}" go install github.com/CycloneDX/cyclonedx-gomod/cmd/cyclonedx-gomod@{{.FORMATTER_VERSION}}'
+    internal: true
+
   jq:
     desc: "  Ensure that jq is installed."
     run: once
