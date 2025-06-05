@@ -24,6 +24,11 @@ includes:
     aliases:
     - rls
     - r
+  cyclonedxgomod:
+    taskfile: tasks_cyclonedxgomod.yaml
+    aliases:
+      - cdxgomod
+      - c
 
 vars:
   # whacky workarounds for incorrect paths in the special variables
@@ -67,7 +72,7 @@ vars:
   BLD_HLM_SEP: "HELM CHART BUILD --- helm ------------------------------------------------------"
   BLD_OCM_SEP: "OCM COMPONENT BUILD --- ocm ----------------------------------------------------"
   RLS_SEP:     "RELEASE MANAGEMENT ### release / rls / r #######################################"
-  CYCLONEDXGOMOD_SEP: "CycloneDX Software Bill of Materials (SBOM) from Go modules ### cyclonedxgomod / cgomod / c #######################################"
+  CYCLONEDXGOMOD_SEP: "CycloneDX Software Bill of Materials (SBOM) from Go modules ### cyclonedxgomod / cdxgomod / c #######################################"
 
 tasks:
 
