@@ -18,27 +18,35 @@ tasks:
     run: once
     deps:
       - tools:cyclonedx-gomod
+    requires:
+      vars:
+        - CYCLONEDXGOMOD
     cmds:
       - '{{.CYCLONEDXGOMOD}} mod -licenses -output sbom.json'
 
   app:
     desc: '  Build the SBOM for each component'
     run: once
+    requires:
+      vars:
+        - CYCLONEDXGOMOD
     cmds:
       - for:
           var: COMPONENTS
         vars:
           COMPONENT: '{{.ITEM}}'
+          CYCLONEDXGOMOD: '{{.CYCLONEDXGOMOD}}'
         task: app-internal
 
   app-internal:
     desc: " Build the SBOM for a specific component."
-    run: always
+    run: when_changed
     deps:
       - tools:cyclonedx-gomod
     requires:
       vars:
         - COMPONENT
+        - CYCLONEDXGOMOD
     cmds:
       - '{{.CYCLONEDXGOMOD}} app -json -output {{.COMPONENT}}-app.bom.json -packages -files -licenses -main {{.ROOT_DIR2}}/cmd/{{.COMPONENT}}'
     internal: true

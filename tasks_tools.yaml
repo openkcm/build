@@ -96,7 +96,8 @@ tasks:
     status:
       - test -x {{.CYCLONEDXGOMOD}}
     cmds:
-      - 'GOBIN="{{.LOCALBIN}}" go install github.com/CycloneDX/cyclonedx-gomod/cmd/cyclonedx-gomod@{{.FORMATTER_VERSION}}'
+      - 'GOBIN="{{.LOCALBIN}}" go install github.com/CycloneDX/cyclonedx-gomod/cmd/cyclonedx-gomod@{{.CYCLONEDXGOMOD_VERSION}}'
+      - 'chmod +x "{{.CYCLONEDXGOMOD}}"'
     internal: true
 
   jq:
