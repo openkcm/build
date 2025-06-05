@@ -93,13 +93,21 @@ tasks:
     - localbin
     vars:
       CYCLONEDXGOMOD_VERSION: '{{ env "CYCLONEDXGOMOD_VERSION" | default ( .CYCLONEDXGOMOD_VERSION | default "v1.9.0" ) }}'
+      CYCLONEDXGOMOD_OS:
+        sh: 'if [[ "{{.OS}}" == "darwin" ]]; then echo "macos"; else echo "{{.OS}}"; fi'
+      tmpdir:
+        sh: 'mktemp -d'
     status:
       - 'test -x {{.CYCLONEDXGOMOD}}'
       - |
           {{.CYCLONEDXGOMOD}} version | grep '^Version:' | awk '{print $2}' | grep -q "{{.CYCLONEDXGOMOD_VERSION | trimPrefix "v" }}"
     cmds:
-      - 'GOBIN="{{.LOCALBIN}}" go install github.com/CycloneDX/cyclonedx-gomod/cmd/cyclonedx-gomod@{{.CYCLONEDXGOMOD_VERSION}}'
+      - 'mkdir -p {{.tmpdir}}/cyclonedx-gomod-unpacked'
+      - 'curl -sfL "https://github.com/CycloneDX/cyclonedx-gomod/releases/download/{{.CYCLONEDXGOMOD_VERSION}}/cyclonedx-gomod_{{.CYCLONEDXGOMOD_VERSION | trimPrefix "v"}}_{{.CYCLONEDXGOMOD_OS}}_{{.ARCH}}.tar.gz" --output "{{.tmpdir}}/cyclonedx-gomod.tar.gz"'
+      - 'tar -xzf "{{.tmpdir}}/cyclonedx-gomod.tar.gz" --directory "{{.tmpdir}}/cyclonedx-gomod-unpacked"'
+      - 'mv "{{.tmpdir}}/cyclonedx-gomod-unpacked/cyclonedx-gomod" "{{.CYCLONEDXGOMOD}}"'
       - 'chmod +x "{{.CYCLONEDXGOMOD}}"'
+      - 'rm -rf "{{.tmpdir}}"'
     internal: true
 
   jq:
