@@ -28,7 +28,6 @@ tasks:
       - tools:cyclonedxgomod
     cmds:
       - 'cd {{.ROOT_DIR2}}; {{.CYCLONEDXGOMOD}} mod -type library -licenses -output sbom.json'
-      -
   app:
     desc: '  Build the SBOM for each component'
     run: once
@@ -48,5 +47,5 @@ tasks:
       vars:
         - COMPONENT
     cmds:
-      - 'ls -l; ls -l cmd/; {{.CYCLONEDXGOMOD}} app -json -output {{.COMPONENT}}-app.sbom.json -packages -files -licenses -main cmd/{{.COMPONENT}} {{.ROOT_DIR2}}'
+      - '{{.CYCLONEDXGOMOD}} app -json -output {{.COMPONENT}}-app.sbom.json -packages -files -licenses -main cmd/{{.COMPONENT}} {{.ROOT_DIR2}}'
     internal: true
