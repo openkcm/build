@@ -95,8 +95,6 @@ tasks:
       FORMATTER_VERSION: '{{ env "CYCLONEDXGOMOD_VERSION" | default ( .CYCLONEDXGOMOD_VERSION | default "v1.9.0" ) }}'
     status:
       - 'test -x {{.CYCLONEDXGOMOD}}'
-      - |
-        {{.CYCLONEDXGOMOD}} version | grep '^Version:' | awk '{print $2}' | grep -q "{{.CYCLONEDXGOMOD_VERSION | trimPrefix "v" }}"
     cmds:
       - 'GOBIN="{{.LOCALBIN}}" go install github.com/CycloneDX/cyclonedx-gomod/cmd/cyclonedx-gomod@{{.CYCLONEDXGOMOD_VERSION}}'
       - 'chmod +x "{{.CYCLONEDXGOMOD}}"'
