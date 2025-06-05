@@ -27,15 +27,11 @@ tasks:
   app:
     desc: '  Build the SBOM for each component'
     run: once
-    requires:
-      vars:
-        - CYCLONEDXGOMOD
     cmds:
       - for:
           var: COMPONENTS
         vars:
           COMPONENT: '{{.ITEM}}'
-          CYCLONEDXGOMOD: '{{.CYCLONEDXGOMOD}}'
         task: app-internal
 
   app-internal:
