@@ -54,6 +54,7 @@ vars:
   CONTROLLER_GEN: '{{ .CONTROLLER_GEN | default (print .LOCALBIN "/controller-gen") }}'
   FORMATTER: '{{ .FORMATTER | default (print .LOCALBIN "/goimports") }}'
   LINTER: '{{ .LINTER | default (print .LOCALBIN "/golangci-lint") }}'
+  CYCLONEDXGOMOD: '{{ .CYCLONEDXGOMOD | default (print .LOCALBIN "/cyclonedx-gomod") }}'
   JQ: '{{ .JQ | default (print .LOCALBIN "/jq") }}'
   YQ: '{{ .YQ | default (print .LOCALBIN "/yq") }}'
   HELM: '{{ .HELM | default (print .LOCALBIN "/helm") }}'
