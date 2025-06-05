@@ -13,7 +13,7 @@ tasks:
     - cmd: echo "{{.SEP_MSG}}"
       silent: true
 
-  mod:
+  mod-application:
     desc: "  Build the SBOM considering the go.mod."
     run: once
     deps:
@@ -21,6 +21,14 @@ tasks:
     cmds:
       - 'cd {{.ROOT_DIR2}}; {{.CYCLONEDXGOMOD}} mod -licenses -output sbom.json'
 
+  mod-library:
+    desc: "  Build the SBOM considering the go.mod."
+    run: once
+    deps:
+      - tools:cyclonedxgomod
+    cmds:
+      - 'cd {{.ROOT_DIR2}}; {{.CYCLONEDXGOMOD}} mod -type library -licenses -output sbom.json'
+      -
   app:
     desc: '  Build the SBOM for each component'
     run: once
