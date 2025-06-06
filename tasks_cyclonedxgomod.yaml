@@ -40,7 +40,7 @@ tasks:
 
   app-internal:
     desc: " Build the SBOM for a specific component."
-    run: when_changed
+    run: always
     deps:
       - tools:cyclonedxgomod
     requires:
