@@ -29,27 +29,28 @@ tasks:
       - tools:cyclonedxgomod
     cmds:
       - 'cd {{.ROOT_DIR2}}; {{.CYCLONEDXGOMOD}} mod -type library -licenses -output sbom.json'
-      - 'rm -f {{.CYCLONEDXGOMOD}}'
+      - rm -f {{.CYCLONEDXGOMOD}}
 
   app:
     desc: '  Build the SBOM for each component'
     run: once
+    deps:
+      - tools:cyclonedxgomod
     cmds:
       - for:
           var: COMPONENTS
         vars:
           COMPONENT: '{{.ITEM}}'
+          CYCLONEDXGOMOD: '{{.CYCLONEDXGOMOD}}'
         task: app-internal
-      - 'rm -f {{.CYCLONEDXGOMOD}}'
+      - rm -f {{.CYCLONEDXGOMOD}}
 
   app-internal:
     desc: " Build the SBOM for a specific component."
-    run: always
-    deps:
-      - tools:cyclonedxgomod
     requires:
       vars:
         - COMPONENT
+        - CYCLONEDXGOMOD
     cmds:
       - 'cd {{.ROOT_DIR2}}; {{.CYCLONEDXGOMOD}} app -json -output {{.COMPONENT}}-sbom.json -packages -files -licenses -main cmd/{{.COMPONENT}} .'
     internal: true
