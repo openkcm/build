@@ -47,5 +47,5 @@ tasks:
       vars:
         - COMPONENT
     cmds:
-      - 'cd {{.ROOT_DIR2}}; ls -l; {{.CYCLONEDXGOMOD}} app -json -output {{.COMPONENT}}-sbom.json -packages -files -licenses -main cmd/{{.COMPONENT}} ./'
+      - 'cd {{.ROOT_DIR2}}; ls -l; go list -json ./cmd/dummy-service; {{.CYCLONEDXGOMOD}} app -json -output {{.COMPONENT}}-sbom.json -packages -files -licenses -main cmd/{{.COMPONENT}} ./'
     internal: true
