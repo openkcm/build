@@ -47,5 +47,5 @@ tasks:
       vars:
         - COMPONENT
     cmds:
-      - 'ls -l; ls -l {{.ROOT_DIR2}}; ls -l {{.ROOT_DIR2}}/cmd; {{.CYCLONEDXGOMOD}} app -json -output {{.COMPONENT}}-app.sbom.json -packages -files -licenses -main cmd/{{.COMPONENT}} {{.ROOT_DIR2}}'
+      - '{{.CYCLONEDXGOMOD}} app -json -output {{.COMPONENT}}-sbom.json -packages -files -licenses -main ./cmd/{{.COMPONENT}} {{.ROOT_DIR2}}'
     internal: true
