@@ -26,7 +26,7 @@ case "$semver" in
       minor=$(echo $latest_tag | cut -d. -f2)
       patch=$(echo $latest_tag | cut -d. -f3)
 
-      if jq -e '.pull_request != null' "$GITHUB_EVENT_PATH" > /dev/null; thenF
+      if jq -e '.pull_request != null' "$GITHUB_EVENT_PATH" > /dev/null; then
          labels=$(jq -r '.pull_request.labels // [] | .[].name' "$GITHUB_EVENT_PATH")
          if echo "$labels" | grep -q "major"; then
            major=$((major + 1))
