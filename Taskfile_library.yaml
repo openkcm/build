@@ -125,9 +125,9 @@ tasks:
     - cmd: 'echo "{{.VERSION}}"'
       silent: true
 
-  next-version:
+  next-release-version:
     desc: "  Print the next version of the project."
     run: once
     cmds:
-      - cmd: 'echo "{{.NEXT_VERSION}}"'
+      - cmd: 'echo "{{.NEXT_RELEASE_VERSION}}"'
         silent: true
