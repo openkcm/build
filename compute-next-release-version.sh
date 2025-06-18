@@ -38,9 +38,6 @@ case "$semver" in
        else
          patch=$((patch + 1))
        fi
-    else
-      echo "❌ Skipping release, as is not done through pull request!"
-      exit 1
     fi
     ;;
   ("major")
