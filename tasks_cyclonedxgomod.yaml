@@ -19,7 +19,7 @@ tasks:
     deps:
       - tools:cyclonedxgomod
     cmds:
-      - 'cd {{.ROOT_DIR2}}; {{.CYCLONEDXGOMOD}} mod -licenses -output sbom.json'
+      - 'cd {{.ROOT_DIR2}}; {{.CYCLONEDXGOMOD}} mod -json -licenses -output sbom.json'
       - 'rm -f {{.CYCLONEDXGOMOD}}'
 
   mod-library:
@@ -28,7 +28,7 @@ tasks:
     deps:
       - tools:cyclonedxgomod
     cmds:
-      - 'cd {{.ROOT_DIR2}}; {{.CYCLONEDXGOMOD}} mod -type library -licenses -output sbom.json'
+      - 'cd {{.ROOT_DIR2}}; {{.CYCLONEDXGOMOD}} mod -type library -json -licenses -output sbom.json'
       - rm -f {{.CYCLONEDXGOMOD}}
 
   app:
