@@ -39,6 +39,8 @@ vars:
 
   VERSION:
     sh: 'PROJECT_ROOT="{{.ROOT_DIR2}}" {{.TASKFILE_DIR2}}/get-version.sh'
+  NEXT_RELEASE_VERSION:
+    sh: '"{{.TASKFILE_DIR2}}/compute-next-release-version.sh" git-tags'
   OS:
     sh: echo ${OS:-$(go env GOOS)}
   IMAGE_OS:
@@ -123,3 +125,9 @@ tasks:
     - cmd: 'echo "{{.VERSION}}"'
       silent: true
 
+  next-version:
+    desc: "  Print the next version of the project."
+    run: once
+    cmds:
+      - cmd: 'echo "{{.NEXT_VERSION}}"'
+        silent: true
