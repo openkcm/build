@@ -9,13 +9,9 @@ if [[ -n "${VERSION_OVERRIDE:-}" ]]; then
 fi
 
 if [ ! -f "${PROJECT_ROOT}/VERSION" ]; then
-  if command -v git >/dev/null 2>&1; then
-    git fetch --tags --force
-    latest_tag=$(git describe --tags $(git rev-list --tags --max-count=1) 2>/dev/null || echo "v0.0.0")
-    echo "$latest_tag" > $PROJECT_ROOT/VERSION
-  else
-    echo "v0.0.0" > $PROJECT_ROOT/VERSION
-  fi
+  git fetch --tags --force
+  latest_tag=$(git describe --tags $(git rev-list --tags --max-count=1) 2>/dev/null || echo "v0.0.0")
+  echo "$latest_tag" > $PROJECT_ROOT/VERSION
 fi
 
 VERSION="$(cat "${PROJECT_ROOT}/VERSION")"
