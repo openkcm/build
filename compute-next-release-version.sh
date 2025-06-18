@@ -19,7 +19,7 @@ patch=${patch%%-*}
 case "$semver" in
   ("git-tags")
     git fetch --tags --force
-    latest_tag=$(git describe --tags $(git rev-list --tags --max-count=1) 2>/dev/null || echo "${VERSION}")
+    latest_tag=$(git describe --tags $(git rev-list --tags --max-count=1) 2>/dev/null || echo "v0.0.0")
 
     # Extract version components
     major=$(echo $latest_tag | cut -d. -f1 | tr -d 'v')
