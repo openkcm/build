@@ -127,5 +127,5 @@ tasks:
     desc: "  Print the next version of the project."
     run: once
     cmds:
-      - cmd: 'VERSION={{.VERSION}} NEXT_RELEASE_VERSION={{.TASKFILE_DIR2}}/compute-next-release-version.sh git-tags; echo "{{.NEXT_RELEASE_VERSION}}"'
+      - cmd: 'VERSION={{.VERSION}} NEXT_RELEASE_VERSION=$("{{.TASKFILE_DIR2}}/compute-next-release-version.sh" git-tags) echo "{{.NEXT_RELEASE_VERSION}}"'
         silent: true
