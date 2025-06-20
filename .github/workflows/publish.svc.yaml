@@ -7,7 +7,7 @@ permissions:
   packages: write
 
 jobs:
-  version:
+  artifacts:
     runs-on: ubuntu-24.04
     steps:
       - name: Generate token from GitHub App
