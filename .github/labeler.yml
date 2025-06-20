@@ -6,7 +6,7 @@ core:
   - cmd/**
   - internal/core/**
   - pkg/core/**
-  - *.go
+  - "*.go"
 
 cli:
   - cmd/cli/**
