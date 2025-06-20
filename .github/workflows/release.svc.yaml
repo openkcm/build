@@ -4,7 +4,7 @@ on:
   workflow_call:
 
 jobs:
-  release-tag:
+  tag:
     if: ${{ (github.event.pull_request.merged == true) && (contains(github.event.pull_request.labels.*.name, 'release')) }}
     runs-on: ubuntu-24.04
     steps:
