@@ -6,9 +6,6 @@ on:
 permissions:
   packages: write
 
-env:
-  OCI_URL: ghcr.io/openkcm
-
 jobs:
   artifacts:
     name: Release version
