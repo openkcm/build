@@ -1,0 +1,57 @@
+# Source code changes
+core:
+  - go.mod
+  - go.sum
+  - main.go
+  - cmd/**
+  - internal/core/**
+  - pkg/core/**
+  - *.go
+
+cli:
+  - cmd/cli/**
+  - internal/cli/**
+  - pkg/cli/**
+
+api:
+  - api/**
+  - internal/api/**
+  - pkg/api/**
+
+# Docs & configs
+docs:
+  - README.md
+  - docs/**
+  - .github/**/*.md
+
+config:
+  - .env*
+  - config/**
+  - .github/workflows/**
+  - Makefile
+  - Dockerfile
+  - go.mod
+  - go.sum
+
+# Testing
+tests:
+  - "**/*_test.go"
+  - test/**
+  - mocks/**
+  - mock/**
+  - .github/actions/test/**
+
+# Dependencies
+dependencies:
+  - go.mod
+  - go.sum
+
+# CI/CD
+ci:
+  - .github/workflows/**
+  - .github/actions/**
+
+# Examples or demos
+examples:
+  - examples/**
+  - demo/**
