@@ -63,6 +63,7 @@ jobs:
 
       - name: Set up environment
         run: |
+          echo "repo_name=$(basename "$GITHUB_REPOSITORY")" >> $GITHUB_ENV
           echo "version=$(task next-release-version)" >> $GITHUB_ENV
 
       - name: Generate SBOM
@@ -101,20 +102,44 @@ jobs:
           mode: "release"
           configurationJson: |
             {
-              "template": "#{{CHANGELOG}}",
-              "pr_template": "- #{{TITLE}}: ##{{NUMBER}}",
+              "template": "## 📦 Release Changelog\n{{CHANGELOG}}",
               "categories": [
                 {
-                    "title": "## Feature",
-                    "labels": ["feat", "feature"]
+                  "title": "🚀 Features",
+                  "labels": ["feature", "enhancement", "feat"]
                 },
                 {
-                    "title": "## Fix",
-                    "labels": ["fix", "bug"]
+                  "title": "🐛 Bug Fixes",
+                  "labels": ["bug", "fix", "hotfix"]
                 },
                 {
-                    "title": "## Other",
-                    "labels": []
+                  "title": "🧰 Maintenance",
+                  "labels": ["chore", "refactor", "cleanup"]
+                },
+                {
+                  "title": "📝 Documentation",
+                  "labels": ["docs", "documentation"]
+                },
+                {
+                  "title": "🔧 CI/CD",
+                  "labels": ["ci", "github-actions", "infrastructure"]
+                },
+                {
+                  "title": "📦 Uncategorized",
+                  "labels": [],
+                  "empty_content": "No uncategorized PRs.",
+                  "collapse_after": 5
+                }
+              ],
+              "pr_template": "- {{TITLE}} (#{{NUMBER}}) by @{{AUTHOR}}",
+              "pr_title_cleaner": {
+                "pattern": "^\\[(feat|fix|chore|docs|ci)]\\s*",
+                "flags": "i"
+              },
+              "replacers": [
+                {
+                  "search": "#(\\d+)",
+                  "replace": "[#\\1](https://github.com/openkcm/${{ env.repo_name }}/pull/\\1)"
                 }
               ],
               "label_extractor": [
@@ -128,6 +153,8 @@ jobs:
                 "pattern": "^chore:\s*release",
                 "labels": "release"
               }
+              "max_pull_requests": 100,
+              "sort": "mergedAt"
             }
 
       - name: Create signed tag from main
