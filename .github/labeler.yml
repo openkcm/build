@@ -15,8 +15,8 @@ tests:
   - changed-files:
       - any-glob-to-any-file:
           - '**/*_test.go'
-          - "*test/**"
-          - "*tests/**"
+          - test/**
+          - tests/**
           - integration/**
 
 # 📁 Command-line apps (Golang main packages)
