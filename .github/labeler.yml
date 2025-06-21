@@ -9,6 +9,9 @@ dependencies:
       - any-glob-to-any-file:
           - go.mod
           - go.sum
+  - title:
+      - '^deps(\(.+\))?:'
+      - '^dependency(\(.+\))?:'
 
 # 🧪 Go tests
 tests:
@@ -23,7 +26,7 @@ tests:
         - '^tests(\(.+\))?:'
 
 # 📁 Command-line apps (Golang main packages)
-CLI:
+service:
   - changed-files:
       - any-glob-to-any-file: cmd/**
 
@@ -138,10 +141,4 @@ chore:
       - '^chore(\(.+\))?:'
       - '^meta(\(.+\))?:'
 
-
-build:
-  - title:
-      - '^build(\(.+\))?:'
-      - '^deps(\(.+\))?:'
-      - '^dependency(\(.+\))?:'
 
