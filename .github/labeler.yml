@@ -1,27 +1,26 @@
 # 🟢 Apply this label to any change in the repo
-AnyChange:
+unknown:
   - changed-files:
       - any-glob-to-any-file: '**'
 
-# 🟦 Core Go files
-Go:
-  - changed-files:
-      - any-glob-to-any-file: '**/*.go'
-
 # 📦 Go dependencies
-Dependencies:
+dependencies:
   - changed-files:
       - any-glob-to-any-file:
           - go.mod
           - go.sum
 
 # 🧪 Go tests
-Tests:
+tests:
   - changed-files:
       - any-glob-to-any-file:
           - '**/*_test.go'
-          - test/**
-          - tests/**
+          - "*test/**"
+          - "*tests/**"
+          - integration/**
+  - title:
+        - '^test(\(.+\))?:'
+        - '^tests(\(.+\))?:'
 
 # 📁 Command-line apps (Golang main packages)
 CLI:
@@ -29,38 +28,51 @@ CLI:
       - any-glob-to-any-file: cmd/**
 
 # 📁 Internal packages (used only within this repo)
-Internal:
+internal:
   - changed-files:
       - any-glob-to-any-file: internal/**
 
 # 📁 Shared packages
-Packages:
+packages:
   - changed-files:
       - any-glob-to-any-file: pkg/**
 
 # 🧠 API or protobuf files
-API:
+api:
   - changed-files:
       - any-glob-to-any-file:
           - api/**
           - proto/**
 
+helm-chart:
+  - changed-files:
+      - any-glob-to-any-file:
+          - charts/**
+          - chart/**
+          -
 # 📚 Documentation and markdown
-Documentation:
+documentation:
   - changed-files:
       - any-glob-to-any-file:
           - docs/**
           - '**/*.md'
+  - title:
+        - '^docs(\(.+\))?:'
+        - '^documentation(\(.+\))?:'
+        - '^doc(\(.+\))?:'
 
 # ⚙️ CI/CD workflows and GitHub Actions
-CI:
+ci-cd:
   - changed-files:
       - any-glob-to-any-file:
           - .github/workflows/**
           - .github/actions/**
+  - title:
+        - '^ci(\(.+\))?:'
+        - '^workflow(\(.+\))?:'
 
 # 🛠️ DevOps, tools, and configuration
-DevOps:
+dev-ops:
   - changed-files:
       - any-glob-to-any-file:
           - Dockerfile
@@ -77,27 +89,59 @@ feature:
       - '^feat'
       - 'feature'
       - 'feat'
+  - title: '^feat(\(.+\))?:'
+  - title:
+        - '^feat(\(.+\))?:'
+        - '^feature(\(.+\))?:'
+        - '^add(\(.+\))?:'
 
 # 🐛 Bugfix branches (e.g., bugfix/..., fix/...)
-bugfix:
+bug:
+  - title:
+      - '^fix(\(.+\))?:'
+      - '^bug(\(.+\))?:'
+      - '^hotfix(\(.+\))?:'
   - head-branch:
       - '^bugfix'
       - '^fix'
       - 'bugfix'
       - 'fix'
 
-# 🚀 Release PRs targeting main
+# 🚀 Release PRs (e.g., feature/..., feat/...)
 release:
-  - base-branch: 'main'
+  - head-branch:
+      - '^release'
+  - title:
+        - '[Rr]elease'
+        - '[Rr]elease[: ]'
+        - 'pre[- ]?[Rr]elease'
 
 # 🔁 Merge PRs to develop branch
 develop:
   - base-branch: 'develop'
 
 # ⚠️ Security-related changes
-Security:
+security:
   - changed-files:
       - any-glob-to-any-file:
           - SECURITY.md
           - '**/vuln*'
           - '**/cve*'
+
+refactor:
+  - title:
+      - '^refactor(\(.+\))?:'
+      - '^improve(\(.+\))?:'
+
+chore:
+  - title:
+      - '^chore(\(.+\))?:'
+      - '^meta(\(.+\))?:'
+
+
+build:
+  - title:
+      - '^build(\(.+\))?:'
+      - '^deps(\(.+\))?:'
+      - '^dependency(\(.+\))?:'
+
