@@ -82,10 +82,6 @@ feature:
 
 # 🐛 Bugfix branches (e.g., bugfix/..., fix/...)
 bug:
-  - title:
-      - '^fix(\(.+\))?:'
-      - '^bug(\(.+\))?:'
-      - '^hotfix(\(.+\))?:'
   - head-branch:
       - '^bugfix'
       - '^fix'
