@@ -1,7 +1,3 @@
-# 🟢 Apply this label to any change in the repo
-unknown:
-  - changed-files:
-      - any-glob-to-any-file: '**'
 
 # 📦 Go dependencies
 dependencies:
