@@ -9,6 +9,9 @@ dependencies:
       - any-glob-to-any-file:
           - go.mod
           - go.sum
+  - title:
+      - '^deps(\(.+\))?:'
+      - '^dependency(\(.+\))?:'
 
 # 🧪 Go tests
 tests:
@@ -18,6 +21,9 @@ tests:
           - "*test/**"
           - "*tests/**"
           - integration/**
+  - title:
+        - '^test(\(.+\))?:'
+        - '^tests(\(.+\))?:'
 
 # 📁 Command-line apps (Golang main packages)
 service:
@@ -53,6 +59,10 @@ documentation:
       - any-glob-to-any-file:
           - docs/**
           - '**/*.md'
+  - title:
+        - '^docs(\(.+\))?:'
+        - '^documentation(\(.+\))?:'
+        - '^doc(\(.+\))?:'
 
 # ⚙️ CI/CD workflows and GitHub Actions
 ci-cd:
@@ -60,6 +70,9 @@ ci-cd:
       - any-glob-to-any-file:
           - .github/workflows/**
           - .github/actions/**
+  - title:
+        - '^ci(\(.+\))?:'
+        - '^workflow(\(.+\))?:'
 
 # 🛠️ DevOps, tools, and configuration
 dev-ops:
@@ -79,9 +92,18 @@ feature:
       - '^feat'
       - 'feature'
       - 'feat'
+  - title: '^feat(\(.+\))?:'
+  - title:
+        - '^feat(\(.+\))?:'
+        - '^feature(\(.+\))?:'
+        - '^add(\(.+\))?:'
 
 # 🐛 Bugfix branches (e.g., bugfix/..., fix/...)
 bug:
+  - title:
+      - '^fix(\(.+\))?:'
+      - '^bug(\(.+\))?:'
+      - '^hotfix(\(.+\))?:'
   - head-branch:
       - '^bugfix'
       - '^fix'
@@ -92,6 +114,10 @@ bug:
 release:
   - head-branch:
       - '^release'
+  - title:
+        - '[Rr]elease'
+        - '[Rr]elease[: ]'
+        - 'pre[- ]?[Rr]elease'
 
 # 🔁 Merge PRs to develop branch
 develop:
@@ -104,4 +130,15 @@ security:
           - SECURITY.md
           - '**/vuln*'
           - '**/cve*'
+
+refactor:
+  - title:
+      - '^refactor(\(.+\))?:'
+      - '^improve(\(.+\))?:'
+
+chore:
+  - title:
+      - '^chore(\(.+\))?:'
+      - '^meta(\(.+\))?:'
+
 
