@@ -1,57 +1,103 @@
-# Source code changes
-core:
-  - go.mod
-  - go.sum
-  - main.go
-  - cmd/**
-  - internal/core/**
-  - pkg/core/**
-  - "*.go"
+# 🟢 Apply this label to any change in the repo
+AnyChange:
+  - changed-files:
+      - any-glob-to-any-file: '**'
 
-cli:
-  - cmd/cli/**
-  - internal/cli/**
-  - pkg/cli/**
+# 🟦 Core Go files
+Go:
+  - changed-files:
+      - any-glob-to-any-file: '**/*.go'
 
-api:
-  - api/**
-  - internal/api/**
-  - pkg/api/**
+# 📦 Go dependencies
+Dependencies:
+  - changed-files:
+      - any-glob-to-any-file:
+          - go.mod
+          - go.sum
 
-# Docs & configs
-docs:
-  - README.md
-  - docs/**
-  - .github/**/*.md
+# 🧪 Go tests
+Tests:
+  - changed-files:
+      - any-glob-to-any-file:
+          - '**/*_test.go'
+          - test/**
+          - tests/**
 
-config:
-  - .env*
-  - config/**
-  - .github/workflows/**
-  - Makefile
-  - Dockerfile
-  - go.mod
-  - go.sum
+# 📁 Command-line apps (Golang main packages)
+CLI:
+  - changed-files:
+      - any-glob-to-any-file: cmd/**
 
-# Testing
-tests:
-  - "**/*_test.go"
-  - test/**
-  - mocks/**
-  - mock/**
-  - .github/actions/test/**
+# 📁 Internal packages (used only within this repo)
+Internal:
+  - changed-files:
+      - any-glob-to-any-file: internal/**
 
-# Dependencies
-dependencies:
-  - go.mod
-  - go.sum
+# 📁 Shared packages
+Packages:
+  - changed-files:
+      - any-glob-to-any-file: pkg/**
 
-# CI/CD
-ci:
-  - .github/workflows/**
-  - .github/actions/**
+# 🧠 API or protobuf files
+API:
+  - changed-files:
+      - any-glob-to-any-file:
+          - api/**
+          - proto/**
 
-# Examples or demos
-examples:
-  - examples/**
-  - demo/**
+# 📚 Documentation and markdown
+Documentation:
+  - changed-files:
+      - any-glob-to-any-file:
+          - docs/**
+          - '**/*.md'
+
+# ⚙️ CI/CD workflows and GitHub Actions
+CI:
+  - changed-files:
+      - any-glob-to-any-file:
+          - .github/workflows/**
+          - .github/actions/**
+
+# 🛠️ DevOps, tools, and configuration
+DevOps:
+  - changed-files:
+      - any-glob-to-any-file:
+          - Dockerfile
+          - docker-compose.*
+          - Makefile
+          - .env*
+          - scripts/**
+          - config/**
+
+# 🌱 Feature branches (e.g., feature/..., feat/...)
+feature:
+  - head-branch:
+      - '^feature'
+      - '^feat'
+      - 'feature'
+      - 'feat'
+
+# 🐛 Bugfix branches (e.g., bugfix/..., fix/...)
+bugfix:
+  - head-branch:
+      - '^bugfix'
+      - '^fix'
+      - 'bugfix'
+      - 'fix'
+
+# 🚀 Release PRs targeting main
+release:
+  - base-branch: 'main'
+
+# 🔁 Merge PRs to develop branch
+develop:
+  - base-branch: 'develop'
+
+# ⚠️ Security-related changes
+Security:
+  - changed-files:
+      - any-glob-to-any-file:
+          - SECURITY.md
+          - '**/vuln*'
+          - '**/cve*'
