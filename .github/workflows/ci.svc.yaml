@@ -10,8 +10,14 @@ jobs:
     runs-on: ubuntu-24.04
 
     steps:
+      - name: Init
+        id: init
+        run: |
+          echo "internal_pr=$([[ '${{ github.event.pull_request.head.repo.full_name }}' == '${{ github.repository }}' ]] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+
       - name: Generate token from GitHub App
         id: generate-token
+        if: steps.init.outputs.internal_pr == 'true'
         uses: tibdex/github-app-token@3beb63f4bd073e61482598c45c71c1019b59b73a # v2.1.0
         with:
           app_id: ${{ secrets.APP_PUSH_TAG_ID }}
@@ -20,7 +26,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
-          token: ${{ steps.generate-token.outputs.token }}
+          token: ${{ steps.generate-token.outputs.token || github.token }}
           fetch-tags: true
           fetch-depth: 0
           submodules: recursive
@@ -39,7 +45,7 @@ jobs:
         with:
           version: 3.x
         env:
-          GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
+          GITHUB_TOKEN:${{ steps.generate-token.outputs.token || github.token }}
 
       - name: Set up environment
         run: |
