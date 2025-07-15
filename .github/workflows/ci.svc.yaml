@@ -13,7 +13,11 @@ jobs:
       - name: Init
         id: init
         run: |
-          echo "internal_pr=$([[ '${{ github.event.pull_request.head.repo.full_name }}' == '${{ github.repository }}' ]] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            echo "internal_pr=$([[ '${{ github.event.pull_request.head.repo.full_name }}' == '${{ github.repository }}' ]] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+          else
+            echo "internal_pr=true" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Generate token from GitHub App
         id: generate-token
