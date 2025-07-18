@@ -99,7 +99,6 @@ jobs:
         id: github_release
         uses: mikepenz/release-changelog-builder-action@c9dc8369bccbc41e0ac887f8fd674f5925d315f7 # v5
         with:
-          mode: "PR"
           configurationJson: |
             {
               "template": "## 📦 Release Changelog\n{{CHANGELOG}}",
@@ -107,32 +106,32 @@ jobs:
                 {
                   "title": "🚀 Features",
                   "labels": ["feature", "enhancement", "feat"],
-                  "pattern": "^(feat|feature|enhancement)"
+                  "pattern": ".*(feat|feature|enhancement).*"
                 },
                 {
                   "title": "🐛 Bug Fixes",
                   "labels": ["bug", "fix", "hotfix"],
-                  "pattern": "^(bug|fix|hotfix)"
+                  "pattern": ".*(bug|fix|hotfix).*"
                 },
                 {
                   "title": "🧰 Maintenance",
                   "labels": ["chore", "refactor", "cleanup"],
-                  "pattern": "^(chore|refactor|cleanup)"
+                  "pattern": ".*(chore|refactor|cleanup).*"
                 },
                 {
                   "title": "📝 Documentation",
                   "labels": ["docs", "documentation"],
-                  "pattern": "^(docs|docu|documentation)"
+                  "pattern": ".*(docs|docu|documentation).*"
                 },
                 {
                   "title": "🔧 CI/CD",
                   "labels": ["ci", "github-actions", "infrastructure"],
-                  "pattern": "^(ci|github-actions|infrastructure)"
+                  "pattern": ".*(ci|github-actions|infrastructure).*"
                 },
                 {
                   "title": "🧱 Build / Dependencies",
                   "labels": ["build"],
-                  "pattern": "^build\\(deps\\)"
+                  "pattern": ".*build\\(deps\\).*"
                 },
                 {
                   "title": "📦 Uncategorized",
@@ -143,7 +142,7 @@ jobs:
               ],
               "pr_template": "- {{TITLE}} (#{{NUMBER}}) by @{{AUTHOR}}",
               "pr_title_cleaner": {
-                "pattern": "^\\[(feat|fix|chore|docs|ci)]\\s*",
+                "pattern": ".*\\[(feat|fix|chore|docs|ci)]\\s.*",
                 "flags": "i"
               },
               "replacers": [
@@ -160,11 +159,13 @@ jobs:
                 }
               ],
               "exclude": {
-                "pattern": "^(chore:\s*release|chore\\(release\\)|release)",
+                "pattern": ".*(chore:\s*release|chore\\(release\\)|release).*",
                 "labels": "release"
               }
               "max_pull_requests": 100,
-              "sort": "mergedAt"
+              "sort": "mergedAt",
+              "includeCommits": true,
+              "includeIssues": true
             }
 
       - name: Create signed tag from main
