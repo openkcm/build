@@ -67,7 +67,7 @@ jobs:
           echo "version=$(task next-release-version)" >> $GITHUB_ENV
 
       - name: Generate Build Version
-        uses: hashicorp/actions-generate-metadata@f6f1ca9cededa05d841a58d171064faf3de8ec74 #main
+        uses: hashicorp/actions-generate-metadata@f1d852525201cb7bbbf031dd2e985fb4c22307fc #main
         with:
           repositoryOwner: ${{ github.repository_owner }}
           repository: ${{ github.repository }}
