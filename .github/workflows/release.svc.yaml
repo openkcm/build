@@ -116,23 +116,33 @@ jobs:
               "categories": [
                 {
                   "title": "🚀 Features",
-                  "labels": ["feature", "enhancement", "feat"]
+                  "labels": ["feature", "enhancement", "feat"],
+                  "pattern": "^(feat|feature|enhancement)"
                 },
                 {
                   "title": "🐛 Bug Fixes",
-                  "labels": ["bug", "fix", "hotfix"]
+                  "labels": ["bug", "fix", "hotfix"],
+                  "pattern": "^(bug|fix|hotfix)"
                 },
                 {
                   "title": "🧰 Maintenance",
-                  "labels": ["chore", "refactor", "cleanup"]
+                  "labels": ["chore", "refactor", "cleanup"],
+                  "pattern": "^(chore|refactor|cleanup)"
                 },
                 {
                   "title": "📝 Documentation",
-                  "labels": ["docs", "documentation"]
+                  "labels": ["docs", "documentation"],
+                  "pattern": "^(docs|docu|documentation)"
                 },
                 {
                   "title": "🔧 CI/CD",
-                  "labels": ["ci", "github-actions", "infrastructure"]
+                  "labels": ["ci", "github-actions", "infrastructure"],
+                  "pattern": "^(ci|github-actions|infrastructure)"
+                },
+                {
+                  "title": "🧱 Build / Dependencies",
+                  "labels": ["build"],
+                  "pattern": "^build\\(deps\\)"
                 },
                 {
                   "title": "📦 Uncategorized",
@@ -160,7 +170,7 @@ jobs:
                 }
               ],
               "exclude": {
-                "pattern": "^chore:\s*release",
+                "pattern": "^(chore:\s*release|chore\\(release\\)|release)",
                 "labels": "release"
               }
               "max_pull_requests": 100,

@@ -160,7 +160,7 @@ jobs:
                 }
               ],
               "exclude": {
-                "pattern": "^chore:\s*release",
+                "pattern": "^(chore:\s*release|chore\\(release\\)|release)",
                 "labels": "release"
               }
               "max_pull_requests": 100,
