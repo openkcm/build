@@ -88,6 +88,9 @@ bug:
 release:
   - head-branch:
       - '^release'
+      - 'release'
+      - '^rel'
+      - 'rel'
 
 # 🔁 Merge PRs to develop branch
 develop:
