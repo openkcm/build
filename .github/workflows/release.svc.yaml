@@ -108,6 +108,8 @@ jobs:
         id: github_release
         uses: mikepenz/release-changelog-builder-action@c9dc8369bccbc41e0ac887f8fd674f5925d315f7 # v5
         with:
+          fromTag: ${{ github.event.before }}
+          toTag: ${{ github.sha }}
           configurationJson: |
             {
               "template": "## 📦 Release Changelog\n{{CHANGELOG}}",
