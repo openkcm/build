@@ -96,10 +96,78 @@ jobs:
 
       - name: Build Changelog
         id: github_release
-        uses: googleapis/release-please-action@v4
+        uses: mikepenz/release-changelog-builder-action@c9dc8369bccbc41e0ac887f8fd674f5925d315f7 # v5
         with:
-          token: ${{ steps.generate-token.outputs.token }}
-          release-type: go
+          fromTag: ${{ github.event.before }}
+          toTag: ${{ github.sha }}
+          configurationJson: |
+            {
+              "template": "## 📦 Release Changelog\n{{CHANGELOG}}",
+              "categories": [
+                {
+                  "title": "🚀 Features",
+                  "labels": ["feature", "enhancement", "feat"],
+                  "pattern": ".*(feat|feature|enhancement).*"
+                },
+                {
+                  "title": "🐛 Bug Fixes",
+                  "labels": ["bug", "fix", "hotfix"],
+                  "pattern": ".*(bug|fix|hotfix).*"
+                },
+                {
+                  "title": "🧰 Maintenance",
+                  "labels": ["chore", "refactor", "cleanup"],
+                  "pattern": ".*(chore|refactor|cleanup).*"
+                },
+                {
+                  "title": "📝 Documentation",
+                  "labels": ["docs", "documentation"],
+                  "pattern": ".*(docs|docu|documentation).*"
+                },
+                {
+                  "title": "🔧 CI/CD",
+                  "labels": ["ci", "github-actions", "infrastructure"],
+                  "pattern": ".*(ci|github-actions|infrastructure).*"
+                },
+                {
+                  "title": "🧱 Build / Dependencies",
+                  "labels": ["build", "dependencies"],
+                  "pattern": ".*(build|deps|dependencies).*"
+                },
+                {
+                  "title": "📦 Uncategorized",
+                  "labels": [],
+                  "empty_content": "No uncategorized PRs.",
+                  "collapse_after": 5
+                }
+              ],
+              "pr_template": "- {{TITLE}} (#{{NUMBER}}) by @{{AUTHOR}}",
+              "pr_title_cleaner": {
+                "pattern": ".*\\[(feat|fix|chore|docs|ci)]\\s.*",
+                "flags": "i"
+              },
+              "replacers": [
+                {
+                  "search": "#(\\d+)",
+                  "replace": "[#\\1](https://github.com/openkcm/${{ env.repo_name }}/pull/\\1)"
+                }
+              ],
+              "label_extractor": [
+                {
+                  "pattern": "^(build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test){1}(\\([\\w\\-\\.]+\\))?(!)?: ([\\w ])+([\\s\\S]*)",
+                  "on_property": "title",
+                  "target": "$1"
+                }
+              ],
+              "exclude": {
+                "pattern": ".*(chore:\s*release|chore\\(release\\)|release).*",
+                "labels": "release"
+              }
+              "max_pull_requests": 100,
+              "sort": "mergedAt",
+              "includeCommits": true,
+              "includeIssues": true
+            }
 
       - name: Create signed tag from main
         run: |
