@@ -105,7 +105,7 @@ jobs:
           format: json
 
       - name: Build Changelog
-        uses: google-github-actions/release-please-action@v4
+        uses: googleapis/release-please-action@v4
         with:
           token: ${{ steps.generate-token.outputs.token }}
           release-type: go
