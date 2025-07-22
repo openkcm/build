@@ -141,8 +141,8 @@ jobs:
                 },
                 {
                   "title": "🧱 Build / Dependencies",
-                  "labels": ["build"],
-                  "pattern": ".*(build|deps).*"
+                  "labels": ["build", "dependencies"],
+                  "pattern": ".*(build|deps|dependencies).*"
                 },
                 {
                   "title": "📦 Uncategorized",
