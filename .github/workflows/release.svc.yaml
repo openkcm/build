@@ -142,7 +142,7 @@ jobs:
                 {
                   "title": "🧱 Build / Dependencies",
                   "labels": ["build"],
-                  "pattern": ".*build\\(deps\\).*"
+                  "pattern": ".*(build|deps).*"
                 },
                 {
                   "title": "📦 Uncategorized",
