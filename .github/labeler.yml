@@ -81,7 +81,7 @@ refactor:
   - head-branch:
       - '^refactor'
       - 'refactor'
-      -
+
 build:
   - head-branch:
       - '^build'
