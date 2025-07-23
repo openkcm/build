@@ -1,12 +1,10 @@
 name: Release
 
 on:
-  pull_request:
-    types:
-      - closed
+  workflow_call:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   tag:
