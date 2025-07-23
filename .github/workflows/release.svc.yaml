@@ -54,8 +54,6 @@ jobs:
         with:
           release-type: go
           token: ${{ steps.generate-token.outputs.token }}
-          config-file: '.release/release-please-config.json'
-          manifest-file: '.release/release-please-manifest.json'
 
       - name: Stop if no release was created
         if: ${{ steps.github_release.outputs.release_created != 'true' }}
