@@ -59,7 +59,8 @@ chore:
       - '**/*.md'
       - '**/*.yml'
       - '**/*.yaml'
-      -
+
+
 # 🌱 Feature branches (e.g., feature/..., feat/...)
 feature:
   - head-branch:
