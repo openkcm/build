@@ -1,11 +1,21 @@
 name: Release
 
 on:
-  workflow_call:
+  pull_request:
+    types:
+      - closed
+
+permissions:
+  contents: write
 
 jobs:
   tag:
-    if: ${{ (github.event.pull_request.merged == true) && (contains(github.event.pull_request.labels.*.name, 'release')) }}
+    if: |
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.merged == true &&
+      contains(github.event.pull_request.title, 'chore(main)') &&
+      contains(github.event.pull_request.title, 'release') &&
+      contains(github.event.pull_request.labels.*.name, 'release')
     runs-on: ubuntu-24.04
     steps:
       - name: Generate token from GitHub App
@@ -39,38 +49,32 @@ jobs:
           git config --global tag.gpgSign true
           git config --global gpg.program gpg
 
-      - name: Ensure initial tag exists
-        run: |
-          if [ -z "$(git tag)" ]; then
-            echo "No tags found. Creating v0.0.0 from main."
-            git fetch origin main --tags
-            git tag -a v0.0.0 origin/main -m "Initial tag" --local-user "$(git config user.signingkey)"
-            git push origin "refs/tags/v0.0.0"
-          else
-            echo "Tags already exist. Skipping initial tag creation."
-          fi
 
-      - name: Checkout build (taskfiles) repo
-        run: |
-          git clone https://github.com/openkcm/build.git ./hack/common
-
-      - name: Install Task
-        uses: arduino/setup-task@b91d5d2c96a56797b48ac1e0e89220bf64044611 #v2.0.0
+      - name: Release Please
+        id: github_release
+        uses: googleapis/release-please-action@v4
         with:
-          version: 3.x
-          repo-token: ${{ steps.generate-token.outputs.token }}
+          release-type: go
+          token: ${{ steps.generate-token.outputs.token }}
 
-      - name: Set up environment
+      - name: Stop if no release was created
+        if: ${{ steps.github_release.outputs.release_created != 'true' }}
         run: |
+          echo "❌ No release was created — a release PR was likely opened instead."
+          echo "ℹ️ Please merge the release PR and re-run the workflow to publish the release."
+          exit 1
+
+      - name: Setup
+        run: |
+          mkdir assets
           echo "repo_name=$(basename "$GITHUB_REPOSITORY")" >> $GITHUB_ENV
-          echo "version=$(task next-release-version)" >> $GITHUB_ENV
 
       - name: Generate Build Version
         uses: hashicorp/actions-generate-metadata@f1d852525201cb7bbbf031dd2e985fb4c22307fc #main
         with:
           repositoryOwner: ${{ github.repository_owner }}
           repository: ${{ github.repository }}
-          version: ${{ env.version }}
+          version: ${{ steps.github_release.outputs.version }}
           product: ${{ env.repo_name }}
           metadataFileName: ${{ github.workspace }}/build_version.json
 
@@ -78,16 +82,21 @@ jobs:
         run: cat ${{ github.workspace }}/build_version.json
 
       - name: Generate SBOM
-        run: |
-          task cyclonedxgomod:app --verbose
+        uses: CycloneDX/gh-gomod-generate-sbom@efc74245d6802c8cefd925620515442756c70d8f #v2.0.0
+        with:
+          version: v1
+          args: mod -json -licenses -output ./assets/sbom.json
+        env:
+          GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
+
 
       - name: Run Trivy sbom vulnerability scanner
         uses: aquasecurity/trivy-action@dc5a429b52fcf669ce959baa2c2dd26090d2a6c4 #v0.32.0
         with:
           scan-type: 'sbom'
-          scan-ref: "${{ env.repo_name }}-sbom.json"
+          scan-ref: "./assets/sbom.json"
           format: 'json'
-          output: 'trivy-sbom-vuln.json'
+          output: './assets/trivy-sbom-vuln.json'
 
       - name: Run trivy repository security scanner
         uses: aquasecurity/trivy-action@dc5a429b52fcf669ce959baa2c2dd26090d2a6c4 #v0.32.0
@@ -95,7 +104,7 @@ jobs:
           token-setup-trivy: ${{ steps.generate-token.outputs.token }}
           scan-type: repository
           format: json
-          output: trivy-repository-vuln.json
+          output: ./assets/trivy-repository-vuln.json
           severity: CRITICAL,HIGH,MEDIUM
 
       - name: Run tfsec security scanner
@@ -104,99 +113,8 @@ jobs:
           github_token: ${{ steps.generate-token.outputs.token }}
           format: json
 
-      - name: Build Changelog
-        id: github_release
-        uses: mikepenz/release-changelog-builder-action@c9dc8369bccbc41e0ac887f8fd674f5925d315f7 # v5
-        with:
-          fromTag: ${{ github.event.before }}
-          toTag: ${{ github.sha }}
-          configurationJson: |
-            {
-              "template": "## 📦 Release Changelog\n{{CHANGELOG}}",
-              "categories": [
-                {
-                  "title": "🚀 Features",
-                  "labels": ["feature", "enhancement", "feat"],
-                  "pattern": ".*(feat|feature|enhancement).*"
-                },
-                {
-                  "title": "🐛 Bug Fixes",
-                  "labels": ["bug", "fix", "hotfix"],
-                  "pattern": ".*(bug|fix|hotfix).*"
-                },
-                {
-                  "title": "🧰 Maintenance",
-                  "labels": ["chore", "refactor", "cleanup"],
-                  "pattern": ".*(chore|refactor|cleanup).*"
-                },
-                {
-                  "title": "📝 Documentation",
-                  "labels": ["docs", "documentation"],
-                  "pattern": ".*(docs|docu|documentation).*"
-                },
-                {
-                  "title": "🔧 CI/CD",
-                  "labels": ["ci", "github-actions", "infrastructure"],
-                  "pattern": ".*(ci|github-actions|infrastructure).*"
-                },
-                {
-                  "title": "🧱 Build / Dependencies",
-                  "labels": ["build", "dependencies"],
-                  "pattern": ".*(build|deps|dependencies).*"
-                },
-                {
-                  "title": "📦 Uncategorized",
-                  "labels": [],
-                  "empty_content": "No uncategorized PRs.",
-                  "collapse_after": 5
-                }
-              ],
-              "pr_template": "- {{TITLE}} (#{{NUMBER}}) by @{{AUTHOR}}",
-              "pr_title_cleaner": {
-                "pattern": ".*\\[(feat|fix|chore|docs|ci)]\\s.*",
-                "flags": "i"
-              },
-              "replacers": [
-                {
-                  "search": "#(\\d+)",
-                  "replace": "[#\\1](https://github.com/openkcm/${{ env.repo_name }}/pull/\\1)"
-                }
-              ],
-              "label_extractor": [
-                {
-                  "pattern": "^(build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test){1}(\\([\\w\\-\\.]+\\))?(!)?: ([\\w ])+([\\s\\S]*)",
-                  "on_property": "title",
-                  "target": "$1"
-                }
-              ],
-              "exclude": {
-                "pattern": ".*(chore:\s*release|chore\\(release\\)|release).*",
-                "labels": "release"
-              }
-              "max_pull_requests": 100,
-              "sort": "mergedAt",
-              "includeCommits": true,
-              "includeIssues": true
-            }
-
-      - name: Create signed tag from main
-        run: |
-          git fetch origin main --tags
-          git tag -a "${{ env.version }}" origin/main -m "Release ${{ env.version }}" --local-user "$(git config user.signingkey)"
-          git push origin "refs/tags/${{ env.version }}"
+      - name: Upload Release Artifact
         env:
           GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
+        run: gh release upload ${{ steps.github_release.outputs.tag_name }} ./assets/**
 
-      - name: Create GitHub release
-        uses: softprops/action-gh-release@72f2c25fcb47643c292f7107632f7a47c1df5cd8 # v2.3.2
-        with:
-          tag_name: ${{ env.version }}
-          name: Release ${{ env.version }}
-          body: ${{steps.github_release.outputs.changelog}}
-          files: |
-            *sbom.json
-            *vuln.json
-          draft: true
-          prerelease: false
-        env:
-          GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}

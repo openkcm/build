@@ -15,21 +15,6 @@ tests:
           - "*tests/**"
           - integration/**
 
-# 📁 Command-line apps (Golang main packages)
-service:
-  - changed-files:
-      - any-glob-to-any-file: cmd/**
-
-# 📁 Internal packages (used only within this repo)
-internal:
-  - changed-files:
-      - any-glob-to-any-file: internal/**
-
-# 📁 Shared packages
-packages:
-  - changed-files:
-      - any-glob-to-any-file: pkg/**
-
 # 🧠 API or protobuf files
 api:
   - changed-files:
@@ -44,18 +29,16 @@ helm-chart:
           - chart/**
 
 # 📚 Documentation and markdown
-documentation:
+docs:
   - changed-files:
       - any-glob-to-any-file:
           - docs/**
-          - '**/*.md'
 
 # ⚙️ CI/CD workflows and GitHub Actions
 ci-cd:
   - changed-files:
       - any-glob-to-any-file:
-          - .github/workflows/**
-          - .github/actions/**
+          - .github/**
 
 # 🛠️ DevOps, tools, and configuration
 dev-ops:
@@ -68,6 +51,15 @@ dev-ops:
           - scripts/**
           - config/**
 
+chore:
+  - any:
+      - 'scripts/**'
+      - '.github/**'
+      - 'Makefile'
+      - '**/*.md'
+      - '**/*.yml'
+      - '**/*.yaml'
+      -
 # 🌱 Feature branches (e.g., feature/..., feat/...)
 feature:
   - head-branch:
@@ -84,7 +76,21 @@ bug:
       - 'bugfix'
       - 'fix'
 
-# 🚀 Release PRs (e.g., feature/..., feat/...)
+refactor:
+  - head-branch:
+      - '^refactor'
+      - 'refactor'
+      -
+build:
+  - head-branch:
+      - '^build'
+      - 'build'
+
+perf:
+  - head-branch:
+      - '^perf'
+      - 'perf'
+
 release:
   - head-branch:
       - '^release'
@@ -92,9 +98,10 @@ release:
       - '^rel'
       - 'rel'
 
-# 🔁 Merge PRs to develop branch
-develop:
-  - base-branch: 'develop'
+test:
+  - head-branch:
+      - '^test'
+      - 'test'
 
 # ⚠️ Security-related changes
 security:
@@ -103,3 +110,4 @@ security:
           - SECURITY.md
           - '**/vuln*'
           - '**/cve*'
+
