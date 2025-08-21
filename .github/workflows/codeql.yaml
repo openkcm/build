@@ -37,6 +37,9 @@ jobs:
           go-version-file: go.mod
           cache: true
 
+      - name: Ensure Go in PATH for CodeQL
+        run: echo "$(go env GOROOT)/bin" >> $GITHUB_PATH
+
       - name: Initialize CodeQL
         uses: github/codeql-action/init@4e828ff8d448a8a6e532957b1811f387a63867e8  # v3.29.4
         with:
