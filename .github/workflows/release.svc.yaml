@@ -67,19 +67,6 @@ jobs:
           mkdir assets
           echo "repo_name=$(basename "$GITHUB_REPOSITORY")" >> $GITHUB_ENV
 
-      - name: Generate Build Version
-        uses: hashicorp/actions-generate-metadata@f1d852525201cb7bbbf031dd2e985fb4c22307fc #main
-        with:
-          branch: ${{ github.ref_name }}
-          repositoryOwner: ${{ github.repository_owner }}
-          repository: ${{ github.repository }}
-          version: ${{ steps.github_release.outputs.version }}
-          product: ${{ env.repo_name }}
-          metadataFileName: ${{ github.workspace }}/build_version.json
-
-      - name: Print Build Version
-        run: cat ${{ github.workspace }}/build_version.json
-
       - name: Generate SBOM
         uses: CycloneDX/gh-gomod-generate-sbom@efc74245d6802c8cefd925620515442756c70d8f #v2.0.0
         with:
