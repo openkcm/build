@@ -23,4 +23,4 @@ BUILD_META=$(cat <<EOF | base64 -w0
 EOF
 )
 
-echo "-ldflags \"-X main.buildInfo=$BUILD_META\""
+echo "-ldflags -X main.buildInfo=$BUILD_META"
