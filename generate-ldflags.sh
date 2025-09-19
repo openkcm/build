@@ -33,7 +33,7 @@ BUILD_TIME="$(date -u +"%Y-%m-%dT%H:%M:%SZ)"
 
 
 ENCODED_BUILD_INFO=$(cat <<EOF | base64 -w0
-json({
+{
   "branch": "$TAG",
   "org": "$ORG",
   "product": "$REPO_NAME",
@@ -44,7 +44,7 @@ json({
   "commitMessage": "$COMMIT_MSG",
   "commitAuthor": "$COMMIT_AUTHOR",
   "commitDate": "$COMMIT_DATE"
-})
+}
 EOF
 )
 
