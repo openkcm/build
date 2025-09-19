@@ -18,9 +18,9 @@ fi
 BUILD_TIME="$(date -u +"+%Y%m%d.%H%M%S")"
 
 
-BUILD_META=$(cat <<EOF
+BUILD_META=$(cat <<EOF | base64 -w0
 {"branch": "refs/tags/$VERSION","org": "$ORG","product": "$REPO","repo": "$REPO_FULL","sha": "$SHA","version": "$VERSION","buildTime": "$BUILD_TIME"}
 EOF
 )
-# --- Final JSON ---
-echo "$BUILD_META"
+
+echo "-ldflags \"-X main.buildInfo=$BUILD_META\""
