@@ -19,4 +19,4 @@ BUILD_TIME="$(date -u +"+%Y%m%d.%H%M%S")"
 
 
 # --- Final JSON ---
-echo "{\\\\"branch\\\\": \\\\"refs/tags/$VERSION\\\\",\\\\"org\\\\": \\\\"$ORG\\\\",\\\\"product\\\\": \\\\"$REPO\\\\",\\\\"repo\\\\": \\\\"$REPO_FULL\\\\",\\\\"sha\\\\": \\\\"$SHA\\\\",\\\\"version\\\\": \\\\"$VERSION\\\\",\\\\"buildTime\\\\": \\\\"$BUILD_TIME\\\\"}"
+echo "{\'branch\': \'refs/tags/$VERSION\',\'org\': \'$ORG\',\'product\': \'$REPO\',\'repo\': \'$REPO_FULL\',\'sha\': \'$SHA\',\'version\': \'$VERSION\',\'buildTime\': \'$BUILD_TIME\'}"
