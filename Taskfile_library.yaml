@@ -39,6 +39,8 @@ vars:
 
   VERSION:
     sh: 'PROJECT_ROOT="{{.ROOT_DIR2}}" {{.TASKFILE_DIR2}}/get-version.sh'
+  BUILD_METADATA_JSON:
+    sh: '{{.TASKFILE_DIR2}}/generate-build-metadata.sh'
   NEXT_RELEASE_VERSION:
     sh: '{{.TASKFILE_DIR2}}/compute-next-release-version.sh git-tags'
   OS:
