@@ -18,7 +18,7 @@ fi
 BUILD_TIME="$(date -u +"+%Y%m%d.%H%M%S")"
 
 
-ENCODED_BUILD_INFO=$(cat <<EOF | base64 -w0
+ENCODED_BUILD_INFO=$(cat <<EOF
 {"branch": "refs/tags/$VERSION","org": "$ORG","product": "$REPO","repo": "$REPO_FULL","sha": "$SHA","version": "$VERSION","buildTime": "$BUILD_TIME"}
 EOF
 )
