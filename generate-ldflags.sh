@@ -7,7 +7,10 @@ SHA=$(git rev-parse HEAD)
 REPO_URL=$(git config --get remote.origin.url)
 ORG=$(echo "$REPO_URL" | sed -E 's#(git@|https://)([^/:]+)[:/]([^/]+)/.*#\3#')
 REPO=$(echo "$REPO_URL" | sed -E 's#.*/([^/]+)\.git#\1#')
-REPO_NAME=$(basename "$REPO_URL")
+REPO_NAME=$(basename -s .git "$REPO_URL")
+COMMIT_MSG=$(git log -1 --pretty=%s)
+COMMIT_AUTHOR=$(git log -1 --pretty="%an <%ae>")
+COMMIT_DATE=$(git log -1 --pretty=%cI)
 
 # --- Version from tags ---
 if [[ -z "${VERSION:-}" ]]; then
@@ -26,8 +29,11 @@ json({
   "repo": "$REPO",
   "sha": "$SHA",
   "version": "$VERSION",
-  "buildTime": "$BUILD_TIME"
-  })
+  "buildTime": "$BUILD_TIME",
+  "commitMessage": "$COMMIT_MSG",
+  "commitAuthor": "$COMMIT_AUTHOR",
+  "commitDate": "$COMMIT_DATE"
+})
 EOF
 )
 
