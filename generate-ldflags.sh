@@ -23,4 +23,4 @@ ENCODED_BUILD_INFO=$(cat <<EOF | base64 -w0
 EOF
 )
 
-echo "-ldflags=-X main.buildInfo=$ENCODED_BUILD_INFO"
+echo "-ldflags \"-X main.buildInfo=$ENCODED_BUILD_INFO\""
