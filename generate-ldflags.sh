@@ -15,7 +15,7 @@ if [[ -z "${VERSION:-}" ]]; then
 fi
 
 # --- Build time---
-BUILD_TIME="$(date -u +"+%Y%m%d.%H%M%S")"
+BUILD_TIME="$(date -u +"%Y-%m-%dT%H:%M:%SZ)"
 
 
 ENCODED_BUILD_INFO=$(cat <<EOF | base64 -w0
