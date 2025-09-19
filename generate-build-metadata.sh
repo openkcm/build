@@ -18,5 +18,9 @@ fi
 BUILD_TIME="$(date -u +"+%Y%m%d.%H%M%S")"
 
 
+BUILD_META=$(cat <<EOF
+{"branch": "refs/tags/$VERSION","org": "$ORG","product": "$REPO","repo": "$REPO_FULL","sha": "$SHA","version": "$VERSION","buildTime": "$BUILD_TIME"}
+EOF
+)
 # --- Final JSON ---
-echo "{\'branch\': \'refs/tags/$VERSION\',\'org\': \'$ORG\',\'product\': \'$REPO\',\'repo\': \'$REPO_FULL\',\'sha\': \'$SHA\',\'version\': \'$VERSION\',\'buildTime\': \'$BUILD_TIME\'}"
+echo "$BUILD_META"
