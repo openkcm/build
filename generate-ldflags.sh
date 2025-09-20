@@ -13,12 +13,22 @@ ORG=$(echo "$REPO_URL" | sed -E 's#(git@|https://)([^/:]+)[:/]([^/]+)/.*#\3#')
 REPO=$(echo "$REPO_URL" | sed -E 's#.*/([^/]+)\.git#\1#')
 REPO_NAME=$(basename -s .git "$REPO_URL")
 
+# --- Tag commit SHA fallback ---
+TAG="$VERSION"
+if git rev-parse -q --verify "refs/tags/$VERSION" >/dev/null; then
+  TAG_COMMIT_SHA=$(git rev-list -n 1 "refs/tags/$VERSION")
+elif [[ -n "${GITHUB_SHA:-}" ]]; then
+  TAG_COMMIT_SHA=$GITHUB_SHA
+else
+  TAG_COMMIT_SHA=$(git rev-parse HEAD)
+fi
+
 # --- Build time ---
 BUILD_TIME="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
 
 # --- Build JSON safely with jq ---
 BUILD_INFO=$(jq -n \
-  --arg branch "refs/tags/$VERSION" \
+  --arg branch "$BRANCH" \
   --arg org "$ORG" \
   --arg product "$REPO_NAME" \
   --arg repo "$REPO" \
