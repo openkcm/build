@@ -15,11 +15,16 @@ REPO_NAME=$(basename -s .git "$REPO_URL")
 
 # --- Tag commit SHA fallback ---
 TAG="$VERSION"
-if git rev-parse -q --verify "refs/tags/$VERSION" >/dev/null; then
+TAG_COMMIT_SHA=""
+
+if git rev-parse -q --verify "refs/tags/$VERSION" >/dev/null 2>&1; then
   TAG_COMMIT_SHA=$(git rev-list -n 1 "refs/tags/$VERSION")
 elif [[ -n "${GITHUB_SHA:-}" ]]; then
   TAG_COMMIT_SHA=$GITHUB_SHA
-else
+fi
+
+# fallback to HEAD if still empty
+if [[ -z "$TAG_COMMIT_SHA" ]]; then
   TAG_COMMIT_SHA=$(git rev-parse HEAD)
 fi
 
