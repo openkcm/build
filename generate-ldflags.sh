@@ -31,19 +31,11 @@ fi
 # --- Build time ---
 BUILD_TIME="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
 
-# --- Build JSON safely with jq ---
-BUILD_INFO=$(jq -n \
-  --arg branch "$BRANCH" \
-  --arg org "$ORG" \
-  --arg product "$REPO_NAME" \
-  --arg repo "$REPO" \
-  --arg sha "$TAG_COMMIT_SHA" \
-  --arg version "$VERSION" \
-  --arg buildTime "$BUILD_TIME" \
-  '{branch, org, product, repo, sha, version, buildTime}'
+# --- Build JSON ---
+ENCODED_BUILD_INFO=$(cat <<EOF | base64 -w0
+{"branch": "$BRANCH","org": "$ORG","product": "$REPO_NAME","repo": "$REPO","sha": "$TAG_COMMIT_SHA","version": "$VERSION","buildTime": "$BUILD_TIME"}
+EOF
 )
-
-ENCODED_BUILD_INFO=$(echo "$BUILD_INFO" | base64 -w0)
 
 # Output for -ldflags
 echo "-X main.buildInfo=$ENCODED_BUILD_INFO"
