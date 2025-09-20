@@ -37,4 +37,4 @@ json({"branch": "$TAG","org": "$ORG","product": "$REPO_NAME","repo": "$REPO","sh
 EOF
 )
 
-echo "-ldflags \"-X main.buildInfo=base64($ENCODED_BUILD_INFO)\""
+echo "\"-X main.buildInfo=base64($ENCODED_BUILD_INFO)\""
