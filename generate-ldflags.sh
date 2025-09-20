@@ -4,7 +4,7 @@ set -euo pipefail
 
 # --- Version from tags ---
 if [[ -z "${VERSION:-}" ]]; then
-  VERSION=$("$COMMON_SCRIPT_DIR/get-version.sh")
+  VERSION=$(realpath "$(dirname $0)/get-version.sh")
 fi
 
 # --- Git values ---
