@@ -7,7 +7,7 @@ SHA=$(git rev-parse HEAD)
 REPO_URL=$(git config --get remote.origin.url)
 ORG=$(echo "$REPO_URL" | sed -E 's#(git@|https://)([^/:]+)[:/]([^/]+)/.*#\3#')
 REPO=$(echo "$REPO_URL" | sed -E 's#.*/([^/]+)\.git#\1#')
-REPO_FULL="$ORG/$REPO"
+REPO_NAME=$(basename "$REPO_URL")
 
 # --- Version from tags ---
 if [[ -z "${VERSION:-}" ]]; then
@@ -19,7 +19,7 @@ BUILD_TIME="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
 
 # --- Build JSON ---
 ENCODED_BUILD_INFO=$(cat <<EOF | base64 -w0
-{"branch": "refs/tags/$VERSION","org": "$ORG","product": "$ORG","repo": "$REPO_FULL","sha": "$SHA","version": "$VERSION","buildTime": "$BUILD_TIME"}
+{"branch": "refs/tags/$VERSION","org": "$ORG","product": "$REPO_NAME","repo": "$REPO","sha": "$SHA","version": "$VERSION","buildTime": "$BUILD_TIME"}
 EOF
 )
 
