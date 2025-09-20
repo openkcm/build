@@ -49,9 +49,6 @@ tasks:
       - COMPONENTS
       - OS
       - ARCH
-    vars:
-      LDFLAGS:
-        sh: "{{.TASKFILE_DIR2}}/generate-ldflags.sh"
     cmds:
     - for:
         var: COMPONENTS
