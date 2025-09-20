@@ -7,17 +7,23 @@ if [[ -z "${VERSION:-}" ]]; then
 fi
 
 # --- Git values ---
-BRANCH=$(git symbolic-ref -q --short HEAD || git describe --tags --exact-match)
 SHA=$(git rev-parse HEAD)
 ORG=$(echo "$REPO_URL" | sed -E 's#(git@|https://)([^/:]+)[:/]([^/]+)/.*#\3#')
 REPO_NAME=$(basename "$REPO_URL")
+
+TAG="refs/tags/$VERSION"
+
+# Get the commit SHA for the tag
+if git rev-parse -q --verify "$TAG" >/dev/null 2>&1; then
+  SHA=$(git rev-list -n 1 "$TAG")
+fi
 
 # --- Build time ---
 BUILD_TIME="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
 
 # --- Build JSON ---
 ENCODED_BUILD_INFO=$(cat <<EOF | base64 -w0
-{"branch": "refs/tags/$VERSION","org": "$ORG","product": "$REPO_NAME","repo": "$REPO_URL","sha": "$SHA","version": "$VERSION","buildTime": "$BUILD_TIME"}
+{"branch": "$TAG","org": "$ORG","product": "$REPO_NAME","repo": "$REPO_URL","sha": "$SHA","version": "$VERSION","buildTime": "$BUILD_TIME"}
 EOF
 )
 
