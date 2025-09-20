@@ -13,6 +13,12 @@ ORG=$(echo "$REPO_URL" | sed -E 's#(git@|https://)([^/:]+)[:/]([^/]+)/.*#\3#')
 REPO=$(echo "$REPO_URL" | sed -E 's#.*/([^/]+)\.git#\1#')
 REPO_NAME=$(basename -s .git "$REPO_URL")
 
+# Extract org and repo name
+if [[ "$REPO_URL" =~ github.com[:/](.+)/(.+)\.git ]]; then
+  ORG="${BASH_REMATCH[1]}"
+  REPO_NAME="${BASH_REMATCH[2]}"
+fi
+
 # --- Tag commit SHA fallback ---
 TAG="$VERSION"
 TAG_COMMIT_SHA=""
