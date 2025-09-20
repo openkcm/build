@@ -49,15 +49,11 @@ tasks:
       - COMPONENTS
       - OS
       - ARCH
-      - LDFLAGS
     cmds:
     - for:
         var: COMPONENTS
         as: COMPONENT
-      cmd: 'CGO_ENABLED=0 GOOS={{.OS}} GOARCH={{.ARCH}} go build -a -o {{.ROOT_DIR2}}/bin/{{.COMPONENT}}.{{.OS}}-{{.ARCH}} {{.LDFLAGS}} {{.ROOT_DIR2}}/cmd/{{.COMPONENT}}/main.go'
-      vars:
-        LDFLAGS:
-          sh: '{{.TASKFILE_DIR2}}/generate-ldflags.sh'
+      cmd: 'CGO_ENABLED=0 GOOS={{.OS}} GOARCH={{.ARCH}} go build -a -o {{.ROOT_DIR2}}/bin/{{.COMPONENT}}.{{.OS}}-{{.ARCH}} {{.TASKFILE_DIR2}}/generate-ldflags.sh {{.ROOT_DIR2}}/cmd/{{.COMPONENT}}/main.go'
 
 
 
