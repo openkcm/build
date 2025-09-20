@@ -14,7 +14,13 @@ REPO=$(echo "$REPO_URL" | sed -E 's#.*/([^/]+)\.git#\1#')
 REPO_NAME=$(basename -s .git "$REPO_URL")
 
 TAG="$VERSION"
-TAG_COMMIT_SHA=$(git rev-list -n 1 "$TAG")
+if git rev-parse -q --verify "refs/tags/$VERSION" >/dev/null; then
+  TAG_COMMIT_SHA=$(git rev-list -n 1 "refs/tags/$VERSION")
+elif [[ -n "${GITHUB_SHA:-}" ]]; then
+  TAG_COMMIT_SHA=$GITHUB_SHA
+else
+  TAG_COMMIT_SHA=$(git rev-parse HEAD)
+fi
 
 # Extract commit metadata from the tag commit
 COMMIT_MSG=$(git log -1 --pretty=%s "$TAG_COMMIT_SHA")
