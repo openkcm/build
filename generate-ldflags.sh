@@ -9,27 +9,15 @@ fi
 # --- Git values ---
 BRANCH=$(git symbolic-ref -q --short HEAD || git describe --tags --exact-match)
 SHA=$(git rev-parse HEAD)
-REPO_URL=$(git config --get remote.origin.url)
 ORG=$(echo "$REPO_URL" | sed -E 's#(git@|https://)([^/:]+)[:/]([^/]+)/.*#\3#')
-REPO=$(echo "$REPO_URL" | sed -E 's#.*/([^/]+)\.git#\1#')
 REPO_NAME=$(basename "$REPO_URL")
-
-
-TARGET_REPO_PATH="${ROOT_DIR2:-.}"  # fallback to current dir if ROOT_DIR2 not set
-TARGET_REPO_URL=$(git -C "$TARGET_REPO_PATH" config --get remote.origin.url)
-
-if [[ "$TARGET_REPO_URL" =~ github.com[:/](.+)/(.+)\.git ]]; then
-  ORG="${BASH_REMATCH[1]}"
-  REPO_NAME="${BASH_REMATCH[2]}"
-  REPO="$REPO_NAME"
-fi
 
 # --- Build time ---
 BUILD_TIME="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
 
 # --- Build JSON ---
 ENCODED_BUILD_INFO=$(cat <<EOF | base64 -w0
-{"branch": "refs/tags/$VERSION","org": "$ORG","product": "$REPO_NAME","repo": "$REPO","sha": "$SHA","version": "$VERSION","buildTime": "$BUILD_TIME"}
+{"branch": "refs/tags/$VERSION","org": "$ORG","product": "$REPO_NAME","repo": "$REPO_URL","sha": "$SHA","version": "$VERSION","buildTime": "$BUILD_TIME"}
 EOF
 )
 
