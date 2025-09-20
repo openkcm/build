@@ -24,4 +24,4 @@ EOF
 )
 
 # Output for -ldflags
-echo "-X main.buildInfo=$ENCODED_BUILD_INFO"
+echo "-X main.buildInfo=base64($ENCODED_BUILD_INFO)"
