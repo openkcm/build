@@ -34,30 +34,13 @@ jobs:
 
       - name: Checkout build (taskfiles) repo
         run: |
-          git clone https://github.com/openkcm/build.git ./hack/common
+          git clone --branch main --single-branch https://github.com/openkcm/build.git ./hack/common
 
       - name: Install Task
         uses: arduino/setup-task@b91d5d2c96a56797b48ac1e0e89220bf64044611 #v2.0.0
         with:
           version: 3.x
           repo-token: ${{ steps.generate-token.outputs.token }}
-
-      - name: Set up environment
-        run: |
-          echo "repo_name=$(basename "$GITHUB_REPOSITORY")" >> $GITHUB_ENV
-          echo "version=$(task version)" >> $GITHUB_ENV
-
-      - name: Generate Build Version
-        uses: hashicorp/actions-generate-metadata@f1d852525201cb7bbbf031dd2e985fb4c22307fc #main
-        with:
-          repositoryOwner: ${{ github.repository_owner }}
-          repository: ${{ github.repository }}
-          version: ${{ env.version }}
-          product: ${{ env.repo_name }}
-          metadataFileName: ${{ github.workspace }}/build_version.json
-
-      - name: Print Build Version
-        run: cat ${{ github.workspace }}/build_version.json
 
       - name: Run trivy repository security scanner
         uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8 #v0.33.1
