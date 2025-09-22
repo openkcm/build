@@ -55,8 +55,6 @@ tasks:
         as: COMPONENT
       cmd: 'CGO_ENABLED=0 GOOS={{.OS}} GOARCH={{.ARCH}} go build -a -o {{.ROOT_DIR2}}/bin/{{.COMPONENT}}.{{.OS}}-{{.ARCH}} -ldflags "{{.LDFLAGS}}" {{.ROOT_DIR2}}/cmd/{{.COMPONENT}}/main.go'
 
-
-
   build-multi-raw:
     desc: "  Build multi-platform binaries. Skips code generation/validation tasks."
     requires:
