@@ -13,10 +13,13 @@ jobs:
       - name: Init
         id: init
         run: |
-          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-            echo "internal_pr=$([[ '${{ github.event.pull_request.head.repo.full_name }}' == '${{ github.repository }}' ]] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+          if [[ "${GITHUB_EVENT_NAME}" == "pull_request" ]]; then
+            internal_pr=false
+            [[ "${GITHUB_EVENT_PULL_REQUEST_HEAD_REPO_FULL_NAME}" == "${GITHUB_REPOSITORY}" ]] && internal_pr=true
           else
-            echo "internal_pr=true" >> "$GITHUB_OUTPUT"
+            internal_pr=true
+          fi
+          echo "internal_pr=${internal_pr}" >> "$GITHUB_OUTPUT"
 
       - name: Stop if not internal PR
         if: steps.init.outputs.internal_pr != 'true'
