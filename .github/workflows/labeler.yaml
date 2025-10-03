@@ -21,12 +21,6 @@ jobs:
           fi
           echo "internal_pr=${internal_pr}" >> "$GITHUB_OUTPUT"
 
-      - name: Stop if not internal PR
-        if: steps.init.outputs.internal_pr != 'true'
-        run: |
-          echo "Not an internal PR, stopping workflow"
-          exit 0
-
       - name: Generate token from GitHub App
         id: generate-token
         if: steps.init.outputs.internal_pr == 'true' && github.actor != 'dependabot[bot]'
@@ -59,6 +53,7 @@ jobs:
 #          GITHUB_TOKEN: ${{ steps.generate-token.outputs.token || github.token }}
 
       - name: Run labeler
+        if: steps.init.outputs.internal_pr == 'true'
         uses: actions/labeler@634933edcd8ababfe52f92936142cc22ac488b1b #v6.0.1
         with:
           repo-token: ${{ steps.generate-token.outputs.token || github.token }}
