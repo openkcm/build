@@ -13,9 +13,9 @@ jobs:
       - name: Init
         id: init
         run: |
-          if [[ "${GITHUB_EVENT_NAME}" == "pull_request" ]]; then
-            internal_pr=false
-            [[ "${GITHUB_EVENT_PULL_REQUEST_HEAD_REPO_FULL_NAME}" == "${GITHUB_REPOSITORY}" ]] && internal_pr=true
+          internal_pr=false
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            [[ '${{ github.event.pull_request.head.repo.full_name }}' == '${{ github.repository }}' ]] && internal_pr=true || internal_pr=false
           else
             internal_pr=true
           fi
