@@ -3,11 +3,16 @@ name: ci
 on:
   workflow_call:
     inputs:
-      skip_tests:
-        description: "Skip running tests"
+      run_task_tests:
+        description: "Run task tests"
         required: false
         type: boolean
         default: true
+      run_makefile_tests:
+        description: "Run makefile tests"
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -60,7 +65,11 @@ jobs:
       - name: task validate
         run: task validate --verbose
 
-      - name: task test
-        if: ${{ !inputs.skip_tests }}
+      - name: run task tests
+        if: ${{ inputs.run_task_tests }}
         run: task test --verbose
+
+      - name: run makefile tests
+        if: ${{ inputs.run_makefile_tests }}
+        run: make test
 
