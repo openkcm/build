@@ -1,6 +1,12 @@
 name: ci
 on:
   workflow_call:
+    inputs:
+      skip_tests:
+        description: "Skip running tests"
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -54,5 +60,6 @@ jobs:
         run: task validate --verbose
 
       - name: task test
+        if: ${{ !inputs.skip_tests }}
         run: task test --verbose
 
