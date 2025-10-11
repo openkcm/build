@@ -64,11 +64,11 @@ jobs:
       - name: task validate
         run: task validate --verbose
 
-      - name: run task tests
+      - name: task unit tests
         if: ${{ inputs.run_task_tests }}
         run: task test --verbose
 
-      - name: run makefile tests
+      - name: makefile advanced tests
         if: ${{ inputs.run_makefile_tests }}
         run: make test
 
