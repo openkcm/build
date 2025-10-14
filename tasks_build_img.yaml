@@ -159,10 +159,26 @@ tasks:
       if [ -z "$COSIGN_PRIVATE_KEY" ] || [ -z "$COSIGN_PASSWORD" ]; then
         echo "⚠️  Warning: Missing COSIGN_PRIVATE_KEY or COSIGN_PASSWORD — skipping signing." >&2
       else
+        IMAGE="{{.IMAGE_BASE}}/{{.COMPONENT}}:{{.VERSION}}-{{.OS}}-{{.ARCH}}"
+        DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' "$IMAGE" || true)
+        if [ -z "$DIGEST" ] && [ -z "$IMAGE" ]; then
+          echo "❌ No image to sign" >&2
+          exit 1
+        fi
+      
+        echo "🔏 Signing image $IMAGE"
+        umask 077
+      
         trap 'rm -f "{{.ROOT_DIR2}}/cosign.key"' EXIT
         echo "$COSIGN_PRIVATE_KEY" > "{{.ROOT_DIR2}}/cosign.key"
-        cosign sign --key "{{.ROOT_DIR2}}/cosign.key" "{{.IMAGE_BASE}}/{{.COMPONENT}}:{{.VERSION}}-{{.OS}}-{{.ARCH}}"
-        echo "✅ Successfully signed image: {{.IMAGE_BASE}}/{{.COMPONENT}}:{{.VERSION}}-{{.OS}}-{{.ARCH}}"
+       
+        if [ -n "$DIGEST" ]; then
+          cosign sign --yes --key "{{.ROOT_DIR2}}/cosign.key" "$DIGEST"
+        else
+          cosign sign --yes --tlog-upload=false --key "{{.ROOT_DIR2}}/cosign.key" "$IMAGE"
+        fi
+        SIGNED_REF=${DIGEST:-$IMAGE}
+        echo "✅ Successfully signed image: $SIGNED_REF"
       fi
     internal: true
 
