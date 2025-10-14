@@ -2,11 +2,6 @@ name: Publish
 
 on:
   workflow_call:
-    secrets:
-      COSIGN_PRIVATE_KEY:
-        required: true
-      COSIGN_PASSWORD:
-        required: true
 
 permissions:
   packages: write
@@ -56,9 +51,6 @@ jobs:
           github_token:  ${{ steps.generate-token.outputs.token }}
           format: json
 
-      - name: Install Cosign
-        uses: sigstore/cosign-installer@d7543c93d881b35a8faa02e8e3605f69b7a1ce62 # v3.1.0
-
       - name: Set up QEMU
         uses: docker/setup-qemu-action@29109295f81e9208d7d86ff1c6c12d2833863392 # v3.6.0
 
@@ -86,8 +78,5 @@ jobs:
           go-version-file: go.mod
 
       - name: Build and Push Images
-        env:
-          COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
-          COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
         run: |
           task build:img:all --verbose
