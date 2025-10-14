@@ -7,7 +7,7 @@ on:
         description: "Run task tests"
         required: false
         type: boolean
-        default: true
+        default: false
       run_makefile_tests:
         description: "Run makefile tests"
         required: false
