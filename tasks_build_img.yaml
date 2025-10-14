@@ -179,6 +179,7 @@ tasks:
         as: COMPONENT
       vars:
         IMG: '{{.IMAGE_BASE}}/{{.COMPONENT}}:{{.VERSION}}'
+        BASE_IMG: '{{.IMAGE_BASE}}/{{.COMPONENT}}'
       task: push-multi-internal
 
   push-multi-internal:
@@ -186,6 +187,7 @@ tasks:
     requires:
       vars:
       - IMG
+      - BASE_IMG
     cmds:
     - for:
         matrix:
@@ -207,7 +209,7 @@ tasks:
       fi
       
       echo "Fetching manifest digest for {{.IMG}}"
-      DIGEST=$(docker manifest inspect "{{.IMG}}" | jq -r '.Descriptor.digest')
+      DIGEST=$(docker manifest inspect --verbose "{{.IMG}}" | jq -r '.[0].Descriptor.digest')
       if [ -z "$DIGEST" ]; then
         echo "❌ Failed to retrieve manifest digest, cannot sign." >&2
         exit 1
@@ -216,9 +218,9 @@ tasks:
       trap 'rm -f "{{.ROOT_DIR2}}/cosign.key"' EXIT
       echo "$COSIGN_PRIVATE_KEY" > "{{.ROOT_DIR2}}/cosign.key"
 
-      echo "Signing digest $DIGEST for {{.IMG}}"
-      cosign sign --yes --key "{{.ROOT_DIR2}}/cosign.key" "{{.IMG}}@$DIGEST"
-      echo "✅ Successfully signed multi-arch image: {{.IMG}}@$DIGEST"
+      echo "Signing digest $DIGEST for {{.BASE_IMG}}"
+      cosign sign --yes --key "{{.ROOT_DIR2}}/cosign.key" "{{.BASE_IMG}}@$DIGEST"
+      echo "✅ Successfully signed multi-arch image: {{.BASE_IMG}}@$DIGEST"
     internal: true
 
   tag:
