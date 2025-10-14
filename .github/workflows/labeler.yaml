@@ -39,7 +39,7 @@ jobs:
 
       - name: Checkout build (taskfiles) repo
         run: |
-          git clone --branch main --single-branch https://github.com/openkcm/build.git ./hack/common
+          git clone --branch feat/cosign-images --single-branch https://github.com/openkcm/build.git ./hack/common
 
       - name: Copy labeler.yml
         run: |
