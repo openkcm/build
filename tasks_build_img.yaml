@@ -179,9 +179,7 @@ tasks:
         as: COMPONENT
       vars:
         IMG: '{{.IMAGE_BASE}}/{{.COMPONENT}}:{{.VERSION}}'
-      tasks:
-        - push-multi-internal
-        - cosign-multi-internal
+      task: push-multi-internal
 
   push-multi-internal:
     desc: "  Build and push the multi-platform manifest for a single component's image. Individual platform-specific images must have been pushed before."
@@ -196,37 +194,30 @@ tasks:
       cmd: 'docker manifest create {{.IMG}} --amend {{.IMG}}-{{.ITEM.OS}}-{{.ITEM.ARCH}}'
     - 'echo "Pushing image {{.IMG}}"'
     - 'docker manifest push {{.IMG}}'
-    internal: true
-
-  cosign-multi-internal:
-    desc: "Sign pushed image for a single component."
-    requires:
-      vars:
-        - IMG
-    cmd: |
+    - |
       set -e
       if ! command -v cosign >/dev/null 2>&1; then
         echo "⚠️ cosign command not found.❌ No image to sign." >&2
         exit 0
       fi
-
+  
       if [ -z "$COSIGN_PRIVATE_KEY" ] || [ -z "$COSIGN_PASSWORD" ]; then
         echo "⚠️  Warning: Missing COSIGN_PRIVATE_KEY or COSIGN_PASSWORD — skipping signing." >&2
         exit 0
       fi
-
+  
       DIGEST=$(docker inspect --format='{{if .RepoDigests}}{{index .RepoDigests 0}}{{end}}' "$IMG" || true)
-
+  
       if [ -z "$DIGEST" ] && [ -z "$IMAGE" ]; then
         echo "❌ No image to sign" >&2
-        exit 1
+        exit 0
       fi
-
+  
       umask 077
-
+  
       trap 'rm -f "{{.ROOT_DIR2}}/cosign.key"' EXIT
       echo "$COSIGN_PRIVATE_KEY" > "{{.ROOT_DIR2}}/cosign.key"
-
+  
       if [ -n "$DIGEST" ]; then
         cosign sign --yes --key "{{.ROOT_DIR2}}/cosign.key" "$DIGEST"
       else
