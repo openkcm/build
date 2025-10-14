@@ -138,7 +138,9 @@ tasks:
         COMPONENT: '{{.ITEM}}'
         OS: '{{.IMAGE_OS}}'
         ARCH: '{{.ARCH}}'
-      task: push-internal
+      tasks:
+        - push-internal
+        - cosign-internal
 
   push-internal:
     desc: "Push the image for a single component. Image must already have been built."
@@ -154,32 +156,49 @@ tasks:
     cmds:
     - 'echo "Pushing image {{.COMPONENT}}:{{.VERSION}}-{{.OS}}-{{.ARCH}}"'
     - 'docker push {{.IMAGE_BASE}}/{{.COMPONENT}}:{{.VERSION}}-{{.OS}}-{{.ARCH}}'
-    - |
+    internal: true
+
+  cosign-internal:
+    desc: "Sign pushed image for a single component."
+    requires:
+      vars:
+        - COMPONENT
+        - VERSION
+        - OS
+        - ARCH
+    cmd: |
       set -e
+      if ! command -v cosign >/dev/null 2>&1; then
+        echo "⚠️ cosign command not found.❌ No image to sign." >&2
+        exit 0
+      fi
+
       if [ -z "$COSIGN_PRIVATE_KEY" ] || [ -z "$COSIGN_PASSWORD" ]; then
         echo "⚠️  Warning: Missing COSIGN_PRIVATE_KEY or COSIGN_PASSWORD — skipping signing." >&2
-      else
-        IMAGE="{{.IMAGE_BASE}}/{{.COMPONENT}}:{{.VERSION}}-{{.OS}}-{{.ARCH}}"
-        DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' "$IMAGE" || true)
-        if [ -z "$DIGEST" ] && [ -z "$IMAGE" ]; then
-          echo "❌ No image to sign" >&2
-          exit 1
-        fi
-      
-        echo "🔏 Signing image $IMAGE"
-        umask 077
-      
-        trap 'rm -f "{{.ROOT_DIR2}}/cosign.key"' EXIT
-        echo "$COSIGN_PRIVATE_KEY" > "{{.ROOT_DIR2}}/cosign.key"
-       
-        if [ -n "$DIGEST" ]; then
-          cosign sign --yes --key "{{.ROOT_DIR2}}/cosign.key" "$DIGEST"
-        else
-          cosign sign --yes --tlog-upload=false --key "{{.ROOT_DIR2}}/cosign.key" "$IMAGE"
-        fi
-        SIGNED_REF=${DIGEST:-$IMAGE}
-        echo "✅ Successfully signed image: $SIGNED_REF"
+        exit 0
       fi
+    
+      IMAGE="{{.IMAGE_BASE}}/{{.COMPONENT}}:{{.VERSION}}-{{.OS}}-{{.ARCH}}"
+      DIGEST=$(docker inspect --format='{{if .RepoDigests}}{{index .RepoDigests 0}}{{end}}' "$IMAGE" || true)
+
+      if [ -z "$DIGEST" ] && [ -z "$IMAGE" ]; then
+        echo "❌ No image to sign" >&2
+        exit 1
+      fi
+
+      echo "🔏 Signing image $IMAGE"
+      umask 077
+
+      trap 'rm -f "{{.ROOT_DIR2}}/cosign.key"' EXIT
+      echo "$COSIGN_PRIVATE_KEY" > "{{.ROOT_DIR2}}/cosign.key"
+
+      if [ -n "$DIGEST" ]; then
+        cosign sign --yes --key "{{.ROOT_DIR2}}/cosign.key" "$DIGEST"
+      else
+        cosign sign --yes --tlog-upload=false --key "{{.ROOT_DIR2}}/cosign.key" "$IMAGE"
+      fi
+      SIGNED_REF=${DIGEST:-$IMAGE}
+      echo "✅ Successfully signed image: $SIGNED_REF"
     internal: true
 
   push-multi:
