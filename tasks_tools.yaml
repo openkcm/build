@@ -246,14 +246,16 @@ tasks:
       - '"{{.CRANE}}" version | grep -q "{{.CRANE_VERSION | trimPrefix "v"}}"'
     vars:
       CRANE_VERSION: '{{ env "CRANE_VERSION" | default ( .CRANE_VERSION | default "v0.20.6" ) }}'
-      OS_UC: '{{ .OS | capitalize }}'       # e.g., linux -> Linux
-      ARCH_MAP: '{{ .ARCH | replace "amd64" "x86_64" }}' # e.g., amd64 -> x86_64
-      ARCHIVE_NAME: 'go-containerregistry_{{.OS_UC}}_{{.ARCH_MAP}}.tar.gz'
       tmpdir:
         sh: 'mktemp -d'
     cmds:
-      - 'wget -O "{{.tmpdir}}/{{.ARCHIVE_NAME}}" "https://github.com/google/go-containerregistry/releases/download/{{.CRANE_VERSION}}/{{.ARCHIVE_NAME}}"'
-      - 'tar -zxvf "{{.tmpdir}}/{{.ARCHIVE_NAME}}" -C "{{.tmpdir}}/" crane'
+      - |
+        set -e
+        ARCHIVE_NAME=$(echo "go-containerregistry_{{.OS}}_{{.ARCH}}.tar.gz" | sed 's/linux/Linux/; s/amd64/x86_64/')
+        ARCHIVE_PATH="{{.tmpdir}}/$ARCHIVE_NAME"
+        trap 'rm -f "$ARCHIVE_PATH"' EXIT
+        wget -O "$ARCHIVE_PATH" "https://github.com/google/go-containerregistry/releases/download/{{.CRANE_VERSION}}/$ARCHIVE_NAME"
+        tar -zxvf "$ARCHIVE_PATH" -C "{{.tmpdir}}" crane
       - 'mv "{{.tmpdir}}/crane" "{{.CRANE}}"'
       - 'chmod +x "{{.CRANE}}"'
     internal: true
