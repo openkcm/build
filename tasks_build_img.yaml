@@ -197,6 +197,11 @@ tasks:
       - tools:localtmp
     vars:
       IMAGE_SIGNING_ENABLED: '{{ env "IMAGE_SIGNING_ENABLED" | default "false" }}'
+      COMMIT_SHA: '{{ env "COMMIT_SHA" }}'
+      REPOSITORY: '{{ env "REPOSITORY" }}'
+      GHA_WORKFLOW_NAME: '{{ env "GHA_WORKFLOW_NAME" }}'
+      RUN_ID: '{{ env "RUN_ID" }}'
+      BUILD_TIME: '{{ env "BUILD_TIME" }}'
     cmds:
     - for:
         matrix:
@@ -221,12 +226,7 @@ tasks:
       echo "$COSIGN_PRIVATE_KEY" > "{{.ROOT_DIR2}}/cosign.key"
   
       DIGEST=$({{.CRANE}} digest {{.IMG}})
-      COMMIT_SHA="${{ github.sha }}"
-      REPOSITORY="${{ github.repository }}"
-      RUN_ID="${{ github.run_id }}"
-      BUILD_TIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-      
-      cat << EOF > provenance.json
+      cat << EOF > attestation.json
       {
         "_type": "https://in-toto.io/Statement/v0.1",
         "subject": [
@@ -240,23 +240,25 @@ tasks:
         "predicateType": "https://slsa.dev/provenance/v0.2",
         "predicate": {
           "builder": {
-            "id": "https://github.com/$REPOSITORY/.github/workflows/{{.GHA_WORKFLOW_NAME}}"
+            "id": "https://github.com/{{.REPOSITORY}}/.github/workflows/{{.GHA_WORKFLOW_NAME}}"
           },
           "metadata": {
-            "buildInvocationId": "$RUN_ID",
-            "buildStartedOn": "$BUILD_TIME"
+            "buildInvocationId": "{{.RUN_ID}}",
+            "buildStartedOn": "{{.BUILD_TIME}}"
           },
           "materials": [
             {
-              "uri": "git+https://github.com/$REPOSITORY@$COMMIT_SHA",
+              "uri": "git+https://github.com/{{.REPOSITORY}}@{{.COMMIT_SHA}}",
               "digest": {
-                "sha1": "$COMMIT_SHA"
+                "sha1": "{{.COMMIT_SHA}}"
               }
             }
           ]
         }
       }
       EOF
+      
+      {{.COSIGN}} sign --yes --key "{{.ROOT_DIR2}}/cosign.key" "{{.BASE_IMG}}@$DIGEST"
       {{.COSIGN}} attest --key "{{.ROOT_DIR2}}/cosign.key" --predicate ./attestation.json --type slsaprovenance "{{.BASE_IMG}}@$DIGEST"
       echo "✅ Successfully signed multi-arch image: {{.BASE_IMG}}@$DIGEST"
     internal: true
