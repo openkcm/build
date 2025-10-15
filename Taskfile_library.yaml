@@ -64,6 +64,8 @@ vars:
   HELM: '{{ .HELM | default (print .LOCALBIN "/helm") }}'
   YAML2JSON: '{{ .YAML2JSON | default (print .LOCALBIN "/yaml2json") }}'
   OCM: '{{ .OCM | default (print .LOCALBIN "/ocm") }}'
+  CRANE: '{{ .CRANE | default (print .LOCALBIN "/crane") }}'
+  COSIGN: '{{ .COSIGN | default (print .LOCALBIN "/cosign") }}'
   ENVTEST: '{{ .ENVTEST | default (print .LOCALBIN "/setup-envtest") }}'
 
   # separator strings
@@ -76,6 +78,8 @@ vars:
   BLD_IMG_SEP: "IMAGE BUILD --- img ------------------------------------------------------------"
   BLD_HLM_SEP: "HELM CHART BUILD --- helm ------------------------------------------------------"
   BLD_OCM_SEP: "OCM COMPONENT BUILD --- ocm ----------------------------------------------------"
+  BLD_CRANE_SEP: "CRANE BUILD --- crane ----------------------------------------------------"
+  BLD_COSIGN_SEP: "COSIGN BUILD --- cosign ----------------------------------------------------"
   RLS_SEP:     "RELEASE MANAGEMENT ### release / rls / r #######################################"
   CYCLONEDXGOMOD_SEP: "CycloneDX Software Bill of Materials (SBOM) from Go modules ### cyclonedxgomod / cdxgomod / c #######################################"
 
