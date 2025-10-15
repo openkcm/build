@@ -3,17 +3,23 @@ name: Publish
 on:
   workflow_call:
     secrets:
+      OCM_PRIVATE_KEY:
+        required: false
       COSIGN_PRIVATE_KEY:
-        required: true
+        required: false
       COSIGN_PASSWORD:
-        required: true
-    envs:
-      IMAGE_SIGNING_ENABLED:
+        required: false
+    inputs:
+      image_signing_enabled:
+        description: 'Enable image signing (true|false)'
         required: false
         default: false
-      OCM_SIGNING_ENABLED:
+        type: boolean # Use boolean type
+      ocm_signing_enabled:
+        description: 'Enable OCM signing (true|false)'
         required: false
         default: false
+        type: boolean # Use boolean type
 
 permissions:
   packages: write
@@ -93,6 +99,7 @@ jobs:
         env:
           COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
           COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
+          IMAGE_SIGNING_ENABLED: ${{ inputs.image_signing_enabled }}
         run: |
           task build:img:all --verbose
 
@@ -101,5 +108,8 @@ jobs:
           task build:helm:all --verbose
 
       - name: Build and Push OCM Component
+        env:
+          OCM_PRIVATE_KEY: ${{ secrets.OCM_PRIVATE_KEY }}
+          OCM_SIGNING_ENABLED: ${{ inputs.ocm_signing_enabled }}
         run: |
           task build:ocm:all --verbose
