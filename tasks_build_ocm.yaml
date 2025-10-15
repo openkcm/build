@@ -97,7 +97,7 @@ tasks:
     cmds:
     - |
       set -eu
-      if [ "${OCM_SIGNING_ENABLED:-false}" = "true" ]; then
+      if [ "${OCM_SIGNING_ENABLED:-false}" != "true" ]; then
         echo "⚠️ OCM component signing is disabled. Skipping." >&2
         exit 0
       fi
