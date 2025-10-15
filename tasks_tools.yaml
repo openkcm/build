@@ -93,8 +93,6 @@ tasks:
     - localbin
     vars:
       CYCLONEDXGOMOD_VERSION: '{{ env "CYCLONEDXGOMOD_VERSION" | default ( .CYCLONEDXGOMOD_VERSION | default "v1.9.0" ) }}'
-      CYCLONEDXGOMOD_OS:
-        sh: 'if [[ "{{.OS}}" == "darwin" ]]; then echo "macos"; else echo "{{.OS}}"; fi'
       tmpdir:
         sh: 'mktemp -d'
     status:
@@ -103,7 +101,7 @@ tasks:
           {{.CYCLONEDXGOMOD}} version | grep '^Version:' | awk '{print $2}' | grep -q "{{.CYCLONEDXGOMOD_VERSION | trimPrefix "v" }}"
     cmds:
       - 'mkdir -p {{.tmpdir}}/cyclonedx-gomod-unpacked'
-      - 'curl -sfL "https://github.com/CycloneDX/cyclonedx-gomod/releases/download/{{.CYCLONEDXGOMOD_VERSION}}/cyclonedx-gomod_{{.CYCLONEDXGOMOD_VERSION | trimPrefix "v"}}_{{.CYCLONEDXGOMOD_OS}}_{{.ARCH}}.tar.gz" --output "{{.tmpdir}}/cyclonedx-gomod.tar.gz"'
+      - 'curl -sfL "https://github.com/CycloneDX/cyclonedx-gomod/releases/download/{{.CYCLONEDXGOMOD_VERSION}}/cyclonedx-gomod_{{.CYCLONEDXGOMOD_VERSION | trimPrefix "v"}}_{{.OS}}_{{.ARCH}}.tar.gz" --output "{{.tmpdir}}/cyclonedx-gomod.tar.gz"'
       - 'tar -xzf "{{.tmpdir}}/cyclonedx-gomod.tar.gz" --directory "{{.tmpdir}}/cyclonedx-gomod-unpacked"'
       - 'mv "{{.tmpdir}}/cyclonedx-gomod-unpacked/cyclonedx-gomod" "{{.CYCLONEDXGOMOD}}"'
       - 'chmod +x "{{.CYCLONEDXGOMOD}}"'
@@ -141,13 +139,11 @@ tasks:
       - localbin
     vars:
       YQ_VERSION: '{{ env "YQ_VERSION" | default ( .YQ_VERSION | default "v4.45.4" ) }}'
-      YQ_OS:
-        sh: 'if [[ "{{.OS}}" == "darwin" ]]; then echo "macos"; else echo "{{.OS}}"; fi' # jq uses 'macos' instead of 'darwin'
     status:
       - test -x {{.YQ}}
       - '{{.YQ}} --version | grep -q "{{.YQ_VERSION | trimPrefix "v"}}"'
     cmds:
-      - 'curl -sfL "https://github.com/mikefarah/yq/releases/download/{{.YQ_VERSION | trimPrefix "v"}}/yq_{{.YQ_OS}}_{{.ARCH}}" --output "{{.YQ}}"'
+      - 'curl -sfL "https://github.com/mikefarah/yq/releases/download/{{.YQ_VERSION | trimPrefix "v"}}/yq_{{.OS}}_{{.ARCH}}" --output "{{.YQ}}"'
       - 'chmod +x "{{.YQ}}"'
     internal: true
 
@@ -214,6 +210,48 @@ tasks:
     cmds:
     - 'curl -sSfL https://ocm.software/install.sh | OCM_VERSION="{{.OCM_VERSION | trimPrefix "v"}}" bash -s "{{.tmpdir}}"'
     - 'mv "{{.tmpdir}}/ocm" "{{.OCM}}"'
+    internal: true
+
+  cosign:
+    desc: "  Ensure that the cosign CLI is installed."
+    run: once
+    requires:
+      vars:
+        - COSIGN
+    deps:
+      - localbin
+    status:
+      - 'test -x "{{.COSIGN}}"'
+      - '"{{.COSIGN}}" --version | grep -q "{{.COSIGN_VERSION | trimPrefix "v"}}"'
+    vars:
+      COSIGN_VERSION: '{{ env "COSIGN_VERSION" | default ( .COSIGN_VERSION | default "v3.0.2" ) }}'
+      tmpdir:
+        sh: 'mktemp -d'
+    cmds:
+      - 'wget -O "{{.tmpdir}}/cosign" https://github.com/sigstore/cosign/releases/download/{{.COSIGN_VERSION}}/cosign-{{.COSIGN_VERSION}}-{{.OS}}-{{.ARCH}}'
+      - 'mv "{{.tmpdir}}/cosign" "{{.COSIGN}}"'
+      - 'chmod +x "{{.COSIGN}}"'
+    internal: true
+
+  crane:
+    desc: "  Ensure that the crane CLI is installed."
+    run: once
+    requires:
+      vars:
+        - CRANE
+    deps:
+      - localbin
+    status:
+      - 'test -x "{{.CRANE}}"'
+      - '"{{.CRANE}}" version | grep -q "{{.CRANE_VERSION | trimPrefix "v"}}"'
+    vars:
+      CRANE_VERSION: '{{ env "CRANE_VERSION" | default ( .CRANE_VERSION | default "v0.20.6" ) }}'
+      tmpdir:
+        sh: 'mktemp -d'
+    cmds:
+      - 'wget -O "{{.tmpdir}}/crane" https://github.com/google/go-containerregistry/releases/download/{{.CRANE_VERSION}}/go-containerregistry_{{.CRANE_VERSION}}_{{.OS}}_{{.ARCH}}'
+      - 'mv "{{.tmpdir}}/crane" "{{.CRANE}}"'
+      - 'chmod +x "{{.CRANE}}"'
     internal: true
 
   envtest:

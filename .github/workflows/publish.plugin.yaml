@@ -2,6 +2,18 @@ name: Publish
 
 on:
   workflow_call:
+    secrets:
+      COSIGN_PRIVATE_KEY:
+        required: true
+      COSIGN_PASSWORD:
+        required: true
+    envs:
+      IMAGE_SIGNING_ENABLED:
+        required: false
+        default: false
+      OCM_SIGNING_ENABLED:
+        required: false
+        default: false
 
 permissions:
   packages: write

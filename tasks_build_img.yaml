@@ -4,6 +4,9 @@ includes:
   build:bin:
     taskfile: tasks_build_bin.yaml
     internal: true
+  tools:
+    taskfile: tasks_tools.yaml
+    internal: true
 
 vars:
   DOCKER_BUILDER_NAME:
@@ -188,6 +191,12 @@ tasks:
       vars:
       - IMG
       - BASE_IMG
+    deps:
+      - tools:crane
+      - tools:cosign
+      - tools:localtmp
+    vars:
+      IMAGE_SIGNING_ENABLED: '{{ env "IMAGE_SIGNING_ENABLED" | default "false" }}'
     cmds:
     - for:
         matrix:
@@ -198,21 +207,24 @@ tasks:
     - 'docker manifest push {{.IMG}}'
     - |
       set -e
-      if ! command -v cosign >/dev/null 2>&1; then
+     
+      if [ -z "$COSIGN_PRIVATE_KEY" ] || [ -z "$COSIGN_PASSWORD" ]; then
         exit 0
       fi
       
-      if ! command -v crane >/dev/null 2>&1; then
+      if [ "${IMAGE_SIGNING_ENABLED:-false}" != "true" ]; then
+        echo "⚠️ Image signing is disabled (IMAGE_SIGNING_ENABLED is not 'true'). Skipping." >&2
         exit 0
       fi
       
       if [ -z "$COSIGN_PRIVATE_KEY" ] || [ -z "$COSIGN_PASSWORD" ]; then
+        echo "⚠️ Error: Missing COSIGN_PRIVATE_KEY or COSIGN_PASSWORD." >&2
         exit 0
       fi
       
       trap 'rm -f "{{.ROOT_DIR2}}/cosign.key"' EXIT
       echo "$COSIGN_PRIVATE_KEY" > "{{.ROOT_DIR2}}/cosign.key"
-
+  
       DIGEST=$(crane digest {{.IMG}})
       cosign sign --yes --key "{{.ROOT_DIR2}}/cosign.key" "{{.BASE_IMG}}@$DIGEST"
       echo "✅ Successfully signed multi-arch image: {{.BASE_IMG}}@$DIGEST"
