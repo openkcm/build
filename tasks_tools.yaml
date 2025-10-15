@@ -228,7 +228,7 @@ tasks:
       tmpdir:
         sh: 'mktemp -d'
     cmds:
-      - 'wget q -O "{{.tmpdir}}/cosign" https://github.com/sigstore/cosign/releases/download/{{.COSIGN_VERSION}}/cosign-{{.OS}}-{{.ARCH}}'
+      - 'wget -nv -q -O "{{.tmpdir}}/cosign" https://github.com/sigstore/cosign/releases/download/{{.COSIGN_VERSION}}/cosign-{{.OS}}-{{.ARCH}}'
       - 'mv "{{.tmpdir}}/cosign" "{{.COSIGN}}"'
       - 'chmod +x "{{.COSIGN}}"'
     internal: true
@@ -250,11 +250,13 @@ tasks:
         sh: 'mktemp -d'
     cmds:
       - |
-        set -e
+        set -eu
         ARCHIVE_NAME=$(echo "go-containerregistry_{{.OS}}_{{.ARCH}}.tar.gz" | sed 's/linux/Linux/; s/amd64/x86_64/')
         ARCHIVE_PATH="{{.tmpdir}}/$ARCHIVE_NAME"
+        
+        wget -nv -q -O "$ARCHIVE_PATH" "https://github.com/google/go-containerregistry/releases/download/{{.CRANE_VERSION}}/$ARCHIVE_NAME"
         trap 'rm -f "$ARCHIVE_PATH"' EXIT
-        wget -q -O "$ARCHIVE_PATH" "https://github.com/google/go-containerregistry/releases/download/{{.CRANE_VERSION}}/$ARCHIVE_NAME"
+        
         tar -zxvf "$ARCHIVE_PATH" -C "{{.tmpdir}}" crane
       - 'mv "{{.tmpdir}}/crane" "{{.CRANE}}"'
       - 'chmod +x "{{.CRANE}}"'
