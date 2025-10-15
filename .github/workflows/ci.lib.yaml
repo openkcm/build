@@ -54,7 +54,7 @@ jobs:
 
       - name: Checkout build (taskfiles) repo
         run: |
-          git clone --branch feat/cosign-images --single-branch https://github.com/openkcm/build.git ./hack/common
+          git clone --branch main --single-branch https://github.com/openkcm/build.git ./hack/common
 
       - name: Install Task
         uses: arduino/setup-task@b91d5d2c96a56797b48ac1e0e89220bf64044611 #v2.0.0
