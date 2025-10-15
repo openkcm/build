@@ -225,8 +225,8 @@ tasks:
       trap 'rm -f "{{.ROOT_DIR2}}/cosign.key"' EXIT
       echo "$COSIGN_PRIVATE_KEY" > "{{.ROOT_DIR2}}/cosign.key"
   
-      DIGEST=$(crane digest {{.IMG}})
-      cosign sign --yes --key "{{.ROOT_DIR2}}/cosign.key" "{{.BASE_IMG}}@$DIGEST"
+      DIGEST=$({{.CRANE}} digest {{.IMG}})
+      {{.COSIGN}} sign --yes --key "{{.ROOT_DIR2}}/cosign.key" "{{.BASE_IMG}}@$DIGEST"
       echo "✅ Successfully signed multi-arch image: {{.BASE_IMG}}@$DIGEST"
     internal: true
 
