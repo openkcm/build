@@ -96,24 +96,20 @@ tasks:
       OCM_SIGNATURE_NAME: 'pipeline-signature'
     cmds:
     - |
-      set -e
+      set -eu
       if [ "${OCM_SIGNING_ENABLED:-false}" = "true" ]; then
         echo "⚠️ OCM component signing is disabled. Skipping." >&2
         exit 0
       fi
       
-      if [ -z "OCM_PRIVATE_KEY" ]; then
-        echo "⚠️ Error: Missing private key at {{.OCM_PRIVATE_KEY}} for signing." >&2
-        exit 0
+      if [ -z "$OCM_PRIVATE_KEY" ]; then
+        echo "❌ Error: Missing private key for signing." >&2
+        exit 1
       fi
-
-      echo "Signing OCM component version {{.VERSION}} in local directory..."
       
       trap 'rm -f "{{.ROOT_DIR2}}/ocm.key"' EXIT
       echo "$OCM_PRIVATE_KEY" > "{{.ROOT_DIR2}}/ocm.key"
-
-      # NOTE: This command signs the component descriptor inside the {{.compdir}}
       "{{.OCM}}" sign componentversion --signature "{{.OCM_SIGNATURE_NAME}}" --private-key="{{.ROOT_DIR2}}/ocm.key" "{{.compdir}}"
 
       echo "✅ OCM component successfully signed."
-    - cmd: '"{{.OCM}}" transfer componentversions "{{.compdir}}" "{{.COMPONENT_REGISTRY}}" {{.overwrite_mod}}'
+    - '"{{.OCM}}" transfer componentversions "{{.compdir}}" "{{.COMPONENT_REGISTRY}}" {{.overwrite_mod}}'
