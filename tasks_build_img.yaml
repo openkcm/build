@@ -85,11 +85,14 @@ tasks:
       - ARCH
       - IMAGE_BASE
       - DOCKER_BUILDER_NAME
+    vars:
+      IMAGE: '{{.IMAGE_BASE}}/{{.COMPONENT}}:{{.VERSION}}-{{.OS}}-{{.ARCH}}'
     cmds:
     - 'echo "Building image {{.COMPONENT}}:{{.VERSION}}-{{.OS}}-{{.ARCH}}"'
     - '[[ "{{.OS}}" == "linux" ]] || { echo "The distroless base image does only support linux as operating system."; exit 1; }'
     - 'cat "{{.TASKFILE_DIR2}}/Dockerfile" | sed "s|<component>|{{.COMPONENT}}|g" > "{{.ROOT_DIR2}}/Dockerfile.tmp"'
-    - '( cd "{{.ROOT_DIR2}}"; docker buildx build --builder {{.DOCKER_BUILDER_NAME}} --load --build-arg COMPONENT={{.COMPONENT}} --platform {{.OS}}/{{.ARCH}} -t {{.IMAGE_BASE}}/{{.COMPONENT}}:{{.VERSION}}-{{.OS}}-{{.ARCH}} -f Dockerfile.tmp . )'
+    - '( cd "{{.ROOT_DIR2}}"; docker buildx build --builder {{.DOCKER_BUILDER_NAME}} --load --build-arg COMPONENT={{.COMPONENT}} --platform {{.OS}}/{{.ARCH}} -t {{.IMAGE}} -f Dockerfile.tmp . )'
+    - 'docker push {{.IMAGE}}'
     - 'rm -f "{{.ROOT_DIR2}}/Dockerfile.tmp"'
     - vars:
         VERSION: '{{.VERSION}}-{{.OS}}-{{.ARCH}}'
@@ -162,6 +165,11 @@ tasks:
     cmds:
     - 'echo "Pushing image {{.COMPONENT}}:{{.VERSION}}-{{.OS}}-{{.ARCH}}"'
     - 'docker push {{.IMAGE_BASE}}/{{.COMPONENT}}:{{.VERSION}}-{{.OS}}-{{.ARCH}}'
+    - vars:
+        VERSION: '{{.VERSION}}-{{.OS}}-{{.ARCH}}'
+        BASE_IMAGE: '{{.IMAGE_BASE}}/{{.COMPONENT}}'
+        CRANE_PLATFORM: '--platform={{.OS}}/{{.ARCH}}'
+      task: sign
     internal: true
 
   push-multi:
