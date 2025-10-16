@@ -88,7 +88,7 @@ tasks:
     cmds:
     - 'echo "Building image {{.COMPONENT}}:{{.VERSION}}-{{.OS}}-{{.ARCH}}"'
     - '[[ "{{.OS}}" == "linux" ]] || { echo "The distroless base image does only support linux as operating system."; exit 1; }'
-    - 'cat "{{.TASKFILE_DIR2}}/Dockerfile" | sed "s|<component>|{{.COMPONENT}}|g" > "{{.ROOT_DIR2}}/Dockerfile.tmp"'
+    - 'cat "{{.TASKFILE_DIR2}}/Dockerfile.component" | sed "s|<component>|{{.COMPONENT}}|g" > "{{.ROOT_DIR2}}/Dockerfile.tmp"'
     - '( cd "{{.ROOT_DIR2}}"; docker buildx build --builder {{.DOCKER_BUILDER_NAME}} --load --build-arg COMPONENT={{.COMPONENT}} --platform {{.OS}}/{{.ARCH}} -t {{.IMAGE_BASE}}/{{.COMPONENT}}:{{.VERSION}}-{{.OS}}-{{.ARCH}} -f Dockerfile.tmp . )'
     - 'rm -f "{{.ROOT_DIR2}}/Dockerfile.tmp"'
     internal: true
@@ -207,7 +207,7 @@ tasks:
         BASE_IMG: '{{.BASE_IMG}}'
     internal: true
 
-  push-all-in-one:
+  build-and-push-one:
     desc: "  Push one the multi-platform image."
     requires:
       vars:
@@ -228,13 +228,13 @@ tasks:
           IMAGE_NAME: '{{.IMAGE_NAME}}'
           VERSION: '{{.VERSION}}'
           IMAGE_BASE: '{{.IMAGE_BASE}}'
-        task: build-all-in-one-internal
+        task: build-and-push-one-internal
       - task: sign
         vars:
           IMG: '{{.IMAGE_BASE}}/{{.IMAGE_NAME}}:{{.VERSION}}'
           BASE_IMG: '{{.IMAGE_BASE}}/{{.IMAGE_NAME}}'
 
-  build-all-in-one-internal:
+  build-and-push-one-internal:
     desc: "  Build a single image including all binaries. Requires the docker builder to have been prepared before."
     requires:
       vars:
@@ -246,7 +246,7 @@ tasks:
     cmds:
       - 'echo "Building image {{.IMAGE_NAME}}:{{.VERSION}}-{{.OS}}"'
       - '[[ "{{.OS}}" == "linux" ]] || { echo "The distroless base image does only support linux as operating system."; exit 1; }'
-      - 'cat "{{.TASKFILE_DIR2}}/Dockerfile.all-in-one" > "{{.ROOT_DIR2}}/Dockerfile.tmp"'
+      - 'cat "{{.TASKFILE_DIR2}}/Dockerfile.components" > "{{.ROOT_DIR2}}/Dockerfile.tmp"'
       - '( cd "{{.ROOT_DIR2}}"; docker buildx build --builder {{.DOCKER_BUILDER_NAME}} --load --platform {{.OS}} -t {{.IMAGE_BASE}}/{{.IMAGE_NAME}}:{{.VERSION}}-{{.OS}} -f Dockerfile.tmp . )'
       - 'docker push {{.IMAGE_BASE}}/{{.IMAGE_NAME}}:{{.VERSION}}-{{.OS}}'
       - 'rm -f "{{.ROOT_DIR2}}/Dockerfile.tmp"'

@@ -21,7 +21,7 @@ tasks:
   # The following tasks are non-namespaced aliases for the most important namespaced tasks.
   # This helps with visibility on 'task -l'.
 
-  build-push-all:
+  build-and-push:
     desc: "  Binary generation, build all artifacts and push to the respective registries."
     run: once
     deps:

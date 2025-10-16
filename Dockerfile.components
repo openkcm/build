@@ -5,7 +5,7 @@ ARG TARGETOS
 
 WORKDIR /
 
-COPY bin/*$TARGETOS-* /
+COPY bin/*$TARGETOS-* /components
 
 USER 65532:65532
 
