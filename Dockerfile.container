@@ -1,5 +1,4 @@
 FROM alpine AS tools_builder
-
 RUN apk add --no-cache busybox && /bin/busybox --install -s /bin
 
 FROM scratch
@@ -9,9 +8,10 @@ ARG TARGETARCH
 
 WORKDIR /
 
-COPY --from=tools_builder /bin/sh /bin/sh
+COPY --from=tools_builder /bin/busybox /bin/busybox
+RUN /bin/busybox --install -s /bin
+
 RUN mkdir -p /binaries /bin
-COPY --from=tools_builder /bin/ls /bin/ls
 
 COPY bin/*$TARGETOS-$TARGETARCH /binaries/
 
