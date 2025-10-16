@@ -95,7 +95,7 @@ jobs:
         with:
           go-version-file: go.mod
 
-      - name: Build and Push Images
+      - name: Build and Push
         env:
           IMAGE_SIGNING_ENABLED: ${{ inputs.image_signing_enabled }}
           COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
