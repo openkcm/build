@@ -108,23 +108,22 @@ tasks:
       OCM_SIGNING_ENABLED: '{{ env "OCM_SIGNING_ENABLED" | default "false" }}'
       OCM_SIGNATURE_NAME: 'pipeline-signature'
     silent: true
-    cmds:
-    - sh: |
-        if [ "{{.OCM_SIGNING_ENABLED}}" != "true" ]; then
-          echo "⚠️ OCM signing is disabled (OCM_SIGNING_ENABLED is not 'true'). Skipping."
-          exit 0
-        fi
-        
-        set -eu
-        
-        if [ -z "$OCM_PRIVATE_KEY" ]; then
-          echo "❌ Error: Missing private key for signing." >&2
-          exit 1
-        fi
-        
-        trap 'rm -f "{{.ROOT_DIR2}}/ocm.key"' EXIT
-        echo "$OCM_PRIVATE_KEY" > "{{.ROOT_DIR2}}/ocm.key"
-        "{{.OCM}}" sign componentversion --signature "{{.OCM_SIGNATURE_NAME}}" --private-key="{{.ROOT_DIR2}}/ocm.key" "{{.COMPONENT}}"
+    cmd: |
+      if [ "{{.OCM_SIGNING_ENABLED}}" != "true" ]; then
+        echo "⚠️ OCM signing is disabled (OCM_SIGNING_ENABLED is not 'true'). Skipping."
+        exit 0
+      fi
+      
+      set -eu
+      
+      if [ -z "$OCM_PRIVATE_KEY" ]; then
+        echo "❌ Error: Missing private key for signing." >&2
+        exit 1
+      fi
+      
+      trap 'rm -f "{{.ROOT_DIR2}}/ocm.key"' EXIT
+      echo "$OCM_PRIVATE_KEY" > "{{.ROOT_DIR2}}/ocm.key"
+      "{{.OCM}}" sign componentversion --signature "{{.OCM_SIGNATURE_NAME}}" --private-key="{{.ROOT_DIR2}}/ocm.key" "{{.COMPONENT}}"
   
-        echo "✅ OCM component successfully signed."
+      echo "✅ OCM component successfully signed."
     internal: true
