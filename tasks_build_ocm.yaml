@@ -109,7 +109,7 @@ tasks:
       OCM_SIGNATURE_NAME: 'pipeline-signature'
     silent: true
     cmds:
-      - |
+    - sh: |
         if [ "{{.OCM_SIGNING_ENABLED}}" != "true" ]; then
           echo "⚠️ OCM signing is disabled (OCM_SIGNING_ENABLED is not 'true'). Skipping."
           exit 0

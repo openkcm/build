@@ -288,7 +288,7 @@ tasks:
       IMAGE_SIGNING_ENABLED: '{{ env "IMAGE_SIGNING_ENABLED" | default "false" }}'
     silent: true
     cmds:
-      - |
+    - sh: |
         if [ "{{.IMAGE_SIGNING_ENABLED}}" != "true" ]; then
           echo "⚠️ Image signing is disabled (IMAGE_SIGNING_ENABLED is not 'true'). Skipping."
           exit 0
