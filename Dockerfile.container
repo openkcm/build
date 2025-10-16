@@ -1,0 +1,10 @@
+FROM scratch
+
+ARG TARGETOS
+ARG TARGETARCH
+
+WORKDIR /
+
+COPY bin/*$TARGETOS-$TARGETARCH /
+
+CMD ["ls -lrt"]
