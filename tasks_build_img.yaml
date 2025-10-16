@@ -205,25 +205,6 @@ tasks:
         BASE_IMG: '{{.BASE_IMG}}'
     internal: true
 
-  push-os-internal:
-    desc: "  Push the manifest for a single component's image. Individual platform-specific images must have been pushed before."
-    requires:
-      vars:
-        - IMG
-        - BASE_IMG
-    cmds:
-      - for:
-          matrix:
-            OS: [ "linux" ]
-        cmd: 'docker manifest create {{.IMG}} --amend {{.IMG}}-{{.ITEM.OS}}'
-      - 'echo "Pushing image {{.IMG}}"'
-      - 'docker manifest push {{.IMG}}'
-      - task: sign
-        vars:
-          IMG: '{{.IMG}}'
-          BASE_IMG: '{{.BASE_IMG}}'
-    internal: true
-
   build-and-push-one:
     desc: "  Push one the multi-platform image."
     requires:
@@ -240,14 +221,16 @@ tasks:
       - for:
           matrix:
             OS: [ "linux" ] # distroless base image only supports linux
+            ARCH: ["amd64", "arm64"]
         vars:
           OS: '{{.ITEM.OS}}'
-          IMAGE: '{{.IMAGE_BASE}}/{{.IMAGE_NAME}}:{{.VERSION}}-{{.OS}}'
+          ARCH: '{{.ITEM.ARCH}}'
+          IMAGE: '{{.IMAGE_BASE}}/{{.IMAGE_NAME}}:{{.VERSION}}-{{.OS}}-{{.ITEM.ARCH}}'
         task: build-and-push-one-internal
       - vars:
           IMG: '{{.IMAGE_BASE}}/{{.IMAGE_NAME}}:{{.VERSION}}'
           BASE_IMG: '{{.IMAGE_BASE}}/{{.IMAGE_NAME}}'
-        task: push-os-internal
+        task: push-multi-internal
 
   build-and-push-one-internal:
     desc: "  Build a single image including all binaries. Requires the docker builder to have been prepared before."
@@ -255,12 +238,13 @@ tasks:
       vars:
         - IMAGE
         - OS
+        - ARCH
         - DOCKER_BUILDER_NAME
     cmds:
       - 'echo "Building image {{.IMAGE}}"'
       - '[[ "{{.OS}}" == "linux" ]] || { echo "The distroless base image does only support linux as operating system."; exit 1; }'
       - 'cat "{{.TASKFILE_DIR2}}/Dockerfile.components" > "{{.ROOT_DIR2}}/Dockerfile.tmp"'
-      - '( cd "{{.ROOT_DIR2}}"; docker buildx build --builder {{.DOCKER_BUILDER_NAME}} --load --platform {{.OS}} -t {{.IMAGE}} -f Dockerfile.tmp . )'
+      - '( cd "{{.ROOT_DIR2}}"; docker buildx build --builder {{.DOCKER_BUILDER_NAME}} --load --platform {{.OS}}/{{.ARCH}} -t {{.IMAGE}} -f Dockerfile.tmp . )'
       - 'docker push {{.IMAGE}}'
       - 'rm -f "{{.ROOT_DIR2}}/Dockerfile.tmp"'
     internal: true
