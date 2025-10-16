@@ -282,14 +282,12 @@ tasks:
       - tools:localtmp
     vars:
       IMAGE_SIGNING_ENABLED: '{{ env "IMAGE_SIGNING_ENABLED" | default "false" }}'
+    preconditions:
+      - sh: test "{{.IMAGE_SIGNING_ENABLED}}" != "true"
+        msg: "⚠️ Image signing is disabled (IMAGE_SIGNING_ENABLED is not 'true'). Skipping."
     cmds:
       - |
         set -eu
-        if [ "${IMAGE_SIGNING_ENABLED:-false}" != "true" ]; then
-          echo "⚠️ Image signing is disabled (IMAGE_SIGNING_ENABLED is not 'true'). Skipping." >&2
-          exit 0
-        fi
-        
         if [ -z "$COSIGN_PRIVATE_KEY" ] || [ -z "$COSIGN_PASSWORD" ]; then
           echo "❌ Error: Missing COSIGN_PRIVATE_KEY or COSIGN_PASSWORD." >&2
           exit 1

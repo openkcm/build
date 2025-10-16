@@ -92,24 +92,30 @@ tasks:
       overwrite_mod:
         sh: 'if [[ -n ${OVERWRITE_COMPONENTS:-} ]] && [[ ${OVERWRITE_COMPONENTS} != "false" ]]; then echo -n "--overwrite"; fi'
       compdir: '{{.LOCALTMP}}/component'
+    cmds:
+    - task: sign
+    - '"{{.OCM}}" transfer componentversions "{{.compdir}}" "{{.COMPONENT_REGISTRY}}" {{.overwrite_mod}}'
+
+  sign:
+    desc: "  Sign OCM."
+    vars:
       OCM_SIGNING_ENABLED: '{{ env "OCM_SIGNING_ENABLED" | default "false" }}'
       OCM_SIGNATURE_NAME: 'pipeline-signature'
+    preconditions:
+      - sh: test "{{.OCM_SIGNING_ENABLED}}" != "true"
+        msg: "⚠️ OCM component signing is disabled (OCM_SIGNING_ENABLED is not 'true'). Skipping."
     cmds:
-    - |
-      set -eu
-      if [ "${OCM_SIGNING_ENABLED:-false}" != "true" ]; then
-        echo "⚠️ OCM component signing is disabled. Skipping." >&2
-        exit 0
-      fi
-      
-      if [ -z "$OCM_PRIVATE_KEY" ]; then
-        echo "❌ Error: Missing private key for signing." >&2
-        exit 1
-      fi
-      
-      trap 'rm -f "{{.ROOT_DIR2}}/ocm.key"' EXIT
-      echo "$OCM_PRIVATE_KEY" > "{{.ROOT_DIR2}}/ocm.key"
-      "{{.OCM}}" sign componentversion --signature "{{.OCM_SIGNATURE_NAME}}" --private-key="{{.ROOT_DIR2}}/ocm.key" "{{.compdir}}"
-
-      echo "✅ OCM component successfully signed."
-    - '"{{.OCM}}" transfer componentversions "{{.compdir}}" "{{.COMPONENT_REGISTRY}}" {{.overwrite_mod}}'
+      - |
+        set -eu
+        
+        if [ -z "$OCM_PRIVATE_KEY" ]; then
+          echo "❌ Error: Missing private key for signing." >&2
+          exit 1
+        fi
+        
+        trap 'rm -f "{{.ROOT_DIR2}}/ocm.key"' EXIT
+        echo "$OCM_PRIVATE_KEY" > "{{.ROOT_DIR2}}/ocm.key"
+        "{{.OCM}}" sign componentversion --signature "{{.OCM_SIGNATURE_NAME}}" --private-key="{{.ROOT_DIR2}}/ocm.key" "{{.compdir}}"
+  
+        echo "✅ OCM component successfully signed."
+    internal: true
