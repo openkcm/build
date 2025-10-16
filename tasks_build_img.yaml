@@ -240,7 +240,7 @@ tasks:
         - VERSION
         - DOCKER_BUILDER_NAME
     vars:
-      IMAGE: '{{.BASE_IMAGE}}:{{.VERSION}}-{{.OS}}-{{.ITEM.ARCH}}'
+      IMAGE: '{{.BASE_IMAGE}}:{{.VERSION}}-{{.OS}}-{{.ARCH}}'
     cmds:
       - 'echo "Building image {{.IMAGE}}"'
       - '[[ "{{.OS}}" == "linux" ]] || { echo "The distroless base image does only support linux as operating system."; exit 1; }'
@@ -249,7 +249,7 @@ tasks:
       - 'docker push {{.IMAGE}}'
       - 'rm -f "{{.ROOT_DIR2}}/Dockerfile.tmp"'
       - vars:
-          VERSION: '{{.VERSION}}-{{.OS}}-{{.ITEM.ARCH}}'
+          VERSION: '{{.VERSION}}-{{.OS}}-{{.ARCH}}'
           BASE_IMAGE: '{{.BASE_IMAGE}}'
           CRANE_PLATFORM: '--platform={{.OS}}/{{.ARCH}}'
         task: sign
