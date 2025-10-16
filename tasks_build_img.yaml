@@ -201,8 +201,8 @@ tasks:
     - 'docker manifest push {{.IMG}}'
     - task: sign
       vars:
-        IMG: '{{.IMG}}'
-        BASE_IMG: '{{.BASE_IMG}}'
+        IMG: '{{.BASE_IMG}}'
+        CRANE_PLATFORM: ''
     internal: true
 
   build-and-push-one:
@@ -247,14 +247,19 @@ tasks:
       - '( cd "{{.ROOT_DIR2}}"; docker buildx build --builder {{.DOCKER_BUILDER_NAME}} --load --platform {{.OS}}/{{.ARCH}} -t {{.IMAGE}} -f Dockerfile.tmp . )'
       - 'docker push {{.IMAGE}}'
       - 'rm -f "{{.ROOT_DIR2}}/Dockerfile.tmp"'
+      - vars:
+          IMG: '{{.IMAGE_BASE}}/{{.IMAGE_NAME}}'
+          CRANE_PLATFORM: '--platform={{.OS}}/{{.ARCH}}'
+        task: sign
     internal: true
 
   sign:
     desc: "  Sign image."
     requires:
       vars:
+        - VERSION
         - IMG
-        - BASE_IMG
+        - CRANE_PLATFORM
     deps:
       - tools:crane
       - tools:cosign
@@ -277,9 +282,9 @@ tasks:
         trap 'rm -f "{{.ROOT_DIR2}}/cosign.key"' EXIT
         echo "$COSIGN_PRIVATE_KEY" > "{{.ROOT_DIR2}}/cosign.key"
         
-        DIGEST=$({{.CRANE}} digest {{.IMG}})
-        {{.COSIGN}} sign --yes --key "{{.ROOT_DIR2}}/cosign.key" "{{.BASE_IMG}}@$DIGEST"
-        echo "✅ Successfully signed multi-arch image: {{.BASE_IMG}}@$DIGEST"
+        DIGEST=$({{.CRANE}} digest {{.CRANE_PLATFORM}} {{.IMG}}:{{.VERSION}})
+        {{.COSIGN}} sign --yes --key "{{.ROOT_DIR2}}/cosign.key" "{{.IMG}}@$DIGEST"
+        echo "✅ Successfully signed multi-arch image: {{.IMG}}@$DIGEST"
     internal: true
 
 
