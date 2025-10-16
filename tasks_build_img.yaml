@@ -282,9 +282,8 @@ tasks:
       - tools:localtmp
     vars:
       IMAGE_SIGNING_ENABLED: '{{ env "IMAGE_SIGNING_ENABLED" | default "false" }}'
-    preconditions:
-      - sh: test "{{.IMAGE_SIGNING_ENABLED}}" = "true"
-        msg: "⚠️ Image signing is disabled (IMAGE_SIGNING_ENABLED is not 'true'). Skipping."
+    status:
+      - test "{{.IMAGE_SIGNING_ENABLED}}" != "true"
     cmds:
       - |
         set -eu

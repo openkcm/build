@@ -106,9 +106,8 @@ tasks:
     vars:
       OCM_SIGNING_ENABLED: '{{ env "OCM_SIGNING_ENABLED" | default "false" }}'
       OCM_SIGNATURE_NAME: 'pipeline-signature'
-    preconditions:
-      - sh: test "{{.OCM_SIGNING_ENABLED}}" = "true"
-        msg: "⚠️ OCM component signing is disabled (OCM_SIGNING_ENABLED is not 'true'). Skipping."
+    status:
+      - test "{{.OCM_SIGNING_ENABLED}}" != "true"
     cmds:
       - |
         set -eu
