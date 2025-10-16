@@ -91,6 +91,11 @@ tasks:
     - 'cat "{{.TASKFILE_DIR2}}/Dockerfile" | sed "s|<component>|{{.COMPONENT}}|g" > "{{.ROOT_DIR2}}/Dockerfile.tmp"'
     - '( cd "{{.ROOT_DIR2}}"; docker buildx build --builder {{.DOCKER_BUILDER_NAME}} --load --build-arg COMPONENT={{.COMPONENT}} --platform {{.OS}}/{{.ARCH}} -t {{.IMAGE_BASE}}/{{.COMPONENT}}:{{.VERSION}}-{{.OS}}-{{.ARCH}} -f Dockerfile.tmp . )'
     - 'rm -f "{{.ROOT_DIR2}}/Dockerfile.tmp"'
+    - vars:
+        VERSION: '{{.VERSION}}-{{.OS}}-{{.ARCH}}'
+        BASE_IMAGE: '{{.IMAGE_BASE}}/{{.COMPONENT}}'
+        CRANE_PLATFORM: '--platform={{.OS}}/{{.ARCH}}'
+      task: sign
     internal: true
 
   build-multi-raw:
@@ -286,7 +291,7 @@ tasks:
         
         DIGEST=$({{.CRANE}} digest {{.CRANE_PLATFORM}} {{.BASE_IMAGE}}:{{.VERSION}})
         {{.COSIGN}} sign --yes --key "{{.ROOT_DIR2}}/cosign.key" "{{.BASE_IMAGE}}@$DIGEST"
-        echo "✅ Successfully signed multi-arch image: {{.BASE_IMAGE}}@$DIGEST"
+        echo "✅ Successfully signed image: {{.BASE_IMAGE}}@$DIGEST"
     internal: true
 
 
