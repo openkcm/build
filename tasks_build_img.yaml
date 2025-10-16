@@ -299,6 +299,7 @@ tasks:
         {{.COSIGN}} sign --yes --key "{{.ROOT_DIR2}}/cosign.key" "{{.BASE_IMAGE}}@$DIGEST"
         echo "✅ Successfully signed image: {{.BASE_IMAGE}}@$DIGEST"
     internal: true
+    silent: true
 
 
   tag:

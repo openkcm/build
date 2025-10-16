@@ -123,3 +123,4 @@ tasks:
   
         echo "✅ OCM component successfully signed."
     internal: true
+    silent: true
