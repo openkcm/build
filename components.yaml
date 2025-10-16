@@ -85,21 +85,9 @@ defaults:
   CD_VERSION: (( funcs.notEmpty(values.CD_VERSION || "") ? values.CD_VERSION :values.VERSION ))
   CHART_VERSION: (( funcs.notEmpty(values.CHART_VERSION || "") ? values.CHART_VERSION :values.VERSION ))
   IMG_VERSION: (( funcs.notEmpty(values.IMG_VERSION || "") ? values.IMG_VERSION :values.VERSION ))
-  BP_COMPONENTS: (( funcs.notEmpty(values.BP_PATH || "") ?
-                   ( funcs.notEmpty(values.BP_COMPONENTS || "") ?
-                   replace(values.BP_COMPONENTS, " ", ",")
-    : replace(values.COMPONENTS, " ", ",")
-                   )
-                   :""
-  ))
-  CHART_COMPONENTS: (( funcs.notEmpty(values.CHART_COMPONENTS || "") ?
-                      replace(values.CHART_COMPONENTS, " ", ",")
-    : replace(values.COMPONENTS, " ", ",")
-  ))
-  IMG_COMPONENTS: (( funcs.notEmpty(values.IMG_COMPONENTS || "") ?
-                    replace(values.IMG_COMPONENTS, " ", ",")
-    : replace(values.COMPONENTS, " ", ",")
-  ))
+  BP_COMPONENTS: (( funcs.notEmpty(values.BP_PATH || "") ? ( funcs.notEmpty(values.BP_COMPONENTS || "") ? replace(values.BP_COMPONENTS, " ", ",") :replace(values.COMPONENTS, " ", ",") ) :"" ))
+  CHART_COMPONENTS: (( funcs.notEmpty(values.CHART_COMPONENTS || "") ? replace(values.CHART_COMPONENTS, " ", ",") :replace(values.COMPONENTS, " ", ",") ))
+  IMG_COMPONENTS: (( funcs.notEmpty(values.IMG_COMPONENTS || "") ? replace(values.IMG_COMPONENTS, " ", ",") :replace(values.COMPONENTS, " ", ",") ))
 
 funcs:
   <<<: (( &temporary ))
