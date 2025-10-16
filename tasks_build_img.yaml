@@ -201,10 +201,11 @@ tasks:
           OS: ["linux"] # distroless base image only supports linux
           ARCH: ["amd64", "arm64"]
       cmd: 'docker manifest create {{.BASE_IMAGE}}:{{.VERSION}} --amend {{.BASE_IMAGE}}:{{.VERSION}}-{{.ITEM.OS}}-{{.ITEM.ARCH}}'
-    - 'echo "Pushing image {{.BASE_IMAGE}}:{{.VERSION}}"'
+    - 'echo "Pushing manifest {{.BASE_IMAGE}}:{{.VERSION}}"'
     - 'docker manifest push {{.BASE_IMAGE}}:{{.VERSION}}'
     - task: sign
       vars:
+        VERSION: '{{.VERSION}}'
         BASE_IMAGE: '{{.BASE_IMAGE}}'
         CRANE_PLATFORM: ''
     internal: true
