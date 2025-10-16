@@ -162,11 +162,6 @@ tasks:
     cmds:
     - 'echo "Pushing image {{.COMPONENT}}:{{.VERSION}}-{{.OS}}-{{.ARCH}}"'
     - 'docker push {{.IMAGE_BASE}}/{{.COMPONENT}}:{{.VERSION}}-{{.OS}}-{{.ARCH}}'
-    - vars:
-        VERSION: '{{.VERSION}}-{{.OS}}-{{.ARCH}}'
-        BASE_IMAGE: '{{.IMAGE_BASE}}/{{.COMPONENT}}'
-        CRANE_PLATFORM: '--platform={{.OS}}/{{.ARCH}}'
-      task: sign
     internal: true
 
   push-multi:
