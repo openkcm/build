@@ -25,5 +25,4 @@ tasks:
     desc: "  Binary generation, build all artifacts and push to the respective registries."
     run: once
     deps:
-      - build:bin:all
-      - build:img:push-one
+      - build:img:push-all-in-one

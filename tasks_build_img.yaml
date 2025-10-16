@@ -207,7 +207,7 @@ tasks:
         BASE_IMG: '{{.BASE_IMG}}'
     internal: true
 
-  push-one:
+  push-all-in-one:
     desc: "  Push one the multi-platform image."
     requires:
       vars:
@@ -216,6 +216,8 @@ tasks:
     vars:
       IMAGE_BASE:
         sh: 'PROJECT_ROOT="{{.ROOT_DIR2}}" {{.TASKFILE_DIR2}}/get-registry.sh --image'
+    deps:
+      - build:bin:all
     cmds:
       - task: prepare-docker-builder
       - for:
