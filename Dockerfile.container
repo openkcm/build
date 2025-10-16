@@ -1,31 +1,26 @@
-# Stage 1: Builder - Get Busybox and its dynamic linker
+# Stage 1: Builder - Prepare BusyBox and minimal filesystem
 FROM alpine:latest AS tools_builder
-# Install busybox and ensure the linker is present.
+
 RUN apk add --no-cache busybox
 
-# Final Stage: Minimal 'scratch'
+# Create a minimal root filesystem
+RUN mkdir -p /rootfs/bin /rootfs/lib /rootfs/binaries && \
+    cp /bin/busybox /rootfs/busybox && \
+    cp /lib/ld-musl-*.so.1 /rootfs/lib/ && \
+    # install busybox symlinks inside /rootfs/bin
+    chroot /rootfs /busybox --install -s /bin
+
+# Stage 2: Final minimal image
 FROM scratch
 
 ARG TARGETOS
 ARG TARGETARCH
 
-# 1. Copy the Dynamic Linker and Busybox (as established)
-COPY --from=tools_builder /lib/ld-musl-*.so.1 /lib/
-COPY --from=tools_builder /bin/busybox /busybox
+# Copy minimal filesystem
+COPY --from=tools_builder /rootfs/ /
 
-# 2. CRITICAL FIX: Install Busybox symlinks using Exec Form.
-# This sets up /bin/sh and /bin/mkdir.
-RUN ["/busybox", "--install", "-s", "/bin"]
+# Copy your binaries
+COPY bin/*$TARGETOS-$TARGETARCH /binaries/
 
-# 3. CRITICAL FIX: Use the Exec Form to run mkdir explicitly.
-# We call the new /bin/mkdir that was just installed.
-RUN ["/bin/mkdir", "-p", "/binaries", "/lib"]
-
-WORKDIR /
-
-# 4. Copy application binaries
-COPY bin/*-$TARGETOS-$TARGETARCH /binaries/
-
-# 5. FINAL CRITICAL FIX: Use the Exec Form for CMD.
-# We call the new /bin/ls that was just installed.
+# Default command
 CMD ["/bin/ls", "-lrt", "/binaries/"]
