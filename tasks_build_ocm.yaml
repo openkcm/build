@@ -110,8 +110,6 @@ tasks:
       - test "{{.OCM_SIGNING_ENABLED}}" != "true"
     cmds:
       - |
-        set -eu
-        
         if [ -z "$OCM_PRIVATE_KEY" ]; then
           echo "❌ Error: Missing private key for signing." >&2
           exit 1
