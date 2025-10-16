@@ -225,10 +225,10 @@ tasks:
         vars:
           OS: '{{.ITEM.OS}}'
           ARCH: '{{.ITEM.ARCH}}'
-          IMAGE: '{{.IMAGE_BASE}}/{{.IMAGE_NAME}}:{{.VERSION}}-{{.OS}}-{{.ITEM.ARCH}}'
+          IMAGE: '{{.IMAGE_BASE}}/{{.IMAGE_NAME}}:{{.VERSION}}-{{.OS}}'
         task: build-and-push-one-internal
       - vars:
-          IMG: '{{.IMAGE_BASE}}/{{.IMAGE_NAME}}:{{.VERSION}}'
+          IMG: '{{.IMAGE_BASE}}/{{.IMAGE_NAME}}:{{.VERSION}}-{{.OS}}'
           BASE_IMG: '{{.IMAGE_BASE}}/{{.IMAGE_NAME}}'
         task: push-multi-internal
 
