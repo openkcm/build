@@ -1,15 +1,20 @@
 FROM alpine AS tools_builder
-RUN apk add --no-cache busybox && /bin/busybox --install -s /bin
+RUN apk add --no-cache busybox
 
 FROM scratch
 
 ARG TARGETOS
 ARG TARGETARCH
 
-COPY --from=tools_builder /bin/busybox /busybox
-RUN ["/busybox", "sh", "-c", "/busybox --install -s /bin && mkdir -p /binaries"]
+RUN mkdir -p /lib /bin /binaries
 
 WORKDIR /
+
+COPY --from=tools_builder /lib/ld-musl-*.so.1 /lib/
+
+COPY --from=tools_builder /bin/busybox /busybox
+
+RUN ["/busybox", "sh", "-c", "/busybox --install -s /bin && /bin/mkdir -p /binaries"]
 
 COPY bin/*$TARGETOS-$TARGETARCH /binaries/
 
