@@ -181,27 +181,26 @@ tasks:
         var: COMPONENTS
         as: COMPONENT
       vars:
-        IMG: '{{.IMAGE_BASE}}/{{.COMPONENT}}:{{.VERSION}}'
-        BASE_IMG: '{{.IMAGE_BASE}}/{{.COMPONENT}}'
+        BASE_IMAGE: '{{.IMAGE_BASE}}/{{.COMPONENT}}'
       task: push-multi-internal
 
   push-multi-internal:
     desc: "  Push the multi-platform manifest for a single component's image. Individual platform-specific images must have been pushed before."
     requires:
       vars:
-      - IMG
-      - BASE_IMG
+      - VERSION
+      - BASE_IMAGE
     cmds:
     - for:
         matrix:
           OS: ["linux"] # distroless base image only supports linux
           ARCH: ["amd64", "arm64"]
-      cmd: 'docker manifest create {{.IMG}} --amend {{.IMG}}-{{.ITEM.OS}}-{{.ITEM.ARCH}}'
-    - 'echo "Pushing image {{.IMG}}"'
-    - 'docker manifest push {{.IMG}}'
+      cmd: 'docker manifest create {{.BASE_IMAGE}}:{{.VERSION}} --amend {{.BASE_IMAGE}}:{{.VERSION}}-{{.ITEM.OS}}-{{.ITEM.ARCH}}'
+    - 'echo "Pushing image {{.BASE_IMAGE}}:{{.VERSION}}"'
+    - 'docker manifest push {{.BASE_IMAGE}}:{{.VERSION}}'
     - task: sign
       vars:
-        IMG: '{{.BASE_IMG}}'
+        BASE_IMAGE: '{{.BASE_IMAGE}}'
         CRANE_PLATFORM: ''
     internal: true
 
@@ -228,8 +227,7 @@ tasks:
           BASE_IMAGE: '{{.IMAGE_BASE}}/{{.IMAGE_NAME}}'
         task: build-and-push-one-internal
       - vars:
-          IMG: '{{.IMAGE_BASE}}/{{.IMAGE_NAME}}:{{.VERSION}}'
-          BASE_IMG: '{{.IMAGE_BASE}}/{{.IMAGE_NAME}}'
+          BASE_IMAGE: '{{.IMAGE_BASE}}/{{.IMAGE_NAME}}'
         task: push-multi-internal
 
   build-and-push-one-internal:
@@ -251,7 +249,8 @@ tasks:
       - 'docker push {{.IMAGE}}'
       - 'rm -f "{{.ROOT_DIR2}}/Dockerfile.tmp"'
       - vars:
-          IMG: '{{.BASE_IMAGE}}'
+          VERSION: '{{.VERSION}}-{{.OS}}-{{.ITEM.ARCH}}'
+          BASE_IMAGE: '{{.BASE_IMAGE}}'
           CRANE_PLATFORM: '--platform={{.OS}}/{{.ARCH}}'
         task: sign
     internal: true
@@ -261,7 +260,7 @@ tasks:
     requires:
       vars:
         - VERSION
-        - IMG
+        - BASE_IMAGE
         - CRANE_PLATFORM
     deps:
       - tools:crane
@@ -285,9 +284,9 @@ tasks:
         trap 'rm -f "{{.ROOT_DIR2}}/cosign.key"' EXIT
         echo "$COSIGN_PRIVATE_KEY" > "{{.ROOT_DIR2}}/cosign.key"
         
-        DIGEST=$({{.CRANE}} digest {{.CRANE_PLATFORM}} {{.IMG}}:{{.VERSION}})
-        {{.COSIGN}} sign --yes --key "{{.ROOT_DIR2}}/cosign.key" "{{.IMG}}@$DIGEST"
-        echo "✅ Successfully signed multi-arch image: {{.IMG}}@$DIGEST"
+        DIGEST=$({{.CRANE}} digest {{.CRANE_PLATFORM}} {{.BASE_IMAGE}}:{{.VERSION}})
+        {{.COSIGN}} sign --yes --key "{{.ROOT_DIR2}}/cosign.key" "{{.BASE_IMAGE}}@$DIGEST"
+        echo "✅ Successfully signed multi-arch image: {{.BASE_IMAGE}}@$DIGEST"
     internal: true
 
 
