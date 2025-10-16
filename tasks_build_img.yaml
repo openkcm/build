@@ -225,9 +225,7 @@ tasks:
             OS: [ "linux" ] # distroless base image only supports linux
         vars:
           OS: '{{.ITEM.OS}}'
-          IMAGE_NAME: '{{.IMAGE_NAME}}'
-          VERSION: '{{.VERSION}}'
-          IMAGE_BASE: '{{.IMAGE_BASE}}'
+          IMAGE: '{{.IMAGE_BASE}}/{{.IMAGE_NAME}}:{{.VERSION}}-{{.OS}}'
         task: build-and-push-one-internal
       - task: sign
         vars:
@@ -238,17 +236,15 @@ tasks:
     desc: "  Build a single image including all binaries. Requires the docker builder to have been prepared before."
     requires:
       vars:
-        - IMAGE_NAME
-        - VERSION
+        - IMAGE
         - OS
-        - IMAGE_BASE
         - DOCKER_BUILDER_NAME
     cmds:
-      - 'echo "Building image {{.IMAGE_NAME}}:{{.VERSION}}-{{.OS}}"'
+      - 'echo "Building image {{.IMAGE}}"'
       - '[[ "{{.OS}}" == "linux" ]] || { echo "The distroless base image does only support linux as operating system."; exit 1; }'
       - 'cat "{{.TASKFILE_DIR2}}/Dockerfile.components" > "{{.ROOT_DIR2}}/Dockerfile.tmp"'
-      - '( cd "{{.ROOT_DIR2}}"; docker buildx build --builder {{.DOCKER_BUILDER_NAME}} --load --platform {{.OS}} -t {{.IMAGE_BASE}}/{{.IMAGE_NAME}}:{{.VERSION}}-{{.OS}} -f Dockerfile.tmp . )'
-      - 'docker push {{.IMAGE_BASE}}/{{.IMAGE_NAME}}:{{.VERSION}}-{{.OS}}'
+      - '( cd "{{.ROOT_DIR2}}"; docker buildx build --builder {{.DOCKER_BUILDER_NAME}} --load --platform {{.OS}} -t {{.IMAGE}} -f Dockerfile.tmp . )'
+      - 'docker push {{.IMAGE}}'
       - 'rm -f "{{.ROOT_DIR2}}/Dockerfile.tmp"'
     internal: true
 
