@@ -248,7 +248,7 @@ tasks:
       - 'docker push {{.IMAGE}}'
       - 'rm -f "{{.ROOT_DIR2}}/Dockerfile.tmp"'
       - vars:
-          IMG: '{{.IMAGE}}/{{.IMAGE_NAME}}'
+          IMG: '{{.IMAGE}}'
           CRANE_PLATFORM: '--platform={{.OS}}/{{.ARCH}}'
         task: sign
     internal: true
