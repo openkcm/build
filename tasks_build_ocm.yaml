@@ -93,16 +93,21 @@ tasks:
         sh: 'if [[ -n ${OVERWRITE_COMPONENTS:-} ]] && [[ ${OVERWRITE_COMPONENTS} != "false" ]]; then echo -n "--overwrite"; fi'
       compdir: '{{.LOCALTMP}}/component'
     cmds:
-    - task: sign
+    - vars:
+        COMPONENT: '{{.compdir}}'
+      task: sign
     - '"{{.OCM}}" transfer componentversions "{{.compdir}}" "{{.COMPONENT_REGISTRY}}" {{.overwrite_mod}}'
 
   sign:
     desc: "  Sign OCM."
+    requires:
+      vars:
+        - COMPONENT
     vars:
       OCM_SIGNING_ENABLED: '{{ env "OCM_SIGNING_ENABLED" | default "false" }}'
       OCM_SIGNATURE_NAME: 'pipeline-signature'
     preconditions:
-      - sh: test "{{.OCM_SIGNING_ENABLED}}" != "true"
+      - sh: test "{{.OCM_SIGNING_ENABLED}}" = "true"
         msg: "⚠️ OCM component signing is disabled (OCM_SIGNING_ENABLED is not 'true'). Skipping."
     cmds:
       - |
@@ -115,7 +120,7 @@ tasks:
         
         trap 'rm -f "{{.ROOT_DIR2}}/ocm.key"' EXIT
         echo "$OCM_PRIVATE_KEY" > "{{.ROOT_DIR2}}/ocm.key"
-        "{{.OCM}}" sign componentversion --signature "{{.OCM_SIGNATURE_NAME}}" --private-key="{{.ROOT_DIR2}}/ocm.key" "{{.compdir}}"
+        "{{.OCM}}" sign componentversion --signature "{{.OCM_SIGNATURE_NAME}}" --private-key="{{.ROOT_DIR2}}/ocm.key" "{{.COMPONENT}}"
   
         echo "✅ OCM component successfully signed."
     internal: true
