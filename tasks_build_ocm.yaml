@@ -96,6 +96,7 @@ tasks:
     - vars:
         COMPONENT: '{{.compdir}}'
       task: sign
+      silent: true
     - '"{{.OCM}}" transfer componentversions "{{.compdir}}" "{{.COMPONENT_REGISTRY}}" {{.overwrite_mod}}'
 
   sign:
@@ -110,6 +111,8 @@ tasks:
       - test "{{.OCM_SIGNING_ENABLED}}" != "true"
     cmds:
       - |
+        set -eu
+        
         if [ -z "$OCM_PRIVATE_KEY" ]; then
           echo "❌ Error: Missing private key for signing." >&2
           exit 1
@@ -121,4 +124,3 @@ tasks:
   
         echo "✅ OCM component successfully signed."
     internal: true
-    silent: true

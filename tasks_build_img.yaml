@@ -99,6 +99,7 @@ tasks:
         BASE_IMAGE: '{{.IMAGE_BASE}}/{{.COMPONENT}}'
         CRANE_PLATFORM: '--platform={{.OS}}/{{.ARCH}}'
       task: sign
+      silent: true
     internal: true
 
   build-multi-raw:
@@ -170,6 +171,7 @@ tasks:
         BASE_IMAGE: '{{.IMAGE_BASE}}/{{.COMPONENT}}'
         CRANE_PLATFORM: '--platform={{.OS}}/{{.ARCH}}'
       task: sign
+      silent: true
     internal: true
 
   push-multi:
@@ -211,11 +213,12 @@ tasks:
       cmd: 'docker manifest create {{.BASE_IMAGE}}:{{.VERSION}} --amend {{.BASE_IMAGE}}:{{.VERSION}}-{{.ITEM.OS}}-{{.ITEM.ARCH}}'
     - 'echo "Pushing manifest {{.BASE_IMAGE}}:{{.VERSION}}"'
     - 'docker manifest push {{.BASE_IMAGE}}:{{.VERSION}}'
-    - task: sign
-      vars:
+    - vars:
         VERSION: '{{.VERSION}}'
         BASE_IMAGE: '{{.BASE_IMAGE}}'
         CRANE_PLATFORM: ''
+      task: sign
+      silent: true
     internal: true
 
   build-and-push-one:
@@ -267,6 +270,7 @@ tasks:
           BASE_IMAGE: '{{.BASE_IMAGE}}'
           CRANE_PLATFORM: '--platform={{.OS}}/{{.ARCH}}'
         task: sign
+        silent: true
     internal: true
 
   sign:
@@ -286,6 +290,8 @@ tasks:
       - test "{{.IMAGE_SIGNING_ENABLED}}" != "true"
     cmds:
       - |
+        set -eu
+        
         if [ -z "$COSIGN_PRIVATE_KEY" ] || [ -z "$COSIGN_PASSWORD" ]; then
           echo "❌ Error: Missing COSIGN_PRIVATE_KEY or COSIGN_PASSWORD." >&2
           exit 1
@@ -298,7 +304,6 @@ tasks:
         {{.COSIGN}} sign --yes --key "{{.ROOT_DIR2}}/cosign.key" "{{.BASE_IMAGE}}@$DIGEST"
         echo "✅ Successfully signed image: {{.BASE_IMAGE}}@$DIGEST"
     internal: true
-    silent: true
 
 
   tag:
