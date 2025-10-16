@@ -107,10 +107,14 @@ tasks:
     vars:
       OCM_SIGNING_ENABLED: '{{ env "OCM_SIGNING_ENABLED" | default "false" }}'
       OCM_SIGNATURE_NAME: 'pipeline-signature'
-    status:
-      - test "{{.OCM_SIGNING_ENABLED}}" != "true"
+    silent: true
     cmds:
       - |
+        if [ "{{.OCM_SIGNING_ENABLED}}" != "true" ]; then
+          echo "⚠️ OCM signing is disabled (OCM_SIGNING_ENABLED is not 'true'). Skipping."
+          exit 0
+        fi
+        
         set -eu
         
         if [ -z "$OCM_PRIVATE_KEY" ]; then
