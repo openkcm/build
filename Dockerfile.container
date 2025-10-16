@@ -9,32 +9,22 @@ FROM scratch
 ARG TARGETOS
 ARG TARGETARCH
 
-# 1. CRITICAL FIX: Copy the Dynamic Linker (ld-musl)
-# This is required for the kernel to run the busybox binary.
-# We copy it to /lib, which the kernel expects.
+# 1. Copy the Dynamic Linker and Busybox (as established)
 COPY --from=tools_builder /lib/ld-musl-*.so.1 /lib/
-
-# 2. CRITICAL FIX: Copy the single /bin/busybox executable.
-# Copy it to the root, avoiding the need for /bin/ to exist first.
 COPY --from=tools_builder /bin/busybox /busybox
 
-# 3. CRITICAL FIX: Use the Exec Form to run the first command directly.
-# This bypasses the missing /bin/sh shell wrapper.
-# We use /busybox to install the necessary symlinks (sh, ls, mkdir) and create directories.
-# Since /bin/sh doesn't exist yet, we call /busybox directly.
-RUN ["/busybox", "sh", "-c", "/busybox --install -s /bin && /bin/mkdir -p /binaries /lib"]
+# 2. CRITICAL FIX: Use the Exec Form to install Busybox symlinks (sh, ls, mkdir).
+# This must be the first command to guarantee /bin/sh and /bin/mkdir exist for the next step.
+RUN ["/busybox", "--install", "-s", "/bin"]
 
-# The above RUN command successfully creates:
-# - /bin/sh (symlink to /busybox)
-# - /bin/ls (symlink to /busybox)
-# - /bin/mkdir (symlink to /busybox)
-# - The /binaries directory.
-# The RUN on line 9 in your error output is now redundant and should be removed.
+# 3. Use the newly created /bin/mkdir (via /bin/sh) to create directories.
+# We can now safely use the shell form.
+RUN mkdir -p /binaries /lib
 
 WORKDIR /
 
-# 4. Copy application binaries (using the assumed correct hyphen syntax)
-COPY bin/*$TARGETOS-$TARGETARCH /binaries/
+# 4. Copy application binaries
+COPY bin/*-$TARGETOS-$TARGETARCH /binaries/
 
 # 5. CMD uses the linked /bin/ls
 CMD ["/bin/ls", "-lrt", "/binaries/"]
