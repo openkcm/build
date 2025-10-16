@@ -13,18 +13,19 @@ ARG TARGETARCH
 COPY --from=tools_builder /lib/ld-musl-*.so.1 /lib/
 COPY --from=tools_builder /bin/busybox /busybox
 
-# 2. CRITICAL FIX: Use the Exec Form to install Busybox symlinks (sh, ls, mkdir).
-# This must be the first command to guarantee /bin/sh and /bin/mkdir exist for the next step.
+# 2. CRITICAL FIX: Install Busybox symlinks using Exec Form.
+# This sets up /bin/sh and /bin/mkdir.
 RUN ["/busybox", "--install", "-s", "/bin"]
 
-# 3. Use the newly created /bin/mkdir (via /bin/sh) to create directories.
-# We can now safely use the shell form.
-RUN mkdir -p /binaries /lib
+# 3. CRITICAL FIX: Use the Exec Form to run mkdir explicitly.
+# We call the new /bin/mkdir that was just installed.
+RUN ["/bin/mkdir", "-p", "/binaries", "/lib"]
 
 WORKDIR /
 
 # 4. Copy application binaries
 COPY bin/*-$TARGETOS-$TARGETARCH /binaries/
 
-# 5. CMD uses the linked /bin/ls
+# 5. FINAL CRITICAL FIX: Use the Exec Form for CMD.
+# We call the new /bin/ls that was just installed.
 CMD ["/bin/ls", "-lrt", "/binaries/"]
