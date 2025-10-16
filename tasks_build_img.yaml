@@ -227,10 +227,10 @@ tasks:
           OS: '{{.ITEM.OS}}'
           IMAGE: '{{.IMAGE_BASE}}/{{.IMAGE_NAME}}:{{.VERSION}}-{{.OS}}'
         task: build-and-push-one-internal
-      - task: sign
-        vars:
-          IMG: '{{.IMAGE_BASE}}/{{.IMAGE_NAME}}:{{.VERSION}}'
-          BASE_IMG: '{{.IMAGE_BASE}}/{{.IMAGE_NAME}}'
+#      - task: sign
+#        vars:
+#          IMG: '{{.IMAGE_BASE}}/{{.IMAGE_NAME}}:{{.VERSION}}'
+#          BASE_IMG: '{{.IMAGE_BASE}}/{{.IMAGE_NAME}}'
 
   build-and-push-one-internal:
     desc: "  Build a single image including all binaries. Requires the docker builder to have been prepared before."
