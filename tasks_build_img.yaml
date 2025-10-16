@@ -186,13 +186,11 @@ tasks:
       task: push-multi-internal
 
   push-multi-internal:
-    desc: "  Build and push the multi-platform manifest for a single component's image. Individual platform-specific images must have been pushed before."
+    desc: "  Push the multi-platform manifest for a single component's image. Individual platform-specific images must have been pushed before."
     requires:
       vars:
       - IMG
       - BASE_IMG
-    vars:
-      IMAGE_SIGNING_ENABLED: '{{ env "IMAGE_SIGNING_ENABLED" | default "false" }}'
     cmds:
     - for:
         matrix:
@@ -205,6 +203,25 @@ tasks:
       vars:
         IMG: '{{.IMG}}'
         BASE_IMG: '{{.BASE_IMG}}'
+    internal: true
+
+  push-os-internal:
+    desc: "  Push the manifest for a single component's image. Individual platform-specific images must have been pushed before."
+    requires:
+      vars:
+        - IMG
+        - BASE_IMG
+    cmds:
+      - for:
+          matrix:
+            OS: [ "linux" ]
+        cmd: 'docker manifest create {{.IMG}} --amend {{.IMG}}-{{.ITEM.OS}}'
+      - 'echo "Pushing image {{.IMG}}"'
+      - 'docker manifest push {{.IMG}}'
+      - task: sign
+        vars:
+          IMG: '{{.IMG}}'
+          BASE_IMG: '{{.BASE_IMG}}'
     internal: true
 
   build-and-push-one:
@@ -227,10 +244,10 @@ tasks:
           OS: '{{.ITEM.OS}}'
           IMAGE: '{{.IMAGE_BASE}}/{{.IMAGE_NAME}}:{{.VERSION}}-{{.OS}}'
         task: build-and-push-one-internal
-#      - task: sign
-#        vars:
-#          IMG: '{{.IMAGE_BASE}}/{{.IMAGE_NAME}}:{{.VERSION}}'
-#          BASE_IMG: '{{.IMAGE_BASE}}/{{.IMAGE_NAME}}'
+      - vars:
+          IMG: '{{.IMAGE_BASE}}/{{.IMAGE_NAME}}:{{.VERSION}}'
+          BASE_IMG: '{{.IMAGE_BASE}}/{{.IMAGE_NAME}}'
+        task: push-os-internal
 
   build-and-push-one-internal:
     desc: "  Build a single image including all binaries. Requires the docker builder to have been prepared before."
