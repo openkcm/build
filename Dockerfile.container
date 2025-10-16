@@ -10,6 +10,8 @@ ARG TARGETARCH
 
 WORKDIR /
 
+RUN mkdir -p /binaries /bin
+
 COPY --from=tools_builder /bin/ls /bin/ls
 
 COPY bin/*$TARGETOS-$TARGETARCH /binaries/
