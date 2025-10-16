@@ -226,13 +226,13 @@ tasks:
           IMAGE_NAME: '{{.IMAGE_NAME}}'
           VERSION: '{{.VERSION}}'
           IMAGE_BASE: '{{.IMAGE_BASE}}'
-        task: build-one-internal
+        task: build-all-in-one-internal
       - task: sign
         vars:
           IMG: '{{.IMAGE_BASE}}/{{.IMAGE_NAME}}:{{.VERSION}}'
           BASE_IMG: '{{.IMAGE_BASE}}/{{.IMAGE_NAME}}'
 
-  build-one-internal:
+  build-all-in-one-internal:
     desc: "  Build a single image including all binaries. Requires the docker builder to have been prepared before."
     requires:
       vars:
@@ -244,7 +244,7 @@ tasks:
     cmds:
       - 'echo "Building image {{.IMAGE_NAME}}:{{.VERSION}}-{{.OS}}"'
       - '[[ "{{.OS}}" == "linux" ]] || { echo "The distroless base image does only support linux as operating system."; exit 1; }'
-      - 'cat "{{.TASKFILE_DIR2}}/Dockerfile" > "{{.ROOT_DIR2}}/Dockerfile.tmp"'
+      - 'cat "{{.TASKFILE_DIR2}}/Dockerfile.all-in-one" > "{{.ROOT_DIR2}}/Dockerfile.tmp"'
       - '( cd "{{.ROOT_DIR2}}"; docker buildx build --builder {{.DOCKER_BUILDER_NAME}} --load --platform {{.OS}} -t {{.IMAGE_BASE}}/{{.IMAGE_NAME}}:{{.VERSION}}-{{.OS}} -f Dockerfile.tmp . )'
       - 'docker push {{.IMAGE_BASE}}/{{.IMAGE_NAME}}:{{.VERSION}}-{{.OS}}'
       - 'rm -f "{{.ROOT_DIR2}}/Dockerfile.tmp"'
