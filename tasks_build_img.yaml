@@ -213,8 +213,6 @@ tasks:
       vars:
         - IMAGE_NAME
         - VERSION
-    deps:
-      - build:bin:all
     vars:
       IMAGE_BASE:
         sh: 'PROJECT_ROOT="{{.ROOT_DIR2}}" {{.TASKFILE_DIR2}}/get-registry.sh --image'
