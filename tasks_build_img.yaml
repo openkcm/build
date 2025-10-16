@@ -225,7 +225,7 @@ tasks:
         vars:
           OS: '{{.ITEM.OS}}'
           ARCH: '{{.ITEM.ARCH}}'
-          IMAGE: '{{.IMAGE_BASE}}/{{.IMAGE_NAME}}:{{.VERSION}}-{{.OS}}-{{.ITEM.ARCH}}'
+          BASE_IMAGE: '{{.IMAGE_BASE}}/{{.IMAGE_NAME}}'
         task: build-and-push-one-internal
       - vars:
           IMG: '{{.IMAGE_BASE}}/{{.IMAGE_NAME}}:{{.VERSION}}'
@@ -236,10 +236,13 @@ tasks:
     desc: "  Build a single image including all binaries. Requires the docker builder to have been prepared before."
     requires:
       vars:
-        - IMAGE
+        - BASE_IMAGE
         - OS
         - ARCH
+        - VERSION
         - DOCKER_BUILDER_NAME
+    vars:
+      IMAGE: '{{.BASE_IMAGE}}:{{.VERSION}}-{{.OS}}-{{.ITEM.ARCH}}'
     cmds:
       - 'echo "Building image {{.IMAGE}}"'
       - '[[ "{{.OS}}" == "linux" ]] || { echo "The distroless base image does only support linux as operating system."; exit 1; }'
@@ -248,7 +251,7 @@ tasks:
       - 'docker push {{.IMAGE}}'
       - 'rm -f "{{.ROOT_DIR2}}/Dockerfile.tmp"'
       - vars:
-          IMG: '{{.IMAGE}}'
+          IMG: '{{.BASE_IMAGE}}'
           CRANE_PLATFORM: '--platform={{.OS}}/{{.ARCH}}'
         task: sign
     internal: true
