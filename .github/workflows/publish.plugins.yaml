@@ -100,5 +100,6 @@ jobs:
           IMAGE_SIGNING_ENABLED: ${{ inputs.image_signing_enabled }}
           COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
           COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
+          IMAGE_NAME: ${{ github.event.repository.name }}
         run: |
           task build-and-push --verbose
