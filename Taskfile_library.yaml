@@ -31,6 +31,9 @@ includes:
       - c
 
 vars:
+  REPO_URL:
+    sh: echo "https://github.com/${GITHUB_REPOSITORY}"
+
   # whacky workarounds for incorrect paths in the special variables
   # see https://github.com/go-task/task/issues/2056 and https://github.com/go-task/task/issues/2057
   ROOT_DIR2: '{{.ROOT_DIR | trimSuffix "/common" | trimSuffix "/hack"}}'
