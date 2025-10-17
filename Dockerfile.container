@@ -20,7 +20,7 @@ ARG TARGETARCH
 COPY --from=tools_builder /rootfs/ /
 
 # Copy your binaries
-COPY bin/*$TARGETOS-$TARGETARCH /binaries/
+COPY bin/**.$TARGETOS-$TARGETARCH /binaries/
 
 # Default command
 CMD ["/bin/ls", "-lrt", "/binaries/"]
