@@ -87,11 +87,12 @@ tasks:
       - DOCKER_BUILDER_NAME
     vars:
       IMAGE: '{{.IMAGE_BASE}}/{{.COMPONENT}}:{{.VERSION}}-{{.OS}}-{{.ARCH}}'
+      BINARY_NAME: '{{(regexReplaceAll "\\/" .COMPONENT "-") | lower}}'
     cmds:
     - 'echo "Building image {{.COMPONENT}}:{{.VERSION}}-{{.OS}}-{{.ARCH}}"'
     - '[[ "{{.OS}}" == "linux" ]] || { echo "The distroless base image does only support linux as operating system."; exit 1; }'
-    - 'cat "{{.TASKFILE_DIR2}}/Dockerfile" | sed "s|<component>|{{.COMPONENT}}|g" > "{{.ROOT_DIR2}}/Dockerfile.tmp"'
-    - '( cd "{{.ROOT_DIR2}}"; docker buildx build --builder {{.DOCKER_BUILDER_NAME}} --load --build-arg COMPONENT={{.COMPONENT}} --platform {{.OS}}/{{.ARCH}} -t {{.IMAGE}} -f Dockerfile.tmp . )'
+    - 'cat "{{.TASKFILE_DIR2}}/Dockerfile" | sed "s|<component>|{{.BINARY_NAME}}|g" > "{{.ROOT_DIR2}}/Dockerfile.tmp"'
+    - '( cd "{{.ROOT_DIR2}}"; docker buildx build --builder {{.DOCKER_BUILDER_NAME}} --load --build-arg COMPONENT={{.BINARY_NAME}} --platform {{.OS}}/{{.ARCH}} -t {{.IMAGE}} -f Dockerfile.tmp . )'
     - 'docker push {{.IMAGE}}'
     - 'rm -f "{{.ROOT_DIR2}}/Dockerfile.tmp"'
     - vars:
