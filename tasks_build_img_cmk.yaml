@@ -155,7 +155,7 @@ tasks:
         BUILD_ARGS=""
         for image in $WATCHED_IMAGES; do
           VAR_NAME=$(echo "$image" | tr '[:lower:]-' '[:upper:]_')
-          BUILD_ARGS+=" --build-arg ${VAR_NAME}_IMAGE_DIGEST=${TAGS[$image]}"
+          BUILD_ARGS+=" --build-arg ${VAR_NAME}_IMAGE=${TAGS[$image]}-{{.OS}}-{{.ARCH}}"
         done
 
         IMAGE="{{.BASE_IMAGE}}:$MAIN_TAG-{{.OS}}-{{.ARCH}}"

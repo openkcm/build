@@ -1,13 +1,13 @@
 # --- Stage 1: import dependencies ---
-ARG KEYSTORE_PLUGINS_IMAGE_DIGEST
-FROM ghcr.io/openkcm/images/keystore-plugins@${KEYSTORE_PLUGINS_IMAGE_DIGEST} AS keystore-plugins
+ARG KEYSTORE_PLUGINS_IMAGE
+FROM ghcr.io/openkcm/images/keystore-plugins:${KEYSTORE_PLUGINS_IMAGE} AS keystore-plugins
 
-ARG IDENTITY_MANAGEMENT_PLUGINS_IMAGE_DIGEST
-FROM ghcr.io/openkcm/images/identity-management-plugins@${IDENTITY_MANAGEMENT_PLUGINS_IMAGE_DIGEST} AS identity-management-plugins
+ARG IDENTITY_MANAGEMENT_PLUGINS_IMAGE
+FROM ghcr.io/openkcm/images/identity-management-plugins:${IDENTITY_MANAGEMENT_PLUGINS_IMAGE} AS identity-management-plugins
 
 # --- Stage 2: main base image ---
-ARG CMK_CORE_IMAGE_DIGEST
-FROM ghcr.io/openkcm/images/dummy-service@${CMK_CORE_IMAGE_DIGEST}
+ARG CMK_CORE_IMAGE
+FROM ghcr.io/openkcm/images/dummy-service:${CMK_CORE_IMAGE}
 
 WORKDIR /
 
