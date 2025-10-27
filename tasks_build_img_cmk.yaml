@@ -139,7 +139,7 @@ tasks:
         MAIN_TAG="${TAGS[$MAIN_IMAGE]}"
         echo "📌 Main image tag: ${MAIN_TAG}"
 
-        COMPOSITE_PATH="https://ghcr.io/v2/${ORG}/${IMAGE_PATH}/cmk-composite/manifests/${MAIN_TAG}"
+        COMPOSITE_PATH="https://ghcr.io/v2/${ORG}/${IMAGE_PATH}/${MAIN_IMAGE}/manifests/${MAIN_TAG}"
         STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
           -H "Authorization: Bearer $TOKEN" \
           -H "Accept: application/vnd.oci.image.manifest.v1+json" \
