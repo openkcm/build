@@ -23,6 +23,10 @@ on:
         default: false
         type: boolean # Use boolean type
 
+permissions:
+  packages: write
+  contents: write
+
 jobs:
   push-cmk:
     runs-on: ubuntu-latest
