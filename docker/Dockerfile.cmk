@@ -2,10 +2,10 @@ ARG DUMMY_SERVICE_IMAGE
 ARG KEYSTORE_PLUGINS_IMAGE
 ARG IDENTITY_MANAGEMENT_PLUGINS_IMAGE
 
-FROM ghcr.io/openkcm/images/keystore-plugins@${KEYSTORE_PLUGINS_IMAGE} AS keystore-plugins
-FROM ghcr.io/openkcm/images/identity-management-plugins@${IDENTITY_MANAGEMENT_PLUGINS_IMAGE} AS identity-management-plugins
+FROM ghcr.io/openkcm/images/keystore-plugins:${KEYSTORE_PLUGINS_IMAGE} AS keystore-plugins
+FROM ghcr.io/openkcm/images/identity-management-plugins:${IDENTITY_MANAGEMENT_PLUGINS_IMAGE} AS identity-management-plugins
 
-FROM ghcr.io/openkcm/images/dummy-service@${DUMMY_SERVICE_IMAGE}
+FROM ghcr.io/openkcm/images/dummy-service:${DUMMY_SERVICE_IMAGE}
 
 WORKDIR /
 

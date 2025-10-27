@@ -126,16 +126,6 @@ tasks:
           fi
         done
         
-        echo "🔖 All Digests:"
-        for k in "${!DIGESTS[@]}"; do
-          echo "   ${k} → ${DIGESTS[$k]}"
-        done
-        
-        echo "🔖 All Tags:"
-        for k in "${!TAGS[@]}"; do
-          echo "   ${k} → ${TAGS[$k]}"
-        done
-
         MAIN_TAG="${TAGS[$MAIN_IMAGE]}"
         echo "📌 Main image tag: ${MAIN_TAG}"
 
@@ -160,7 +150,7 @@ tasks:
   
         for image in $WATCHED_IMAGES; do
           VAR_NAME=$(echo "$image" | tr '[:lower:]-' '[:upper:]_')
-          VALUE=${DIGESTS[$image]}
+          VALUE=${TAGS[$image]}
           if [ -z "$VALUE" ]; then
             echo "❌ Tag missing for image: $image"
             exit 1
