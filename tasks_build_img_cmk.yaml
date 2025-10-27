@@ -123,8 +123,15 @@ tasks:
           fi
         done
         
-        echo "🔖 Digests ${DIGESTS}"
-        echo "🔖 Tags ${TAGS}"
+        echo "🔖 All Digests:"
+        for k in "${!DIGESTS[@]}"; do
+          echo "   ${k} → ${DIGESTS[$k]}"
+        done
+        
+        echo "🔖 All Tags:"
+        for k in "${!TAGS[@]}"; do
+          echo "   ${k} → ${TAGS[$k]}"
+        done
 
         MAIN_TAG="${TAGS[$MAIN_IMAGE]}"
         echo "📌 Main image tag: ${MAIN_TAG}"
