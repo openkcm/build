@@ -87,4 +87,4 @@ jobs:
           CMK_CORE_IMAGE: "dummy-service"
           CMK_PLUGIN_IMAGES: "keystore-plugins identity-management-plugins"
         run: |
-          task push --verbose
+          task build:img_cmk:push --verbose
