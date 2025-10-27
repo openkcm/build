@@ -91,7 +91,7 @@ tasks:
           TOKEN=$(get_ghcr_token "${FULL_PATH}")
 
           TAGS_URL="https://ghcr.io/v2/${FULL_PATH}/tags/list"
-          TAG=$(curl -fsSL -H "Authorization: Bearer $TOKEN" "$TAGS_URL" | jq -r '.tags | sort | last')
+          TAG=$(curl -fsSL -H "Authorization: Bearer $TOKEN" "$TAGS_URL" | jq -r '.tags | sort | first')
 
           if [ -z "$TAG" ] || [ "$TAG" = "null" ]; then
             echo "❌ No tags found for ${FULL_PATH}"
@@ -122,6 +122,9 @@ tasks:
             echo "✅ No change for ${image}"
           fi
         done
+        
+        echo "🔖 Digests ${DIGESTS}"
+        echo "🔖 Tags ${TAGS}"
 
         MAIN_TAG="${TAGS[$MAIN_IMAGE]}"
         echo "📌 Main image tag: ${MAIN_TAG}"
