@@ -1,8 +1,12 @@
-name: Publish
+name: Release CMK
 
 on:
+  schedule:
+    - cron: '*/10 * * * *'   # every 10 minutes
   workflow_call:
     secrets:
+      OCM_PRIVATE_KEY:
+        required: false
       COSIGN_PRIVATE_KEY:
         required: false
       COSIGN_PASSWORD:
@@ -12,15 +16,18 @@ on:
         description: 'Enable image signing (true|false)'
         required: false
         default: false
-        type: boolean
-
-permissions:
-  packages: write
-  contents: read
+        type: boolean # Use boolean type
+      ocm_signing_enabled:
+        description: 'Enable OCM signing (true|false)'
+        required: false
+        default: false
+        type: boolean # Use boolean type
 
 jobs:
-  artifacts:
-    runs-on: ubuntu-24.04
+  push-cmk:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # needed for caching state
     steps:
       - name: Generate token from GitHub App
         id: generate-token
@@ -39,7 +46,7 @@ jobs:
 
       - name: Checkout build (taskfiles) repo
         run: |
-          git clone --branch main --single-branch https://github.com/openkcm/build.git ./hack/common
+          git clone --branch feature/cmk-image-build --single-branch https://github.com/openkcm/build.git ./hack/common
 
       - name: Install Task
         uses: arduino/setup-task@b91d5d2c96a56797b48ac1e0e89220bf64044611 #v2.0.0
@@ -59,7 +66,7 @@ jobs:
       - name: Run tfsec security scanner
         uses: aquasecurity/tfsec-action@b466648d6e39e7c75324f25d83891162a721f2d6 #v1.0.3
         with:
-          github_token:  ${{ steps.generate-token.outputs.token }}
+          github_token: ${{ steps.generate-token.outputs.token }}
           format: json
 
       - name: Set up QEMU
@@ -83,16 +90,16 @@ jobs:
         with:
           version: latest
 
-      - name: Set up Go
-        uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00 # v6.0.0
-        with:
-          go-version-file: go.mod
-
-      - name: Build and Push
+      - name: Push Image
         env:
           IMAGE_SIGNING_ENABLED: ${{ inputs.image_signing_enabled }}
           COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
           COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
-          IMAGE_NAME: ${{ github.event.repository.name }}
+          IMAGE_NAME: cmk
+          ORG: openkcm
+          GITHUB_REPOSITORY_IMAGE_PATH: images
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CMK_CORE_IMAGE: "dummy-service"
+          CMK_PLUGIN_IMAGES: "keystore-plugins identity-management-plugins"
         run: |
-          task build-and-push --verbose
+          task push --verbose

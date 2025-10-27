@@ -1,0 +1,19 @@
+# --- Define image arguments passed from build ---
+ARG CMK_CORE_IMAGE_DIGEST
+ARG KEYSTORE_PLUGINS_IMAGE_DIGEST
+ARG IDENTITY_MANAGEMENT_PLUGINS_IMAGE_DIGEST
+
+# --- Stage 1: import dependencies ---
+FROM ghcr.io/openkcm/images/keystore-plugins@${KEYSTORE_PLUGINS_IMAGE_DIGEST} AS keystore-plugins
+FROM ghcr.io/openkcm/images/identity-management-plugins@${IDENTITY_MANAGEMENT_PLUGINS_IMAGE_DIGEST} AS identity-management-plugins
+
+# --- Stage 2: main base image ---
+FROM hcr.io/openkcm/images/cmk-core@${CMK_CORE_IMAGE_DIGEST}
+
+WORKDIR /
+
+# Copy dependencies from other repos
+COPY --from=keystore-plugins /bin/keystoreop-aws** /etc/plugins/keystore/
+COPY --from=identity-management-plugins /bin/scim** /etc/plugins/identity-management/
+
+CMD ["./core api-server"]

@@ -5,6 +5,8 @@ includes:
     taskfile: tasks_build_bin.yaml
   img:
     taskfile: tasks_build_img.yaml
+  img_cmk:
+    taskfile: tasks_build_img_cmk.yaml
   helm:
     taskfile: tasks_build_helm.yaml
   ocm:
