@@ -55,6 +55,8 @@ tasks:
         - DOCKER_BUILDER_NAME
         - ORG
         - GITHUB_REPOSITORY_IMAGE_PATH
+        - GITHUB_TOKEN
+        - GITHUB_ACTOR
         - CMK_CORE_IMAGE
         - CMK_PLUGIN_IMAGES
         - IMAGE_NAME
@@ -69,6 +71,16 @@ tasks:
         IMAGE_PATH="{{.GITHUB_REPOSITORY_IMAGE_PATH}}"
         MAIN_IMAGE="{{.CMK_CORE_IMAGE}}"
         PLUGIN_IMAGES="{{.CMK_PLUGIN_IMAGES}}"
+        GHCR_PAT="{{.GITHUB_TOKEN}}"
+        GITHUB_ACTOR="{{.GITHUB_ACTOR}}"
+        
+        get_ghcr_token() {
+          local repo="$1"
+          curl -fsSL "https://ghcr.io/token?scope=repository:${repo}:pull" \
+            -u "${GITHUB_ACTOR}:${GHCR_PAT}" | jq -r '.token'
+        }
+
+        mkdir -p .ghcr_state
         
         WATCHED_IMAGES="$MAIN_IMAGE $PLUGIN_IMAGES"
         declare -A TAGS
@@ -91,6 +103,7 @@ tasks:
         MAIN_TAG="${TAGS[$MAIN_IMAGE]}"
 
         COMPOSITE_PATH="https://ghcr.io/v2/${ORG}/${IMAGE_PATH}/{{.IMAGE_NAME}}/manifests/${MAIN_TAG}"
+        TOKEN=$(get_ghcr_token "${ORG}/${IMAGE_PATH}/{{.IMAGE_NAME}}")
         STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
           -H "Authorization: Bearer $TOKEN" \
           -H "Accept: application/vnd.oci.image.manifest.v1+json" \

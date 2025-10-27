@@ -88,8 +88,8 @@ jobs:
           IMAGE_NAME: dummy-service-2
           ORG: openkcm
           GITHUB_REPOSITORY_IMAGE_PATH: images
-#          GITHUB_ACTOR: ${{ github.actor }}
-#          GITHUB_TOKEN: ${{  steps.generate-token.outputs.token }}
+          GITHUB_ACTOR: ${{ github.actor }}
+          GITHUB_TOKEN: ${{  steps.generate-token.outputs.token }}
           CMK_CORE_IMAGE: "dummy-service"
           CMK_PLUGIN_IMAGES: "keystore-plugins identity-management-plugins"
         run: |
