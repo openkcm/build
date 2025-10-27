@@ -147,12 +147,12 @@ tasks:
 
         if [ "$STATUS" -eq 200 ]; then
           echo "✅ Composite image already exists for tag ${MAIN_TAG}. Exiting."
-          exit 0
+          exit 1
         fi
 
         if [ "$CHANGED" -eq 0 ]; then
           echo "ℹ️  No image updates detected. Nothing to build."
-          exit 0
+          exit 1
         fi
 
 
