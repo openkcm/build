@@ -55,8 +55,6 @@ tasks:
         - DOCKER_BUILDER_NAME
         - ORG
         - GITHUB_REPOSITORY_IMAGE_PATH
-        - GITHUB_TOKEN
-        - GITHUB_ACTOR
         - CMK_CORE_IMAGE
         - CMK_PLUGIN_IMAGES
         - IMAGE_NAME
@@ -71,19 +69,8 @@ tasks:
         IMAGE_PATH="{{.GITHUB_REPOSITORY_IMAGE_PATH}}"
         MAIN_IMAGE="{{.CMK_CORE_IMAGE}}"
         PLUGIN_IMAGES="{{.CMK_PLUGIN_IMAGES}}"
-        GHCR_PAT="{{.GITHUB_TOKEN}}"
-        GITHUB_ACTOR="{{.GITHUB_ACTOR}}"
-        
-        get_ghcr_token() {
-          local repo="$1"
-          curl -fsSL "https://ghcr.io/token?scope=repository:${repo}:pull" \
-            -u "${GITHUB_ACTOR}:${GHCR_PAT}" | jq -r '.token'
-        }
-
-        mkdir -p .ghcr_state
         
         WATCHED_IMAGES="$MAIN_IMAGE $PLUGIN_IMAGES"
-        declare -A DIGESTS
         declare -A TAGS
         CHANGED=0
 
@@ -98,27 +85,7 @@ tasks:
             exit 1
           fi
 
-          TOKEN=$(get_ghcr_token "${FULL_PATH}")
-          MANIFEST_URL="https://ghcr.io/v2/${FULL_PATH}/manifests/${TAG}-{{.OS}}-{{.ARCH}}"
-          DIGEST=$(curl -fsSLI \
-            -H "Authorization: Bearer $TOKEN" \
-            -H "Accept: application/vnd.oci.image.manifest.v1+json" \
-            "$MANIFEST_URL" | grep -i 'Docker-Content-Digest' | awk '{print $2}' | tr -d '\r')
-
-          if [ -z "$DIGEST" ]; then
-            echo "❌ Could not retrieve digest for ${FULL_PATH}:${TAG}"
-            exit 1
-          fi
-
-          DIGESTS[$image]="$DIGEST"
           TAGS[$image]="$TAG"
-
-          STATE_FILE=".ghcr_state/${image}.digest"
-          LAST_DIGEST=$(cat "$STATE_FILE" 2>/dev/null || echo "")
-          if [ "$DIGEST" != "$LAST_DIGEST" ]; then
-            echo "$DIGEST" > "$STATE_FILE"
-            CHANGED=1
-          fi
         done
         
         MAIN_TAG="${TAGS[$MAIN_IMAGE]}"
@@ -130,7 +97,7 @@ tasks:
           "$COMPOSITE_PATH")
 
         if [ "$STATUS" -eq 200 ]; then
-          echo "✅ Composite image ${MAIN_IMAGE} already exists for tag ${MAIN_TAG}. Exiting."
+          echo "✅ Composite image {{.IMAGE_NAME}} already exists for tag ${MAIN_TAG}. Exiting."
           exit 1
         fi
 
