@@ -83,6 +83,7 @@ tasks:
         mkdir -p .ghcr_state
         
         WATCHED_IMAGES="$MAIN_IMAGE $PLUGIN_IMAGES"
+        declare -A DIGESTS
         declare -A TAGS
         CHANGED=0
 
@@ -97,13 +98,32 @@ tasks:
             exit 1
           fi
 
+          TOKEN=$(get_ghcr_token "${FULL_PATH}")
+          MANIFEST_URL="https://ghcr.io/v2/${FULL_PATH}/manifests/${TAG}-{{.OS}}-{{.ARCH}}"
+          DIGEST=$(curl -fsSLI \
+            -H "Authorization: Bearer $TOKEN" \
+            -H "Accept: application/vnd.oci.image.manifest.v1+json" \
+            "$MANIFEST_URL" | grep -i 'Docker-Content-Digest' | awk '{print $2}' | tr -d '\r')
+
+          if [ -z "$DIGEST" ]; then
+            echo "❌ Could not retrieve digest for ${FULL_PATH}:${TAG}"
+            exit 1
+          fi
+
+          DIGESTS[$image]="$DIGEST"
           TAGS[$image]="$TAG"
+
+          STATE_FILE=".ghcr_state/${image}.digest"
+          LAST_DIGEST=$(cat "$STATE_FILE" 2>/dev/null || echo "")
+          if [ "$DIGEST" != "$LAST_DIGEST" ]; then
+            echo "$DIGEST" > "$STATE_FILE"
+            CHANGED=1
+          fi
         done
         
         MAIN_TAG="${TAGS[$MAIN_IMAGE]}"
 
         COMPOSITE_PATH="https://ghcr.io/v2/${ORG}/${IMAGE_PATH}/{{.IMAGE_NAME}}/manifests/${MAIN_TAG}"
-        TOKEN=$(get_ghcr_token "${ORG}/${IMAGE_PATH}/{{.IMAGE_NAME}}")
         STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
           -H "Authorization: Bearer $TOKEN" \
           -H "Accept: application/vnd.oci.image.manifest.v1+json" \
