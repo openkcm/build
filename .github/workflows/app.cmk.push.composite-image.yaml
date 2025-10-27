@@ -80,7 +80,7 @@ jobs:
           IMAGE_SIGNING_ENABLED: ${{ inputs.image_signing_enabled }}
           COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
           COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
-          IMAGE_NAME: dummy-service
+          IMAGE_NAME: dummy-service-2
           ORG: openkcm
           GITHUB_REPOSITORY_IMAGE_PATH: images
           GITHUB_ACTOR: ${{ github.actor }}
