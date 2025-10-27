@@ -53,6 +53,7 @@ tasks:
         - ORG
         - GITHUB_REPOSITORY_IMAGE_PATH
         - GITHUB_TOKEN
+        - GITHUB_ACTOR
         - CMK_CORE_IMAGE
         - CMK_PLUGIN_IMAGES
     cmds:
@@ -61,13 +62,23 @@ tasks:
       - |
         set -euo pipefail
         
+        
         ORG="{{.ORG}}"
         IMAGE_PATH="{{.GITHUB_REPOSITORY_IMAGE_PATH}}"
         MAIN_IMAGE="{{.CMK_CORE_IMAGE}}"
         PLUGIN_IMAGES="{{.CMK_PLUGIN_IMAGES}}"
         GHCR_PAT="{{.GITHUB_TOKEN}}"
+        GITHUB_ACTOR="{{.GITHUB_ACTOR}}"
+        
+        get_ghcr_token() {
+          local repo="$1"
+          curl -fsSL "https://ghcr.io/token?scope=repository:${repo}:pull" \
+            -u "${GITHUB_ACTOR}:${GHCR_PAT}" | jq -r '.token'
+        }
 
         mkdir -p .ghcr_state
+        
+        TOKEN=$(get_ghcr_token "${FULL_PATH}")
 
         WATCHED_IMAGES="$MAIN_IMAGE $PLUGIN_IMAGES"
         declare -A DIGESTS
@@ -80,7 +91,7 @@ tasks:
           echo "➡️  Checking ghcr.io/${FULL_PATH}"
 
           TAGS_URL="https://ghcr.io/v2/${FULL_PATH}/tags/list"
-          TAG=$(curl -fsSL -H "Authorization: Bearer $GHCR_PAT" "$TAGS_URL" | jq -r '.tags | sort | last')
+          TAG=$(curl -fsSL -H "Authorization: Bearer $TOKEN" "$TAGS_URL" | jq -r '.tags | sort | last')
 
           if [ -z "$TAG" ] || [ "$TAG" = "null" ]; then
             echo "❌ No tags found for ${FULL_PATH}"
@@ -89,7 +100,7 @@ tasks:
 
           MANIFEST_URL="https://ghcr.io/v2/${FULL_PATH}/manifests/${TAG}"
           DIGEST=$(curl -fsSLI \
-            -H "Authorization: Bearer $GHCR_PAT" \
+            -H "Authorization: Bearer $TOKEN" \
             -H "Accept: application/vnd.oci.image.manifest.v1+json" \
             "$MANIFEST_URL" | grep -i 'Docker-Content-Digest' | awk '{print $2}' | tr -d '\r')
 
@@ -117,7 +128,7 @@ tasks:
 
         COMPOSITE_PATH="https://ghcr.io/v2/${ORG}/${IMAGE_PATH}/cmk-composite/manifests/${MAIN_TAG}"
         STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
-          -H "Authorization: Bearer $GHCR_PAT" \
+          -H "Authorization: Bearer $TOKEN" \
           -H "Accept: application/vnd.oci.image.manifest.v1+json" \
           "$COMPOSITE_PATH")
 
