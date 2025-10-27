@@ -161,9 +161,10 @@ tasks:
         IMAGE="{{.BASE_IMAGE}}:$MAIN_TAG-{{.OS}}-{{.ARCH}}"
         
         echo "ℹ️  Push to $IMAGE with build args: $BUILD_ARGS"
+        echo "ℹ️  docker buildx build --builder {{.DOCKER_BUILDER_NAME}} --load $BUILD_ARGS --platform {{.OS}}/{{.ARCH}} -t $IMAGE --push -f Dockerfile.tmp ."
         
         cd "{{.ROOT_DIR2}}"
-        docker buildx build --builder {{.DOCKER_BUILDER_NAME}} --load $BUILD_ARGS --platform {{.OS}}/{{.ARCH}} -t $IMAGE --push -f {{.ROOT_DIR2}}/Dockerfile.tmp .
+        docker buildx build --builder {{.DOCKER_BUILDER_NAME}} --load $BUILD_ARGS --platform {{.OS}}/{{.ARCH}} -t $IMAGE --push -f Dockerfile.tmp .
       - 'rm -f "{{.ROOT_DIR2}}/Dockerfile.tmp"'
       - vars:
           VERSION: '{{.VERSION}}-{{.OS}}-{{.ARCH}}'
