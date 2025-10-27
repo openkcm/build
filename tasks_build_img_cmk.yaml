@@ -39,9 +39,12 @@ tasks:
           OS: '{{.ITEM.OS}}'
           ARCH: '{{.ITEM.ARCH}}'
           BASE_IMAGE: '{{.IMAGE_BASE}}/{{.IMAGE_NAME}}'
-        task: push-internal
+        task: push-multi-internal
+      - task: push-multi-manifest-internal
+        vars:
+          BASE_IMAGE: '{{.IMAGE_BASE}}/{{.IMAGE_NAME}}'
 
-  push-internal:
+  push-multi-internal:
     desc: "  Build a the CMK image."
     requires:
       vars:
@@ -172,14 +175,41 @@ tasks:
         
         cd "{{.ROOT_DIR2}}"
         docker buildx build --debug --builder {{.DOCKER_BUILDER_NAME}} ${BUILD_ARGS[@]} --platform {{.OS}}/{{.ARCH}} -t $IMAGE --push -f Dockerfile.tmp .
-      - 'rm -f "{{.ROOT_DIR2}}/Dockerfile.tmp"'
-      - vars:
-          VERSION: '{{.VERSION}}-{{.OS}}-{{.ARCH}}'
-          BASE_IMAGE: '{{.BASE_IMAGE}}'
-          CRANE_PLATFORM: '--platform={{.OS}}/{{.ARCH}}'
-        task: build:img:sign
-        silent: true
+        docker manifest create {{.BASE_IMAGE}}:$MAIN_TAG --amend $IMAGE
+        rm -f "{{.ROOT_DIR2}}/Dockerfile.tmp"
+
     internal: true
+
+    push-multi-manifest-internal:
+      desc: "  Push the multi-platform manifest for a single component's image. Individual platform-specific images must have been pushed before."
+      requires:
+        vars:
+          - BASE_IMAGE
+          - ORG
+          - GITHUB_REPOSITORY_IMAGE_PATH
+          - CMK_CORE_IMAGE
+      cmd: |
+          set -euo pipefail
+          
+          
+          ORG="{{.ORG}}"
+          IMAGE_PATH="{{.GITHUB_REPOSITORY_IMAGE_PATH}}"
+          MAIN_IMAGE="{{.CMK_CORE_IMAGE}}"
+          
+          echo "🔍 Checking GHCR images for updates..."
+          FULL_PATH="${ORG}/${IMAGE_PATH}/${MAIN_IMAGE}"
+          echo "➡️  Checking ghcr.io/${FULL_PATH}"
+        
+          TAGS_URL="https://ghcr.io/v2/${FULL_PATH}/tags/list"
+          TAG=$(curl -s -H "Accept: application/vnd.github+json" "https://api.github.com/repos/${ORG}/${MAIN_IMAGE}/tags" | jq -r '.[].name' | sort -V | tail -n1)
+        
+          if [ -z "$TAG" ] || [ "$TAG" = "null" ]; then
+            echo "❌ No tags found for ${FULL_PATH}"
+            exit 1
+          fi
+          
+          docker manifest push {{.BASE_IMAGE}}:$TAG
+      internal: true
 
 
   all:
