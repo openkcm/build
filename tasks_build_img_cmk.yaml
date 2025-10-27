@@ -168,8 +168,9 @@ tasks:
           BUILD_ARGS+=(--build-arg "${VAR_NAME}_IMAGE=${TAG_VALUE}-{{.OS}}-{{.ARCH}}")
         done
 
-        docker buildx build --debug --builder {{.DOCKER_BUILDER_NAME}} ${BUILD_ARGS[@]} --platform {{.OS}}/{{.ARCH}} -t {{.BASE_IMAGE}}:$MAIN_TAG-{{.OS}}-{{.ARCH}} --push -f {{.ROOT_DIR2}}/Dockerfile.tmp .
-        docker manifest create --debug {{.BASE_IMAGE}}:$MAIN_TAG --amend {{.BASE_IMAGE}}:$MAIN_TAG-{{.OS}}-{{.ARCH}}
+        docker buildx build --load --builder {{.DOCKER_BUILDER_NAME}} ${BUILD_ARGS[@]} --platform {{.OS}}/{{.ARCH}} -t {{.BASE_IMAGE}}:$MAIN_TAG-{{.OS}}-{{.ARCH}} -f {{.ROOT_DIR2}}/Dockerfile.tmp .
+        docker push {{.BASE_IMAGE}}:$MAIN_TAG-{{.OS}}-{{.ARCH}}
+        docker manifest create  {{.BASE_IMAGE}}:$MAIN_TAG --amend {{.BASE_IMAGE}}:$MAIN_TAG-{{.OS}}-{{.ARCH}}
         rm -f "{{.ROOT_DIR2}}/Dockerfile.tmp"
 
     internal: true
