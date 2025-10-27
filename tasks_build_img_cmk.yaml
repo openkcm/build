@@ -161,7 +161,7 @@ tasks:
         for image in $WATCHED_IMAGES; do
           VAR_NAME=$(echo "$image" | tr '[:lower:]-' '[:upper:]_')
           VALUE=${DIGESTS[$image]}
-          if [ -z "$TAG_VALUE" ]; then
+          if [ -z "$VALUE" ]; then
             echo "❌ Tag missing for image: $image"
             exit 1
           fi
