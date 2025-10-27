@@ -146,7 +146,7 @@ tasks:
           "$COMPOSITE_PATH")
 
         if [ "$STATUS" -eq 200 ]; then
-          echo "✅ Composite image already exists for tag ${MAIN_TAG}. Exiting."
+          echo "✅ Composite image ${MAIN_IMAGE} already exists for tag ${MAIN_TAG}. Exiting."
           exit 1
         fi
 
@@ -160,12 +160,12 @@ tasks:
   
         for image in $WATCHED_IMAGES; do
           VAR_NAME=$(echo "$image" | tr '[:lower:]-' '[:upper:]_')
-          TAG_VALUE=${TAGS[$image]}
+          VALUE=${DIGESTS[$image]}
           if [ -z "$TAG_VALUE" ]; then
             echo "❌ Tag missing for image: $image"
             exit 1
           fi
-          BUILD_ARGS+=(--build-arg "${VAR_NAME}_IMAGE=${TAG_VALUE}-{{.OS}}-{{.ARCH}}")
+          BUILD_ARGS+=(--build-arg "${VAR_NAME}_IMAGE=${VALUE}-{{.OS}}-{{.ARCH}}")
         done
 
         docker buildx build --load --builder {{.DOCKER_BUILDER_NAME}} ${BUILD_ARGS[@]} --platform {{.OS}}/{{.ARCH}} -t {{.BASE_IMAGE}}:$MAIN_TAG-{{.OS}}-{{.ARCH}} -f {{.ROOT_DIR2}}/Dockerfile.tmp .
