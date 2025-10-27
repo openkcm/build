@@ -23,15 +23,12 @@ on:
         default: false
         type: boolean # Use boolean type
 
-permissions:
-  packages: write
-  contents: read
-
 jobs:
   push-cmk:
     runs-on: ubuntu-latest
     permissions:
       contents: write  # needed for caching state
+      packages: write
     steps:
       - name: Generate token from GitHub App
         id: generate-token
