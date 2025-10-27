@@ -7,12 +7,12 @@ FROM ghcr.io/openkcm/images/identity-management-plugins@${IDENTITY_MANAGEMENT_PL
 
 # --- Stage 2: main base image ---
 ARG CMK_CORE_IMAGE_DIGEST
-FROM ghcr.io/openkcm/images/cmk-core@${CMK_CORE_IMAGE_DIGEST}
+FROM ghcr.io/openkcm/images/dummy-service@${CMK_CORE_IMAGE_DIGEST}
 
 WORKDIR /
 
 # Copy dependencies from other repos
-COPY --from=keystore-plugins /bin/keystoreop-aws** /etc/plugins/keystore/
-COPY --from=identity-management-plugins /bin/scim** /etc/plugins/identity-management/
+COPY --from=keystore-plugins /binaries/keystoreop-aws** /etc/plugins/keystore/
+COPY --from=identity-management-plugins /binaries/scim** /etc/plugins/identity-management/
 
 CMD ["./core", "api-server"]

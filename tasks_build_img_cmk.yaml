@@ -98,7 +98,7 @@ tasks:
             exit 1
           fi
 
-          MANIFEST_URL="https://ghcr.io/v2/${FULL_PATH}/manifests/${TAG}"
+          MANIFEST_URL="https://ghcr.io/v2/${FULL_PATH}/manifests/${TAG}-{{.OS}}-{{.ARCH}}"
           DIGEST=$(curl -fsSLI \
             -H "Authorization: Bearer $TOKEN" \
             -H "Accept: application/vnd.oci.image.manifest.v1+json" \
@@ -159,6 +159,8 @@ tasks:
         done
 
         IMAGE="{{.BASE_IMAGE}}:$MAIN_TAG-{{.OS}}-{{.ARCH}}"
+        
+        echo "ℹ️  Push to $IMAGE"
         
         cd "{{.ROOT_DIR2}}" ; docker buildx build \
           --builder {{.DOCKER_BUILDER_NAME}} \
