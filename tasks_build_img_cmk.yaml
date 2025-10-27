@@ -78,8 +78,6 @@ tasks:
 
         mkdir -p .ghcr_state
         
-        TOKEN=$(get_ghcr_token "${FULL_PATH}")
-
         WATCHED_IMAGES="$MAIN_IMAGE $PLUGIN_IMAGES"
         declare -A DIGESTS
         declare -A TAGS
@@ -89,6 +87,8 @@ tasks:
         for image in $WATCHED_IMAGES; do
           FULL_PATH="${ORG}/${IMAGE_PATH}/${image}"
           echo "➡️  Checking ghcr.io/${FULL_PATH}"
+        
+          TOKEN=$(get_ghcr_token "${FULL_PATH}")
 
           TAGS_URL="https://ghcr.io/v2/${FULL_PATH}/tags/list"
           TAG=$(curl -fsSL -H "Authorization: Bearer $TOKEN" "$TAGS_URL" | jq -r '.tags | sort | last')
