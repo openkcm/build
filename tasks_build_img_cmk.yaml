@@ -160,8 +160,14 @@ tasks:
 
         IMAGE="{{.BASE_IMAGE}}:$MAIN_TAG-{{.OS}}-{{.ARCH}}"
         
-        ( cd "{{.ROOT_DIR2}}"; docker buildx build --builder {{.DOCKER_BUILDER_NAME}} --load --build-arg $BUILD_ARGS --platform {{.OS}}/{{.ARCH}} -t $IMAGE -f Dockerfile.tmp . ) 
-        docker push $IMAGE
+        cd "{{.ROOT_DIR2}}" ; docker buildx build \
+          --builder {{.DOCKER_BUILDER_NAME}} \
+          --load \
+          $BUILD_ARGS \
+          --platform {{.OS}}/{{.ARCH}} \
+          -t $IMAGE \
+          --push \
+          -f {{.ROOT_DIR2}}/Dockerfile.tmp .
       - 'rm -f "{{.ROOT_DIR2}}/Dockerfile.tmp"'
       - vars:
           VERSION: '{{.VERSION}}-{{.OS}}-{{.ARCH}}'
