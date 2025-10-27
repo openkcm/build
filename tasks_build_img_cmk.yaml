@@ -59,6 +59,7 @@ tasks:
         - GITHUB_ACTOR
         - CMK_CORE_IMAGE
         - CMK_PLUGIN_IMAGES
+        - IMAGE_NAME
     cmds:
       - '[[ "{{.OS}}" == "linux" ]] || { echo "The distroless base image does only support linux as operating system."; exit 1; }'
       - 'cat "{{.TASKFILE_DIR2}}/docker/Dockerfile.cmk" > "{{.ROOT_DIR2}}/Dockerfile.tmp"'
@@ -86,13 +87,9 @@ tasks:
         declare -A TAGS
         CHANGED=0
 
-        echo "🔍 Checking GHCR images for updates..."
         for image in $WATCHED_IMAGES; do
           FULL_PATH="${ORG}/${IMAGE_PATH}/${image}"
-          echo "➡️  Checking ghcr.io/${FULL_PATH}"
-        
-          TOKEN=$(get_ghcr_token "${FULL_PATH}")
-
+          
           TAGS_URL="https://ghcr.io/v2/${FULL_PATH}/tags/list"
           TAG=$(curl -s -H "Accept: application/vnd.github+json" "https://api.github.com/repos/${ORG}/${image}/tags" | jq -r '.[].name' | sort -V | tail -n1)
 
@@ -101,6 +98,7 @@ tasks:
             exit 1
           fi
 
+          TOKEN=$(get_ghcr_token "${FULL_PATH}")
           MANIFEST_URL="https://ghcr.io/v2/${FULL_PATH}/manifests/${TAG}-{{.OS}}-{{.ARCH}}"
           DIGEST=$(curl -fsSLI \
             -H "Authorization: Bearer $TOKEN" \
@@ -118,18 +116,14 @@ tasks:
           STATE_FILE=".ghcr_state/${image}.digest"
           LAST_DIGEST=$(cat "$STATE_FILE" 2>/dev/null || echo "")
           if [ "$DIGEST" != "$LAST_DIGEST" ]; then
-            echo "🆕 Change detected for ${image}!"
             echo "$DIGEST" > "$STATE_FILE"
             CHANGED=1
-          else
-            echo "✅ No change for ${image}"
           fi
         done
         
         MAIN_TAG="${TAGS[$MAIN_IMAGE]}"
-        echo "📌 Main image tag: ${MAIN_TAG}"
 
-        COMPOSITE_PATH="https://ghcr.io/v2/${ORG}/${IMAGE_PATH}/dummy-service-2/manifests/${MAIN_TAG}"
+        COMPOSITE_PATH="https://ghcr.io/v2/${ORG}/${IMAGE_PATH}/{{.IMAGE_NAME}}/manifests/${MAIN_TAG}"
         STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
           -H "Authorization: Bearer $TOKEN" \
           -H "Accept: application/vnd.oci.image.manifest.v1+json" \
@@ -178,7 +172,6 @@ tasks:
         IMAGE_PATH="{{.GITHUB_REPOSITORY_IMAGE_PATH}}"
         MAIN_IMAGE="{{.CMK_CORE_IMAGE}}"
         
-        echo "🔍 Checking GHCR images for updates..."
         FULL_PATH="{{.ORG}}/${IMAGE_PATH}/${MAIN_IMAGE}"
         echo "➡️  Checking ghcr.io/${FULL_PATH}"
       
