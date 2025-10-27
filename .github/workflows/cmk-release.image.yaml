@@ -83,7 +83,7 @@ jobs:
           IMAGE_NAME: cmk
           ORG: openkcm
           GITHUB_REPOSITORY_IMAGE_PATH: images
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{  steps.generate-token.outputs.token }}
           CMK_CORE_IMAGE: "dummy-service"
           CMK_PLUGIN_IMAGES: "keystore-plugins identity-management-plugins"
         run: |
