@@ -40,7 +40,7 @@ tasks:
             echo "❌ No tags found. Looking into `repos/{{.ORG_NAME}}/{{.CMK_CORE_IMAGE_NAME}}/tags`"
             exit 1
           fi
-          echo "CMK_CORE_IMAGE_VERSION"
+          echo "$CMK_CORE_IMAGE_VERSION"
     cmds:
       - task: build:img:prepare-docker-builder
       - for:
