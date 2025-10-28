@@ -92,5 +92,6 @@ jobs:
           GITHUB_TOKEN: ${{  steps.generate-token.outputs.token }}
           CMK_CORE_IMAGE_NAME: "dummy-service"
           CMK_PLUGIN_IMAGES: "keystore-plugins identity-management-plugins"
+          DOCKER_FILE_IDENTIFIER: "cmk"
         run: |
-          task build:apps[cmk]:all --verbose
+          task build:apps[composite]:all --verbose

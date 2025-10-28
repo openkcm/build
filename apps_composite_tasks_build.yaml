@@ -25,6 +25,7 @@ tasks:
       vars:
         - COMPONENT_NAME
         - VERSION
+        - DOCKER_FILE_IDENTIFIER
     vars:
       ROOT_IMAGE:
         sh: 'PROJECT_ROOT="{{.ROOT_DIR2}}" {{.TASKFILE_DIR2}}/get-registry.sh --image'
@@ -45,6 +46,7 @@ tasks:
           IMAGE_SIGNING_ENABLED: '{{.IMAGE_SIGNING_ENABLED}}'
           OCM_SIGNING_ENABLED: '{{.OCM_SIGNING_ENABLED}}'
           COMPONENT_NAME: '{{.COMPONENT_NAME}}'
+          DOCKER_FILE_IDENTIFIER: '{{.DOCKER_FILE_IDENTIFIER}}'
         task: push-multi-internal
       - task: push-manifest-internal
         vars:
@@ -69,9 +71,10 @@ tasks:
         - CMK_PLUGIN_IMAGES
         - COMPONENT_NAME
         - IMAGE_SIGNING_ENABLED
+        - DOCKER_FILE_IDENTIFIER
     cmds:
       - '[[ "{{.OS}}" == "linux" ]] || { echo "The distroless base image does only support linux as operating system."; exit 1; }'
-      - 'cat "{{.TASKFILE_DIR2}}/docker/Dockerfile.cmk" > "{{.ROOT_DIR2}}/Dockerfile.tmp"'
+      - 'cat "{{.TASKFILE_DIR2}}/docker/Dockerfile.{{.DOCKER_FILE_IDENTIFIER}}}" > "{{.ROOT_DIR2}}/Dockerfile.tmp"'
       - |
         set -euo pipefail
         
