@@ -28,7 +28,7 @@ permissions:
   contents: write
 
 jobs:
-  push-cmk:
+  push-composite:
     runs-on: ubuntu-latest
     permissions:
       contents: write  # needed for caching state
