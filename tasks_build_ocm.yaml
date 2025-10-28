@@ -57,8 +57,8 @@ tasks:
     vars:
       CHART_VERSION:
         sh: "grep '^version:' {{.ROOT_DIR2}}/charts/{{.COMPONENT}}/Chart.yaml | awk '{print $2}'"
-      CHART_COMPONENTS: '{{ if .CHART_COMPONENTS }} {{ .CHART_COMPONENTS }} {{ else }} {{ .COMPONENTS }} {{ end }}'
-      IMG_COMPONENTS: '{{ if .IMG_COMPONENTS }} {{ .IMG_COMPONENTS }} {{ else }} {{ .COMPONENTS }} {{ end }}'
+      CHART_COMPONENTS: '{{ if .CHART_COMPONENTS }}{{.CHART_COMPONENTS}}{{ else }}{{.COMPONENTS}}{{ end }}'
+      IMG_COMPONENTS: '{{ if .IMG_COMPONENTS }}{{.IMG_COMPONENTS}}{{ else }}{{.COMPONENTS}}{{ end }}'
       compdir: '{{.LOCALTMP}}/component'
     cmds:
     - |
