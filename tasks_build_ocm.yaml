@@ -62,6 +62,7 @@ tasks:
     - |
       "{{.OCM}}" add componentversions --file "{{.compdir}}" --version "{{.VERSION}}" --create --force --templater spiff "{{.TASKFILE_DIR2}}/components.yaml" -- \
         VERSION="{{.VERSION}}" \
+        ORG_NAME="{{.ORG_NAME}}" \
         CHART_REGISTRY="{{.CHART_REGISTRY}}" \
         IMG_REGISTRY="{{.IMAGE_REGISTRY}}" \
         COMMIT="{{.COMMIT}}" \

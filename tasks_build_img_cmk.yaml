@@ -38,9 +38,9 @@ tasks:
         vars:
           OS: '{{.ITEM.OS}}'
           ARCH: '{{.ITEM.ARCH}}'
-          BASE_IMAGE: '{{.IMAGE_BASE}}/{{.IMAGE_NAME}}'
+
         task: push-multi-internal
-      - task: push-multi-manifest-internal
+      - task: push-manifest-internal
         vars:
           BASE_IMAGE: '{{.IMAGE_BASE}}/{{.IMAGE_NAME}}'
 
@@ -53,11 +53,9 @@ tasks:
         - ARCH
         - VERSION
         - DOCKER_BUILDER_NAME
-        - ORG
-        - GITHUB_REPOSITORY_IMAGE_PATH
         - GITHUB_TOKEN
         - GITHUB_ACTOR
-        - CMK_CORE_IMAGE
+        - CMK_CORE_IMAGE_NAME
         - CMK_PLUGIN_IMAGES
         - IMAGE_NAME
     cmds:
@@ -67,9 +65,7 @@ tasks:
         set -euo pipefail
         
         
-        ORG="{{.ORG}}"
-        IMAGE_PATH="{{.GITHUB_REPOSITORY_IMAGE_PATH}}"
-        MAIN_IMAGE="{{.CMK_CORE_IMAGE}}"
+        MAIN_IMAGE_NAME="{{.CMK_CORE_IMAGE_NAME}}"
         PLUGIN_IMAGES="{{.CMK_PLUGIN_IMAGES}}"
         GHCR_PAT="{{.GITHUB_TOKEN}}"
         GITHUB_ACTOR="{{.GITHUB_ACTOR}}"
@@ -82,16 +78,16 @@ tasks:
 
         mkdir -p .ghcr_state
         
-        WATCHED_IMAGES="$MAIN_IMAGE $PLUGIN_IMAGES"
+        WATCHED_IMAGES="$MAIN_IMAGE_NAME $PLUGIN_IMAGES"
         declare -A DIGESTS
         declare -A TAGS
         CHANGED=0
 
         for image in $WATCHED_IMAGES; do
-          FULL_PATH="${ORG}/${IMAGE_PATH}/${image}"
+          FULL_PATH="{{.ORG_NAME}}/images/${image}"
           
           TAGS_URL="https://ghcr.io/v2/${FULL_PATH}/tags/list"
-          TAG=$(curl -s -H "Accept: application/vnd.github+json" "https://api.github.com/repos/${ORG}/${image}/tags" | jq -r '.[].name' | sort -V | tail -n1)
+          TAG=$(curl -s -H "Accept: application/vnd.github+json" "https://api.github.com/repos/{{.ORG_NAME}}/${image}/tags" | jq -r '.[].name' | sort -V | tail -n1)
 
           if [ -z "$TAG" ] || [ "$TAG" = "null" ]; then
             echo "❌ No tags found for ${FULL_PATH}"
@@ -121,9 +117,9 @@ tasks:
           fi
         done
         
-        MAIN_TAG="${TAGS[$MAIN_IMAGE]}"
+        MAIN_TAG="${TAGS[$MAIN_IMAGE_NAME]}"
 
-        COMPOSITE_PATH="https://ghcr.io/v2/${ORG}/${IMAGE_PATH}/{{.IMAGE_NAME}}/manifests/${MAIN_TAG}"
+        COMPOSITE_PATH="https://ghcr.io/v2/{{.ORG_NAME}}/images/{{.IMAGE_NAME}}/manifests/${MAIN_TAG}"
         STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
           -H "Authorization: Bearer $TOKEN" \
           -H "Accept: application/vnd.oci.image.manifest.v1+json" \
@@ -152,34 +148,30 @@ tasks:
           BUILD_ARGS+=(--build-arg "${VAR_NAME}_IMAGE=${VALUE}-{{.OS}}-{{.ARCH}}")
         done
 
-        docker buildx build --load --builder {{.DOCKER_BUILDER_NAME}} ${BUILD_ARGS[@]} --platform {{.OS}}/{{.ARCH}} -t {{.BASE_IMAGE}}:$MAIN_TAG-{{.OS}}-{{.ARCH}} -f {{.ROOT_DIR2}}/Dockerfile.tmp .
-        docker push {{.BASE_IMAGE}}:$MAIN_TAG-{{.OS}}-{{.ARCH}}
-        docker manifest create  {{.BASE_IMAGE}}:$MAIN_TAG --amend {{.BASE_IMAGE}}:$MAIN_TAG-{{.OS}}-{{.ARCH}}
+
+        IMAGE_TAG="{{.BASE_IMAGE}}:$MAIN_TAG"
+        MULTI_ARCH_IMAGE_TAG="${IMAGE_TAG}-{{.OS}}-{{.ARCH}}"
+        
+        docker buildx build --load --builder {{.DOCKER_BUILDER_NAME}} ${BUILD_ARGS[@]} --platform {{.OS}}/{{.ARCH}} -t $MULTI_ARCH_IMAGE_TAG -f {{.ROOT_DIR2}}/Dockerfile.tmp .
+        docker push $MULTI_ARCH_IMAGE_TAG
+        docker manifest create  $IMAGE_TAG --amend $MULTI_ARCH_IMAGE_TAG
+        
         rm -f "{{.ROOT_DIR2}}/Dockerfile.tmp"
     internal: true
 
-  push-multi-manifest-internal:
-    desc: "  Push the multi-platform manifest for a single component's image. Individual platform-specific images must have been pushed before."
+  push-manifest-internal:
+    desc: "  Push the manifest for a single component's image."
     requires:
       vars:
         - BASE_IMAGE
-        - ORG
-        - GITHUB_REPOSITORY_IMAGE_PATH
-        - CMK_CORE_IMAGE
+        - CMK_CORE_IMAGE_NAME
     cmd: |
         set -euo pipefail
-        
-        IMAGE_PATH="{{.GITHUB_REPOSITORY_IMAGE_PATH}}"
-        MAIN_IMAGE="{{.CMK_CORE_IMAGE}}"
-        
-        FULL_PATH="{{.ORG}}/${IMAGE_PATH}/${MAIN_IMAGE}"
-        echo "➡️  Checking ghcr.io/${FULL_PATH}"
       
-        TAGS_URL="https://ghcr.io/v2/${FULL_PATH}/tags/list"
-        TAG=$(curl -s -H "Accept: application/vnd.github+json" "https://api.github.com/repos/{{.ORG}}/${MAIN_IMAGE}/tags" | jq -r '.[].name' | sort -V | tail -n1)
+        TAG=$(curl -s -H "Accept: application/vnd.github+json" "https://api.github.com/repos/{{.ORG_NAME}}/{{.CMK_CORE_IMAGE_NAME}}/tags" | jq -r '.[].name' | sort -V | tail -n1)
       
         if [ -z "$TAG" ] || [ "$TAG" = "null" ]; then
-          echo "❌ No tags found for ${FULL_PATH}"
+          echo "❌ No tags found. Looking into `repos/{{.ORG_NAME}}/{{.CMK_CORE_IMAGE_NAME}}/tags`"
           exit 1
         fi
         

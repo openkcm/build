@@ -31,8 +31,12 @@ includes:
       - c
 
 vars:
+  ORG_NAME:
+    sh: echo "${GITHUB_REPOSITORY%%/*}"
   REPO_URL:
     sh: echo "https://github.com/${GITHUB_REPOSITORY}"
+  REPO_NAME:
+    sh: echo "${GITHUB_REPOSITORY##*/}"
 
   # whacky workarounds for incorrect paths in the special variables
   # see https://github.com/go-task/task/issues/2056 and https://github.com/go-task/task/issues/2057

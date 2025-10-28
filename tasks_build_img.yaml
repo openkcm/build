@@ -10,7 +10,7 @@ includes:
 
 vars:
   DOCKER_BUILDER_NAME:
-    sh: 'echo -n ${DOCKER_BUILDER_NAME:-"openkcm-multiarch-builder"}'
+    sh: 'echo -n ${DOCKER_BUILDER_NAME:-"{{.ORG_NAME}}-multiarch-builder"}'
 
 tasks:
   # This is a dummy task that serves as a separator between task namespaces in the 'task -l' output.

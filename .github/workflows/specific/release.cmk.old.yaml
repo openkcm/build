@@ -14,7 +14,7 @@ jobs:
       ORG: openkcm
       IMAGE_PATH: images
       GHCR_PAT: ${{ secrets.GHCR_PAT }}
-      MAIN_IMAGE: cmk
+      MAIN_IMAGE_NAME: cmk
       PLUGIN_IMAGES: "cmk keystore-plugins identity-management-plugins"
     steps:
       - name: Generate token from GitHub App
