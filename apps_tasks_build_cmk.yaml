@@ -252,5 +252,5 @@ tasks:
         exit 1
       fi
       
-      task build:ocm:all COMPONENTS="{{.COMPONENT_NAME}}" VERSION="${TAG}"
+      COMPONENTS="{{.COMPONENT_NAME}}" VERSION="${TAG}" task build:ocm:all
     internal: true
