@@ -82,12 +82,12 @@ jobs:
 
       - name: Build & Push Image and OCM
         env:
+          COMPONENT_NAME: dummy-service-2
           IMAGE_SIGNING_ENABLED: ${{ inputs.image_signing_enabled }}
           COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
           COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
           OCM_SIGNING_ENABLED: ${{ inputs.ocm_signing_enabled }}
           OCM_PRIVATE_KEY: ${{ secrets.OCM_PRIVATE_KEY }}
-          IMAGE_NAME: dummy-service-2
           GITHUB_ACTOR: ${{ github.actor }}
           GITHUB_TOKEN: ${{  steps.generate-token.outputs.token }}
           CMK_CORE_IMAGE_NAME: "dummy-service"

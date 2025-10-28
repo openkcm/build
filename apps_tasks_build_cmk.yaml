@@ -23,10 +23,10 @@ tasks:
     desc: "  Push the multi-platform image for CMK including the plugins."
     requires:
       vars:
-        - IMAGE_NAME
+        - COMPONENT_NAME
         - VERSION
     vars:
-      IMAGE_PREFIX:
+      ROOT_IMAGE:
         sh: 'PROJECT_ROOT="{{.ROOT_DIR2}}" {{.TASKFILE_DIR2}}/get-registry.sh --image'
       IMAGE_SIGNING_ENABLED: '{{ env "IMAGE_SIGNING_ENABLED" | default "false" }}'
       OCM_SIGNING_ENABLED: '{{ env "OCM_SIGNING_ENABLED" | default "false" }}'
@@ -39,16 +39,16 @@ tasks:
         vars:
           OS: '{{.ITEM.OS}}'
           ARCH: '{{.ITEM.ARCH}}'
-          BASE_IMAGE: '{{.IMAGE_PREFIX}}/{{.IMAGE_NAME}}'
+          BASE_IMAGE: '{{.ROOT_IMAGE}}/{{.COMPONENT_NAME}}'
           IMAGE_SIGNING_ENABLED: '{{.IMAGE_SIGNING_ENABLED}}'
           OCM_SIGNING_ENABLED: '{{.OCM_SIGNING_ENABLED}}'
         task: push-multi-internal
       - task: push-manifest-internal
         vars:
-          BASE_IMAGE: '{{.IMAGE_PREFIX}}/{{.IMAGE_NAME}}'
+          BASE_IMAGE: '{{.ROOT_IMAGE}}/{{.COMPONENT_NAME}}'
       - task: push-ocm-internal
         vars:
-          BASE_IMAGE: '{{.IMAGE_PREFIX}}/{{.IMAGE_NAME}}'
+          BASE_IMAGE: '{{.ROOT_IMAGE}}/{{.COMPONENT_NAME}}'
 
   push-multi-internal:
     desc: "  Build a the CMK image."
@@ -67,7 +67,7 @@ tasks:
         - GITHUB_ACTOR
         - CMK_CORE_IMAGE_NAME
         - CMK_PLUGIN_IMAGES
-        - IMAGE_NAME
+        - COMPONENT_NAME
         - IMAGE_SIGNING_ENABLED
         - OCM_SIGNING_ENABLED
     cmds:
@@ -131,14 +131,14 @@ tasks:
         
         MAIN_TAG="${TAGS[$MAIN_IMAGE_NAME]}"
 
-        COMPOSITE_PATH="https://ghcr.io/v2/{{.ORG_NAME}}/images/{{.IMAGE_NAME}}/manifests/${MAIN_TAG}"
+        COMPOSITE_PATH="https://ghcr.io/v2/{{.ORG_NAME}}/images/{{.COMPONENT_NAME}}/manifests/${MAIN_TAG}"
         STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
           -H "Authorization: Bearer $TOKEN" \
           -H "Accept: application/vnd.oci.image.manifest.v1+json" \
           "$COMPOSITE_PATH")
 
         if [ "$STATUS" -eq 200 ]; then
-          echo "✅ Composite image {{.IMAGE_NAME}} already exists for tag ${MAIN_TAG}. Exiting."
+          echo "✅ Composite image {{.COMPONENT_NAME}} already exists for tag ${MAIN_TAG}. Exiting."
           exit 1
         fi
 
@@ -237,6 +237,7 @@ tasks:
     desc: "  Push OCM component."
     requires:
       vars:
+        - COMPONENT_NAME
         - BASE_IMAGE
         - CMK_CORE_IMAGE_NAME
     cmd: |
@@ -249,5 +250,5 @@ tasks:
         exit 1
       fi
       
-      task build:ocm:all COMPONENTS="{{.CMK_CORE_IMAGE_NAME}}" VERSION="${TAG}"
+      task build:ocm:all COMPONENTS="{{.COMPONENT_NAME}}" VERSION="${TAG}"
     internal: true
