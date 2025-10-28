@@ -162,25 +162,7 @@ tasks:
         docker push $MULTI_ARCH_IMAGE_TAG
         docker manifest create  $IMAGE_TAG --amend $MULTI_ARCH_IMAGE_TAG
         
-        # Signing the image
-        if [ "{{.IMAGE_SIGNING_ENABLED}}" != "true" ]; then
-          echo "⚠️ Image signing is disabled (IMAGE_SIGNING_ENABLED is not 'true'). Skipping."
-          exit 0
-        fi
-        
-        set -eu
-        
-        if [ -z "$COSIGN_PRIVATE_KEY" ] || [ -z "$COSIGN_PASSWORD" ]; then
-          echo "❌ Error: Missing COSIGN_PRIVATE_KEY or COSIGN_PASSWORD." >&2
-          exit 1
-        fi
-        
-        trap 'rm -f "{{.ROOT_DIR2}}/cosign.key"' EXIT
-        echo "$COSIGN_PRIVATE_KEY" > "{{.ROOT_DIR2}}/cosign.key"
-        
-        DIGEST=$({{.CRANE}} digest --platform={{.OS}}/{{.ARCH}} ${MULTI_ARCH_IMAGE_TAG})
-        {{.COSIGN}} sign --yes --key "{{.ROOT_DIR2}}/cosign.key" "{{.BASE_IMAGE}}@$DIGEST"
-        echo "✅ Successfully signed image: {{.BASE_IMAGE}}@$DIGEST"
+        task build:img:sign VERSION="${MULTI_ARCH_IMAGE_TAG}" BASE_IMAGE="{{.BASE_IMAGE}}" CRANE_PLATFORM="--platform={{.OS}}/{{.ARCH}}"
         
         rm -f "{{.ROOT_DIR2}}/Dockerfile.tmp"
     internal: true
@@ -205,26 +187,7 @@ tasks:
         
         docker manifest push {{.BASE_IMAGE}}:$TAG
       
-      
-        # Signing the image
-        if [ "{{.IMAGE_SIGNING_ENABLED}}" != "true" ]; then
-          echo "⚠️ Image signing is disabled (IMAGE_SIGNING_ENABLED is not 'true'). Skipping."
-          exit 0
-        fi
-        
-        set -eu
-        
-        if [ -z "$COSIGN_PRIVATE_KEY" ] || [ -z "$COSIGN_PASSWORD" ]; then
-          echo "❌ Error: Missing COSIGN_PRIVATE_KEY or COSIGN_PASSWORD." >&2
-          exit 1
-        fi
-        
-        trap 'rm -f "{{.ROOT_DIR2}}/cosign.key"' EXIT
-        echo "$COSIGN_PRIVATE_KEY" > "{{.ROOT_DIR2}}/cosign.key"
-        
-        DIGEST=$({{.CRANE}} digest {{.BASE_IMAGE}}:$TAG)
-        {{.COSIGN}} sign --yes --key "{{.ROOT_DIR2}}/cosign.key" "{{.BASE_IMAGE}}@$DIGEST"
-        echo "✅ Successfully signed image: {{.BASE_IMAGE}}@$DIGEST"
+        task build:img:sign VERSION="${TAG}" BASE_IMAGE="{{.BASE_IMAGE}}" CRANE_PLATFORM=""
     internal: true
 
 
