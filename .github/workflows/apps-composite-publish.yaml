@@ -80,7 +80,7 @@ jobs:
         with:
           version: latest
 
-      - name: Build & Push Image and OCM
+      - name: Build & Push Image
         env:
           IMAGE_SIGNING_ENABLED: ${{ inputs.image_signing_enabled }}
           COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
