@@ -38,6 +38,9 @@ vars:
   REPO_NAME:
     sh: echo "${GITHUB_REPOSITORY##*/}"
 
+  DOCKER_BUILDER_NAME:
+    sh: echo -n "${DOCKER_BUILDER_NAME:-'{{.ORG_NAME}}-multiarch-builder'}"
+
   # whacky workarounds for incorrect paths in the special variables
   # see https://github.com/go-task/task/issues/2056 and https://github.com/go-task/task/issues/2057
   ROOT_DIR2: '{{.ROOT_DIR | trimSuffix "/common" | trimSuffix "/hack"}}'
