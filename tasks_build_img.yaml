@@ -303,7 +303,6 @@ tasks:
       DIGEST=$({{.CRANE}} digest {{.CRANE_PLATFORM}} {{.BASE_IMAGE}}:{{.VERSION}})
       {{.COSIGN}} sign --yes --key "{{.ROOT_DIR2}}/cosign.key" "{{.BASE_IMAGE}}@$DIGEST"
       echo "✅ Successfully signed image: {{.BASE_IMAGE}}@$DIGEST"
-    internal: true
 
 
   tag:
