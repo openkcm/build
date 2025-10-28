@@ -162,8 +162,7 @@ tasks:
         docker push $MULTI_ARCH_IMAGE_TAG
         docker manifest create  $IMAGE_TAG --amend $MULTI_ARCH_IMAGE_TAG
         
-        task build:img:sign --verbose VERSION="${MULTI_ARCH_IMAGE_TAG}" BASE_IMAGE="{{.BASE_IMAGE}}" CRANE_PLATFORM="--platform={{.OS}}/{{.ARCH}}"
-#        task build:ocm:all --verbose
+        task build:img:sign VERSION="${MULTI_ARCH_IMAGE_TAG}" BASE_IMAGE="{{.BASE_IMAGE}}" CRANE_PLATFORM="--platform={{.OS}}/{{.ARCH}}"
         
         rm -f "{{.ROOT_DIR2}}/Dockerfile.tmp"
     internal: true
@@ -188,8 +187,7 @@ tasks:
         
         docker manifest push {{.BASE_IMAGE}}:$TAG
       
-        task build:img:sign --verbose VERSION="${TAG}" BASE_IMAGE="{{.BASE_IMAGE}}" CRANE_PLATFORM=""
-#        task build:ocm:all --verbose
+        task build:img:sign VERSION="${TAG}" BASE_IMAGE="{{.BASE_IMAGE}}" CRANE_PLATFORM=""
     internal: true
 
 
