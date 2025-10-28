@@ -80,7 +80,7 @@ jobs:
         with:
           version: latest
 
-      - name: Push Image
+      - name: Build & Push Image and OCM
         env:
           IMAGE_SIGNING_ENABLED: ${{ inputs.image_signing_enabled }}
           COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
@@ -93,4 +93,4 @@ jobs:
           CMK_CORE_IMAGE_NAME: "dummy-service"
           CMK_PLUGIN_IMAGES: "keystore-plugins identity-management-plugins"
         run: |
-          task build:img_cmk:push --verbose
+          task build:apps[cmk]:all --verbose

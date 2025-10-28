@@ -19,7 +19,7 @@ tasks:
     - cmd: echo "{{.SEP_MSG}}"
       silent: true
 
-  push:
+  all:
     desc: "  Push the multi-platform image for CMK including the plugins."
     requires:
       vars:
@@ -233,27 +233,21 @@ tasks:
         echo "✅ Successfully signed image: {{.BASE_IMAGE}}@$DIGEST"
     internal: true
 
-    push-ocm-internal:
-      desc: "  Push OCM component."
-      requires:
-        vars:
-          - BASE_IMAGE
-          - CMK_CORE_IMAGE_NAME
-      cmd: |
-        set -euo pipefail
-        
-        TAG=$(curl -s -H "Accept: application/vnd.github+json" "https://api.github.com/repos/{{.ORG_NAME}}/{{.CMK_CORE_IMAGE_NAME}}/tags" | jq -r '.[].name' | sort -V | tail -n1)
-        
-        if [ -z "$TAG" ] || [ "$TAG" = "null" ]; then
-          echo "❌ No tags found. Looking into `repos/{{.ORG_NAME}}/{{.CMK_CORE_IMAGE_NAME}}/tags`"
-          exit 1
-        fi
-        
-        task task build:ocm:all COMPONENTS="{{.CMK_CORE_IMAGE_NAME}}" VERSION="${TAG}"
-      internal: true
-
-
-  all:
-    desc: "  Build composite image."
-    cmds:
-    - task: push
+  push-ocm-internal:
+    desc: "  Push OCM component."
+    requires:
+      vars:
+        - BASE_IMAGE
+        - CMK_CORE_IMAGE_NAME
+    cmd: |
+      set -euo pipefail
+      
+      TAG=$(curl -s -H "Accept: application/vnd.github+json" "https://api.github.com/repos/{{.ORG_NAME}}/{{.CMK_CORE_IMAGE_NAME}}/tags" | jq -r '.[].name' | sort -V | tail -n1)
+      
+      if [ -z "$TAG" ] || [ "$TAG" = "null" ]; then
+        echo "❌ No tags found. Looking into `repos/{{.ORG_NAME}}/{{.CMK_CORE_IMAGE_NAME}}/tags`"
+        exit 1
+      fi
+      
+      task task build:ocm:all COMPONENTS="{{.CMK_CORE_IMAGE_NAME}}" VERSION="${TAG}"
+    internal: true
