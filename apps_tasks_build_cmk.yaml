@@ -249,5 +249,5 @@ tasks:
         exit 1
       fi
       
-      task task build:ocm:all COMPONENTS="{{.CMK_CORE_IMAGE_NAME}}" VERSION="${TAG}"
+      task build:ocm:all COMPONENTS="{{.CMK_CORE_IMAGE_NAME}}" VERSION="${TAG}"
     internal: true
