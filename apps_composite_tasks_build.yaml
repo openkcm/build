@@ -72,7 +72,7 @@ tasks:
         - DOCKER_FILE_IDENTIFIER
     cmds:
       - '[[ "{{.OS}}" == "linux" ]] || { echo "The distroless base image does only support linux as operating system."; exit 1; }'
-      - 'cat "{{.TASKFILE_DIR2}}/docker/Dockerfile.{{.DOCKER_FILE_IDENTIFIER}}}" > "{{.ROOT_DIR2}}/Dockerfile.tmp"'
+      - 'cat "{{.TASKFILE_DIR2}}/docker/Dockerfile.{{.DOCKER_FILE_IDENTIFIER}}" > "{{.ROOT_DIR2}}/Dockerfile.tmp"'
       - |
         set -euo pipefail
         
