@@ -4,7 +4,7 @@ ARG IDENTITY_MANAGEMENT_PLUGINS_IMAGE
 
 FROM ghcr.io/openkcm/images/keystore-plugins:${KEYSTORE_PLUGINS_IMAGE} AS keystore-plugins
 FROM ghcr.io/openkcm/images/identity-management-plugins:${IDENTITY_MANAGEMENT_PLUGINS_IMAGE} AS identity-management-plugins
-
+FROM ghcr.io/openkcm/images/dummy-service:${DUMMY_SERVICE_IMAGE} AS dummy-service
 
 FROM alpine:latest AS builder
 
@@ -17,7 +17,9 @@ RUN mkdir -p /rootfs/bin /rootfs/lib /rootfs/binaries && \
     # install busybox symlinks inside /rootfs/bin
     chroot /rootfs /busybox --install -s /bin
 
-FROM ghcr.io/openkcm/images/dummy-service:${DUMMY_SERVICE_IMAGE}
+
+
+FROM scratch
 
 WORKDIR /
 
@@ -25,6 +27,7 @@ WORKDIR /
 COPY --from=builder /rootfs/ /
 
 # Copy dependencies from other repos
+COPY --from=dummy-service /** /
 COPY --from=keystore-plugins /binaries/keystoreop-aws** /etc/plugins/keystore/
 COPY --from=identity-management-plugins /binaries/scim** /etc/plugins/identity-management/
 
