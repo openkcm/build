@@ -57,7 +57,7 @@ tasks:
       - task: push-manifest-internal
         vars:
           BASE_IMAGE: '{{.ROOT_IMAGE}}/{{.COMPONENT_NAME}}'
-      - task: task build:ocm:all
+      - task: build:ocm:all
         vars:
           VERSION: '{{.COMPONENT_VERSION}}'
           COMPONENTS: '{{.COMPONENT_NAME}}'
