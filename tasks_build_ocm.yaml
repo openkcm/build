@@ -133,4 +133,3 @@ tasks:
       "{{.OCM}}" sign componentversion --signature "{{.OCM_SIGNATURE_NAME}}" --private-key="{{.ROOT_DIR2}}/ocm.key" "{{.COMPONENT}}"
   
       echo "✅ OCM component successfully signed."
-    internal: true
