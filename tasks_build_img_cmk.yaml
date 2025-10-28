@@ -4,6 +4,9 @@ includes:
   build:img:
     taskfile: tasks_build_img.yaml
     internal: true
+  build:ocm:
+    taskfile: tasks_build_ocm.yaml
+    internal: true
   tools:
     taskfile: tasks_tools.yaml
     internal: true
@@ -41,6 +44,9 @@ tasks:
           OCM_SIGNING_ENABLED: '{{.OCM_SIGNING_ENABLED}}'
         task: push-multi-internal
       - task: push-manifest-internal
+        vars:
+          BASE_IMAGE: '{{.IMAGE_PREFIX}}/{{.IMAGE_NAME}}'
+      - task: push-ocm-internal
         vars:
           BASE_IMAGE: '{{.IMAGE_PREFIX}}/{{.IMAGE_NAME}}'
 
@@ -193,7 +199,6 @@ tasks:
         - BASE_IMAGE
         - CMK_CORE_IMAGE_NAME
         - IMAGE_SIGNING_ENABLED
-        - OCM_SIGNING_ENABLED
     cmd: |
         set -euo pipefail
       
@@ -227,6 +232,25 @@ tasks:
         {{.COSIGN}} sign --yes --key "{{.ROOT_DIR2}}/cosign.key" "{{.BASE_IMAGE}}@$DIGEST"
         echo "✅ Successfully signed image: {{.BASE_IMAGE}}@$DIGEST"
     internal: true
+
+    push-ocm-internal:
+      desc: "  Push OCM component."
+      requires:
+        vars:
+          - BASE_IMAGE
+          - CMK_CORE_IMAGE_NAME
+      cmd: |
+        set -euo pipefail
+        
+        TAG=$(curl -s -H "Accept: application/vnd.github+json" "https://api.github.com/repos/{{.ORG_NAME}}/{{.CMK_CORE_IMAGE_NAME}}/tags" | jq -r '.[].name' | sort -V | tail -n1)
+        
+        if [ -z "$TAG" ] || [ "$TAG" = "null" ]; then
+          echo "❌ No tags found. Looking into `repos/{{.ORG_NAME}}/{{.CMK_CORE_IMAGE_NAME}}/tags`"
+          exit 1
+        fi
+        
+        task task build:ocm:all COMPONENTS="{{.CMK_CORE_IMAGE_NAME}}" VERSION="${TAG}"
+      internal: true
 
 
   all:
