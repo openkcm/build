@@ -31,6 +31,15 @@ tasks:
       IMAGE_SIGNING_ENABLED: '{{ env "IMAGE_SIGNING_ENABLED" | default "false" }}'
       OCM_SIGNING_ENABLED: '{{ env "OCM_SIGNING_ENABLED" | default "false" }}'
       COMPONENT_NAME: '{{ env "COMPONENT_NAME"}}'
+      COMPONENT_VERSION:
+        sh: |
+          TAG=$(curl -s -H "Accept: application/vnd.github+json" "https://api.github.com/repos/{{.ORG_NAME}}/{{.CMK_CORE_IMAGE_NAME}}/tags" | jq -r '.[].name' | sort -V | tail -n1)
+
+          if [ -z "$TAG" ] || [ "$TAG" = "null" ]; then
+            echo "❌ No tags found. Looking into `repos/{{.ORG_NAME}}/{{.CMK_CORE_IMAGE_NAME}}/tags`"
+            exit 1
+          fi
+          echo "$TAG"
     cmds:
       - task: build:img:prepare-docker-builder
       - for:
@@ -48,10 +57,10 @@ tasks:
       - task: push-manifest-internal
         vars:
           BASE_IMAGE: '{{.ROOT_IMAGE}}/{{.COMPONENT_NAME}}'
-      - task: push-ocm-internal
+      - task: task build:ocm:all
         vars:
-          BASE_IMAGE: '{{.ROOT_IMAGE}}/{{.COMPONENT_NAME}}'
-          COMPONENT_NAME: '{{.COMPONENT_NAME}}'
+          VERSION: '{{.COMPONENT_VERSION}}'
+          COMPONENTS: '{{.COMPONENT_NAME}}'
 
   push-multi-internal:
     desc: "  Build a the CMK image."
