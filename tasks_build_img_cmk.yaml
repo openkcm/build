@@ -160,9 +160,29 @@ tasks:
         
         docker buildx build --load --builder {{.DOCKER_BUILDER_NAME}} ${BUILD_ARGS[@]} --platform {{.OS}}/{{.ARCH}} -t $MULTI_ARCH_IMAGE_TAG -f {{.ROOT_DIR2}}/Dockerfile.tmp .
         docker push $MULTI_ARCH_IMAGE_TAG
-        docker manifest push  $IMAGE_TAG --amend $MULTI_ARCH_IMAGE_TAG
+        docker manifest create  $IMAGE_TAG --amend $MULTI_ARCH_IMAGE_TAG
         
         task build:img:sign VERSION="${MAIN_TAG}-{{.OS}}-{{.ARCH}}" BASE_IMAGE="{{.BASE_IMAGE}}" CRANE_PLATFORM="--platform={{.OS}}/{{.ARCH}}"
+        
+        # Signing the image
+        if [ "{{.IMAGE_SIGNING_ENABLED}}" != "true" ]; then
+          echo "⚠️ Image signing is disabled (IMAGE_SIGNING_ENABLED is not 'true'). Skipping."
+          exit 0
+        fi
+        
+        set -eu
+        
+        if [ -z "$COSIGN_PRIVATE_KEY" ] || [ -z "$COSIGN_PASSWORD" ]; then
+          echo "❌ Error: Missing COSIGN_PRIVATE_KEY or COSIGN_PASSWORD." >&2
+          exit 1
+        fi
+        
+        trap 'rm -f "{{.ROOT_DIR2}}/cosign.key"' EXIT
+        echo "$COSIGN_PRIVATE_KEY" > "{{.ROOT_DIR2}}/cosign.key"
+        
+        DIGEST=$({{.CRANE}} digest --platform={{.OS}}/{{.ARCH}} ${MULTI_ARCH_IMAGE_TAG})
+        {{.COSIGN}} sign --yes --key "{{.ROOT_DIR2}}/cosign.key" "{{.BASE_IMAGE}}@$DIGEST"
+        echo "✅ Successfully signed image: {{.BASE_IMAGE}}@$DIGEST"
         
         rm -f "{{.ROOT_DIR2}}/Dockerfile.tmp"
     internal: true
@@ -186,8 +206,29 @@ tasks:
         fi
         
         docker manifest push {{.BASE_IMAGE}}:$TAG
-      
-        task build:img:sign VERSION="${TAG}" BASE_IMAGE="{{.BASE_IMAGE}}" CRANE_PLATFORM=""
+
+  #     task build:img:sign VERSION="${TAG}" BASE_IMAGE="{{.BASE_IMAGE}}" CRANE_PLATFORM=""
+
+        # Signing the image
+        if [ "{{.IMAGE_SIGNING_ENABLED}}" != "true" ]; then
+          echo "⚠️ Image signing is disabled (IMAGE_SIGNING_ENABLED is not 'true'). Skipping."
+          exit 0
+        fi
+        
+        set -eu
+        
+        if [ -z "$COSIGN_PRIVATE_KEY" ] || [ -z "$COSIGN_PASSWORD" ]; then
+          echo "❌ Error: Missing COSIGN_PRIVATE_KEY or COSIGN_PASSWORD." >&2
+          exit 1
+        fi
+        
+        trap 'rm -f "{{.ROOT_DIR2}}/cosign.key"' EXIT
+        echo "$COSIGN_PRIVATE_KEY" > "{{.ROOT_DIR2}}/cosign.key"
+        
+        DIGEST=$({{.CRANE}} digest {{.BASE_IMAGE}}:$TAG)
+        {{.COSIGN}} sign --yes --key "{{.ROOT_DIR2}}/cosign.key" "{{.BASE_IMAGE}}@$DIGEST"
+        echo "✅ Successfully signed image: {{.BASE_IMAGE}}@$DIGEST"
+
     internal: true
 
 
