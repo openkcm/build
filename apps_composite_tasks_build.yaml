@@ -23,8 +23,8 @@ tasks:
     desc: "  Push the multi-platform image for CMK including the plugins."
     requires:
       vars:
-        - COMPONENT_NAME
         - VERSION
+        - DESTINATION_COMPONENT_NAME
         - DOCKER_FILE_IDENTIFIER
     vars:
       ROOT_IMAGE:
@@ -40,7 +40,7 @@ tasks:
         vars:
           OS: '{{.ITEM.OS}}'
           ARCH: '{{.ITEM.ARCH}}'
-          BASE_IMAGE: '{{.ROOT_IMAGE}}/{{.COMPONENT_NAME}}'
+          BASE_IMAGE: '{{.ROOT_IMAGE}}/{{.DESTINATION_COMPONENT_NAME}}'
           IMAGE_SIGNING_ENABLED: '{{.IMAGE_SIGNING_ENABLED}}'
           OCM_SIGNING_ENABLED: '{{.OCM_SIGNING_ENABLED}}'
           DESTINATION_COMPONENT_NAME: '{{.DESTINATION_COMPONENT_NAME}}'
@@ -48,7 +48,7 @@ tasks:
         task: push-multi-internal
       - task: push-manifest-internal
         vars:
-          BASE_IMAGE: '{{.ROOT_IMAGE}}/{{.COMPONENT_NAME}}'
+          BASE_IMAGE: '{{.ROOT_IMAGE}}/{{.DESTINATION_COMPONENT_NAME}}'
 
   push-multi-internal:
     desc: "  Build a the CMK image."
