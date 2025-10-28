@@ -58,6 +58,9 @@ tasks:
         - CMK_CORE_IMAGE_NAME
         - CMK_PLUGIN_IMAGES
         - IMAGE_NAME
+    vars:
+      IMAGE_SIGNING_ENABLED: '{{ env "IMAGE_SIGNING_ENABLED" | default "false" }}'
+      OCM_SIGNING_ENABLED: '{{ env "OCM_SIGNING_ENABLED" | default "false" }}'
     cmds:
       - '[[ "{{.OS}}" == "linux" ]] || { echo "The distroless base image does only support linux as operating system."; exit 1; }'
       - 'cat "{{.TASKFILE_DIR2}}/docker/Dockerfile.cmk" > "{{.ROOT_DIR2}}/Dockerfile.tmp"'
@@ -185,6 +188,9 @@ tasks:
       vars:
         - BASE_IMAGE
         - CMK_CORE_IMAGE_NAME
+    vars:
+      IMAGE_SIGNING_ENABLED: '{{ env "IMAGE_SIGNING_ENABLED" | default "false" }}'
+      OCM_SIGNING_ENABLED: '{{ env "OCM_SIGNING_ENABLED" | default "false" }}'
     cmd: |
         set -euo pipefail
       
