@@ -1,8 +1,12 @@
-name: Publish
+name: Release CMK
 
 on:
+  schedule:
+    - cron: '*/10 * * * *'   # every 10 minutes
   workflow_call:
     secrets:
+      OCM_PRIVATE_KEY:
+        required: false
       COSIGN_PRIVATE_KEY:
         required: false
       COSIGN_PASSWORD:
@@ -12,15 +16,23 @@ on:
         description: 'Enable image signing (true|false)'
         required: false
         default: false
-        type: boolean
+        type: boolean # Use boolean type
+      ocm_signing_enabled:
+        description: 'Enable OCM signing (true|false)'
+        required: false
+        default: false
+        type: boolean # Use boolean type
 
 permissions:
   packages: write
-  contents: read
+  contents: write
 
 jobs:
-  artifacts:
-    runs-on: ubuntu-24.04
+  push-composite:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # needed for caching state
+      packages: write
     steps:
       - name: Generate token from GitHub App
         id: generate-token
@@ -47,21 +59,6 @@ jobs:
           version: 3.x
           repo-token: ${{ steps.generate-token.outputs.token }}
 
-      - name: Run trivy repository security scanner
-        uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8 #v0.33.1
-        with:
-          token-setup-trivy: ${{ steps.generate-token.outputs.token }}
-          scan-type: repository
-          format: json
-          output: trivy-repository-vuln.json
-          severity: CRITICAL,HIGH,MEDIUM
-
-      - name: Run tfsec security scanner
-        uses: aquasecurity/tfsec-action@b466648d6e39e7c75324f25d83891162a721f2d6 #v1.0.3
-        with:
-          github_token:  ${{ steps.generate-token.outputs.token }}
-          format: json
-
       - name: Set up QEMU
         uses: docker/setup-qemu-action@29109295f81e9208d7d86ff1c6c12d2833863392 # v3.6.0
 
@@ -83,16 +80,14 @@ jobs:
         with:
           version: latest
 
-      - name: Set up Go
-        uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00 # v6.0.0
-        with:
-          go-version-file: go.mod
-
-      - name: Build and Push
+      - name: Build & Push Image and OCM
         env:
           IMAGE_SIGNING_ENABLED: ${{ inputs.image_signing_enabled }}
           COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
           COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
-          IMAGE_NAME: ${{ github.event.repository.name }}
+          OCM_SIGNING_ENABLED: ${{ inputs.ocm_signing_enabled }}
+          OCM_PRIVATE_KEY: ${{ secrets.OCM_PRIVATE_KEY }}
+          GITHUB_ACTOR: ${{ github.actor }}
+          GITHUB_TOKEN: ${{  steps.generate-token.outputs.token }}
         run: |
-          task build-and-push --verbose
+          task build:apps[composite]:all --verbose

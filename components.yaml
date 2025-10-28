@@ -61,7 +61,7 @@
 name: (( lower(values.MODULE_NAME) ))
 version: (( defaults.CD_VERSION ))
 provider:
-  name: openkcm
+  name: values.ORG_NAME
 
 sources:
 - name: (( ( "tmp" = split("/", values.REPO_URL) ) element(tmp, length(tmp) - 1) ))

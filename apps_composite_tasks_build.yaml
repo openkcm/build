@@ -1,0 +1,235 @@
+version: 3
+
+includes:
+  build:img:
+    taskfile: tasks_build_img.yaml
+    internal: true
+  build:ocm:
+    taskfile: tasks_build_ocm.yaml
+    internal: true
+  tools:
+    taskfile: tasks_tools.yaml
+    internal: true
+
+tasks:
+  # This is a dummy task that serves as a separator between task namespaces in the 'task -l' output.
+  "---":
+    desc: "{{.BLD_CMK_IMG_SEP}}"
+    cmds:
+    - cmd: echo "{{.SEP_MSG}}"
+      silent: true
+
+  all:
+    desc: "  Push the multi-platform image for CMK including the plugins."
+    requires:
+      vars:
+        - VERSION
+        - DESTINATION_COMPONENT_NAME
+        - DOCKER_FILE_IDENTIFIER
+    vars:
+      ROOT_IMAGE:
+        sh: 'PROJECT_ROOT="{{.ROOT_DIR2}}" {{.TASKFILE_DIR2}}/get-registry.sh --image'
+      IMAGE_SIGNING_ENABLED: '{{ env "IMAGE_SIGNING_ENABLED" | default "false" }}'
+      OCM_SIGNING_ENABLED: '{{ env "OCM_SIGNING_ENABLED" | default "false" }}'
+    cmds:
+      - task: build:img:prepare-docker-builder
+      - for:
+          matrix:
+            OS: [ "linux" ]
+            ARCH: [ "amd64", "arm64" ]
+        vars:
+          OS: '{{.ITEM.OS}}'
+          ARCH: '{{.ITEM.ARCH}}'
+          BASE_IMAGE: '{{.ROOT_IMAGE}}/{{.DESTINATION_COMPONENT_NAME}}'
+          IMAGE_SIGNING_ENABLED: '{{.IMAGE_SIGNING_ENABLED}}'
+          OCM_SIGNING_ENABLED: '{{.OCM_SIGNING_ENABLED}}'
+          DESTINATION_COMPONENT_NAME: '{{.DESTINATION_COMPONENT_NAME}}'
+          DOCKER_FILE_IDENTIFIER: '{{.DOCKER_FILE_IDENTIFIER}}'
+        task: push-multi-internal
+      - task: push-manifest-internal
+        vars:
+          BASE_IMAGE: '{{.ROOT_IMAGE}}/{{.DESTINATION_COMPONENT_NAME}}'
+
+  push-multi-internal:
+    desc: "  Build a the CMK image."
+    deps:
+      - tools:crane
+      - tools:cosign
+      - tools:localtmp
+    requires:
+      vars:
+        - BASE_IMAGE
+        - OS
+        - ARCH
+        - VERSION
+        - DOCKER_BUILDER_NAME
+        - GITHUB_TOKEN
+        - GITHUB_ACTOR
+        - CORE_IMAGE_NAME
+        - PLUGIN_IMAGE_NAMES
+        - DESTINATION_COMPONENT_NAME
+        - IMAGE_SIGNING_ENABLED
+        - DOCKER_FILE_IDENTIFIER
+    cmds:
+      - '[[ "{{.OS}}" == "linux" ]] || { echo "The distroless base image does only support linux as operating system."; exit 1; }'
+      - 'cat "{{.TASKFILE_DIR2}}/docker/Dockerfile.{{.DOCKER_FILE_IDENTIFIER}}" > "{{.ROOT_DIR2}}/Dockerfile.tmp"'
+      - |
+        set -euo pipefail
+        
+        
+        MAIN_IMAGE_NAME="{{.CORE_IMAGE_NAME}}"
+        PLUGIN_IMAGES="{{.PLUGIN_IMAGE_NAMES}}"
+        GHCR_PAT="{{.GITHUB_TOKEN}}"
+        GITHUB_ACTOR="{{.GITHUB_ACTOR}}"
+        
+        get_ghcr_token() {
+          local repo="$1"
+          curl -fsSL "https://ghcr.io/token?scope=repository:${repo}:pull" \
+            -u "${GITHUB_ACTOR}:${GHCR_PAT}" | jq -r '.token'
+        }
+
+        mkdir -p .ghcr_state
+        
+        WATCHED_IMAGES="$MAIN_IMAGE_NAME $PLUGIN_IMAGES"
+        declare -A DIGESTS
+        declare -A TAGS
+        CHANGED=0
+
+        for image in $WATCHED_IMAGES; do
+          FULL_PATH="{{.ORG_NAME}}/images/${image}"
+          
+          TAGS_URL="https://ghcr.io/v2/${FULL_PATH}/tags/list"
+          TAG=$(curl -s -H "Accept: application/vnd.github+json" "https://api.github.com/repos/{{.ORG_NAME}}/${image}/tags" | jq -r '.[].name' | sort -V | tail -n1)
+
+          if [ -z "$TAG" ] || [ "$TAG" = "null" ]; then
+            echo "❌ No tags found for ${FULL_PATH}"
+            exit 1
+          fi
+
+          TOKEN=$(get_ghcr_token "${FULL_PATH}")
+          MANIFEST_URL="https://ghcr.io/v2/${FULL_PATH}/manifests/${TAG}-{{.OS}}-{{.ARCH}}"
+          DIGEST=$(curl -fsSLI \
+            -H "Authorization: Bearer $TOKEN" \
+            -H "Accept: application/vnd.oci.image.manifest.v1+json" \
+            "$MANIFEST_URL" | grep -i 'Docker-Content-Digest' | awk '{print $2}' | tr -d '\r')
+
+          if [ -z "$DIGEST" ]; then
+            echo "❌ Could not retrieve digest for ${FULL_PATH}:${TAG}"
+            exit 1
+          fi
+
+          DIGESTS[$image]="$DIGEST"
+          TAGS[$image]="$TAG"
+
+          STATE_FILE=".ghcr_state/${image}.digest"
+          LAST_DIGEST=$(cat "$STATE_FILE" 2>/dev/null || echo "")
+          if [ "$DIGEST" != "$LAST_DIGEST" ]; then
+            echo "$DIGEST" > "$STATE_FILE"
+            CHANGED=1
+          fi
+        done
+        
+        MAIN_TAG="${TAGS[$MAIN_IMAGE_NAME]}"
+
+        COMPOSITE_PATH="https://ghcr.io/v2/{{.ORG_NAME}}/images/{{.DESTINATION_COMPONENT_NAME}}/manifests/${MAIN_TAG}"
+        STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+          -H "Authorization: Bearer $TOKEN" \
+          -H "Accept: application/vnd.oci.image.manifest.v1+json" \
+          "$COMPOSITE_PATH")
+
+        if [ "$STATUS" -eq 200 ]; then
+          echo "✅ Composite image {{.DESTINATION_COMPONENT_NAME}} already exists for tag ${MAIN_TAG}. Exiting."
+          exit 1
+        fi
+
+        if [ "$CHANGED" -eq 0 ]; then
+          echo "ℹ️  No image updates detected. Nothing to build."
+          exit 1
+        fi
+
+
+        BUILD_ARGS=()
+  
+        for image in $WATCHED_IMAGES; do
+          VAR_NAME=$(echo "$image" | tr '[:lower:]-' '[:upper:]_')
+          VALUE=${TAGS[$image]}
+          if [ -z "$VALUE" ]; then
+            echo "❌ Tag missing for image: $image"
+            exit 1
+          fi
+          BUILD_ARGS+=(--build-arg "${VAR_NAME}_IMAGE=${VALUE}-{{.OS}}-{{.ARCH}}")
+        done
+
+
+        IMAGE_TAG="{{.BASE_IMAGE}}:$MAIN_TAG"
+        MULTI_ARCH_IMAGE_TAG="${IMAGE_TAG}-{{.OS}}-{{.ARCH}}"
+        
+        docker buildx build --load --builder {{.DOCKER_BUILDER_NAME}} ${BUILD_ARGS[@]} --platform {{.OS}}/{{.ARCH}} -t $MULTI_ARCH_IMAGE_TAG -f {{.ROOT_DIR2}}/Dockerfile.tmp .
+        docker push $MULTI_ARCH_IMAGE_TAG
+        docker manifest create  $IMAGE_TAG --amend $MULTI_ARCH_IMAGE_TAG
+        
+        #task build:img:sign VERSION="${MAIN_TAG}-{{.OS}}-{{.ARCH}}" BASE_IMAGE="{{.BASE_IMAGE}}" CRANE_PLATFORM="--platform={{.OS}}/{{.ARCH}}"
+        # Signing the image
+        if [ "{{.IMAGE_SIGNING_ENABLED}}" != "true" ]; then
+          echo "⚠️ Image signing is disabled (IMAGE_SIGNING_ENABLED is not 'true'). Skipping."
+          exit 0
+        fi
+        
+        set -eu
+        
+        if [ -z "$COSIGN_PRIVATE_KEY" ] || [ -z "$COSIGN_PASSWORD" ]; then
+          echo "❌ Error: Missing COSIGN_PRIVATE_KEY or COSIGN_PASSWORD." >&2
+          exit 1
+        fi
+        
+        trap 'rm -f "{{.ROOT_DIR2}}/cosign.key"' EXIT
+        echo "$COSIGN_PRIVATE_KEY" > "{{.ROOT_DIR2}}/cosign.key"
+        
+        DIGEST=$({{.CRANE}} digest --platform={{.OS}}/{{.ARCH}} ${MULTI_ARCH_IMAGE_TAG})
+        {{.COSIGN}} sign --yes --key "{{.ROOT_DIR2}}/cosign.key" "{{.BASE_IMAGE}}@$DIGEST"
+        echo "✅ Successfully signed image: {{.BASE_IMAGE}}@$DIGEST"
+        
+        rm -f "{{.ROOT_DIR2}}/Dockerfile.tmp"
+    internal: true
+
+  push-manifest-internal:
+    desc: "  Push the manifest for a single component's image."
+    requires:
+      vars:
+        - BASE_IMAGE
+        - CORE_IMAGE_NAME
+        - IMAGE_SIGNING_ENABLED
+    cmd: |
+        set -euo pipefail
+      
+        FULL_REPO="{{.ORG_NAME}}/{{.CORE_IMAGE_NAME}}"
+        TAG=$(curl -s -H "Accept: application/vnd.github+json" "https://api.github.com/repos/${FULL_REPO}/tags" | jq -r '.[].name' | sort -V | tail -n1)
+      
+        if [ -z "$TAG" ] || [ "$TAG" = "null" ]; then
+          echo "❌ No tags found. Looking into `repos/${FULL_REPO}/tags`"
+          exit 1
+        fi
+        
+        docker manifest push {{.BASE_IMAGE}}:$TAG
+  
+        # task build:img:sign VERSION="${TAG}" BASE_IMAGE="{{.BASE_IMAGE}}" CRANE_PLATFORM=""
+        # Signing the image
+        if [ "{{.IMAGE_SIGNING_ENABLED}}" != "true" ]; then
+          echo "⚠️ Image signing is disabled (IMAGE_SIGNING_ENABLED is not 'true'). Skipping."
+          exit 0
+        fi
+        
+        set -eu
+        
+        if [ -z "$COSIGN_PRIVATE_KEY" ] || [ -z "$COSIGN_PASSWORD" ]; then
+          echo "❌ Error: Missing COSIGN_PRIVATE_KEY or COSIGN_PASSWORD." >&2
+          exit 1
+        fi
+        
+        trap 'rm -f "{{.ROOT_DIR2}}/cosign.key"' EXIT
+        echo "$COSIGN_PRIVATE_KEY" > "{{.ROOT_DIR2}}/cosign.key"
+        
+        DIGEST=$({{.CRANE}} digest {{.BASE_IMAGE}}:$TAG)
+        {{.COSIGN}} sign --yes --key "{{.ROOT_DIR2}}/cosign.key" "{{.BASE_IMAGE}}@$DIGEST"
+        echo "✅ Successfully signed image: {{.BASE_IMAGE}}@$DIGEST"
+    internal: true
