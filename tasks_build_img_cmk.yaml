@@ -162,7 +162,7 @@ tasks:
         docker push $MULTI_ARCH_IMAGE_TAG
         docker manifest create  $IMAGE_TAG --amend $MULTI_ARCH_IMAGE_TAG
         
-        task build:img:sign VERSION="${MAIN_TAG}-{{.OS}}-{{.ARCH}}" BASE_IMAGE="{{.BASE_IMAGE}}" CRANE_PLATFORM="--platform={{.OS}}/{{.ARCH}}"
+#        task build:img:sign VERSION="${MAIN_TAG}-{{.OS}}-{{.ARCH}}" BASE_IMAGE="{{.BASE_IMAGE}}" CRANE_PLATFORM="--platform={{.OS}}/{{.ARCH}}"
         
         # Signing the image
         if [ "{{.IMAGE_SIGNING_ENABLED}}" != "true" ]; then
