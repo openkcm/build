@@ -23,6 +23,8 @@ tasks:
         sh: 'PROJECT_ROOT="{{.ROOT_DIR2}}" {{.TASKFILE_DIR2}}/get-registry.sh --image'
       COMMIT:
         sh: '( cd "{{.ROOT_DIR2}}"; git rev-parse HEAD )'
+      CHART_COMPONENTS: '{{ if .CHART_COMPONENTS }}{{.CHART_COMPONENTS}}{{ else }}{{.COMPONENTS}}{{ end }}'
+      IMG_COMPONENTS: '{{ if .IMG_COMPONENTS }}{{.IMG_COMPONENTS}}{{ else }}{{.COMPONENTS}}{{ end }}'
     cmds:
     - task: build
       for:
@@ -36,6 +38,8 @@ tasks:
         CHART_REGISTRY: '{{.CHART_REGISTRY}}'
         IMAGE_REGISTRY: '{{.IMAGE_REGISTRY}}'
         COMMIT: '{{.COMMIT}}'
+        CHART_COMPONENTS: '{{.CHART_COMPONENTS}}'
+        IMG_COMPONENTS: '{{.IMG_COMPONENTS}}'
     - task: push
 
   build:
@@ -54,11 +58,11 @@ tasks:
       - CHART_REGISTRY
       - IMAGE_REGISTRY
       - COMMIT
+      - CHART_COMPONENTS
+      - IMG_COMPONENTS
     vars:
       CHART_VERSION:
         sh: "grep '^version:' {{.ROOT_DIR2}}/charts/{{.COMPONENT}}/Chart.yaml | awk '{print $2}'"
-      CHART_COMPONENTS: '{{ if .CHART_COMPONENTS }}{{.CHART_COMPONENTS}}{{ else }}{{.COMPONENTS}}{{ end }}'
-      IMG_COMPONENTS: '{{ if .IMG_COMPONENTS }}{{.IMG_COMPONENTS}}{{ else }}{{.COMPONENTS}}{{ end }}'
       compdir: '{{.LOCALTMP}}/component'
     cmds:
     - |
