@@ -31,8 +31,6 @@ tasks:
         sh: 'PROJECT_ROOT="{{.ROOT_DIR2}}" {{.TASKFILE_DIR2}}/get-registry.sh --image'
       IMAGE_SIGNING_ENABLED: '{{ env "IMAGE_SIGNING_ENABLED" | default "false" }}'
       OCM_SIGNING_ENABLED: '{{ env "OCM_SIGNING_ENABLED" | default "false" }}'
-      CORE_IMAGE_NAME: '{{ env "CORE_IMAGE_NAME" | default ""}}'
-      DESTINATION_COMPONENT_NAME: '{{ env "DESTINATION_COMPONENT_NAME"}}'
     cmds:
       - task: build:img:prepare-docker-builder
       - for:
