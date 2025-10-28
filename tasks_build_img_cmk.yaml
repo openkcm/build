@@ -162,8 +162,7 @@ tasks:
         docker push $MULTI_ARCH_IMAGE_TAG
         docker manifest create  $IMAGE_TAG --amend $MULTI_ARCH_IMAGE_TAG
         
-#        task build:img:sign VERSION="${MAIN_TAG}-{{.OS}}-{{.ARCH}}" BASE_IMAGE="{{.BASE_IMAGE}}" CRANE_PLATFORM="--platform={{.OS}}/{{.ARCH}}"
-        
+        #task build:img:sign VERSION="${MAIN_TAG}-{{.OS}}-{{.ARCH}}" BASE_IMAGE="{{.BASE_IMAGE}}" CRANE_PLATFORM="--platform={{.OS}}/{{.ARCH}}"
         # Signing the image
         if [ "{{.IMAGE_SIGNING_ENABLED}}" != "true" ]; then
           echo "⚠️ Image signing is disabled (IMAGE_SIGNING_ENABLED is not 'true'). Skipping."
@@ -196,39 +195,37 @@ tasks:
         - IMAGE_SIGNING_ENABLED
         - OCM_SIGNING_ENABLED
     cmd: |
-      set -euo pipefail
-    
-      TAG=$(curl -s -H "Accept: application/vnd.github+json" "https://api.github.com/repos/{{.ORG_NAME}}/{{.CMK_CORE_IMAGE_NAME}}/tags" | jq -r '.[].name' | sort -V | tail -n1)
-    
-      if [ -z "$TAG" ] || [ "$TAG" = "null" ]; then
-        echo "❌ No tags found. Looking into `repos/{{.ORG_NAME}}/{{.CMK_CORE_IMAGE_NAME}}/tags`"
-        exit 1
-      fi
+        set -euo pipefail
       
-      docker manifest push {{.BASE_IMAGE}}:$TAG
-
-#     task build:img:sign VERSION="${TAG}" BASE_IMAGE="{{.BASE_IMAGE}}" CRANE_PLATFORM=""
-
-      # Signing the image
-      if [ "{{.IMAGE_SIGNING_ENABLED}}" != "true" ]; then
-        echo "⚠️ Image signing is disabled (IMAGE_SIGNING_ENABLED is not 'true'). Skipping."
-        exit 0
-      fi
+        TAG=$(curl -s -H "Accept: application/vnd.github+json" "https://api.github.com/repos/{{.ORG_NAME}}/{{.CMK_CORE_IMAGE_NAME}}/tags" | jq -r '.[].name' | sort -V | tail -n1)
       
-      set -eu
-      
-      if [ -z "$COSIGN_PRIVATE_KEY" ] || [ -z "$COSIGN_PASSWORD" ]; then
-        echo "❌ Error: Missing COSIGN_PRIVATE_KEY or COSIGN_PASSWORD." >&2
-        exit 1
-      fi
-      
-      trap 'rm -f "{{.ROOT_DIR2}}/cosign.key"' EXIT
-      echo "$COSIGN_PRIVATE_KEY" > "{{.ROOT_DIR2}}/cosign.key"
-      
-      DIGEST=$({{.CRANE}} digest {{.BASE_IMAGE}}:$TAG)
-      {{.COSIGN}} sign --yes --key "{{.ROOT_DIR2}}/cosign.key" "{{.BASE_IMAGE}}@$DIGEST"
-      echo "✅ Successfully signed image: {{.BASE_IMAGE}}@$DIGEST"
-
+        if [ -z "$TAG" ] || [ "$TAG" = "null" ]; then
+          echo "❌ No tags found. Looking into `repos/{{.ORG_NAME}}/{{.CMK_CORE_IMAGE_NAME}}/tags`"
+          exit 1
+        fi
+        
+        docker manifest push {{.BASE_IMAGE}}:$TAG
+  
+        # task build:img:sign VERSION="${TAG}" BASE_IMAGE="{{.BASE_IMAGE}}" CRANE_PLATFORM=""
+        # Signing the image
+        if [ "{{.IMAGE_SIGNING_ENABLED}}" != "true" ]; then
+          echo "⚠️ Image signing is disabled (IMAGE_SIGNING_ENABLED is not 'true'). Skipping."
+          exit 0
+        fi
+        
+        set -eu
+        
+        if [ -z "$COSIGN_PRIVATE_KEY" ] || [ -z "$COSIGN_PASSWORD" ]; then
+          echo "❌ Error: Missing COSIGN_PRIVATE_KEY or COSIGN_PASSWORD." >&2
+          exit 1
+        fi
+        
+        trap 'rm -f "{{.ROOT_DIR2}}/cosign.key"' EXIT
+        echo "$COSIGN_PRIVATE_KEY" > "{{.ROOT_DIR2}}/cosign.key"
+        
+        DIGEST=$({{.CRANE}} digest {{.BASE_IMAGE}}:$TAG)
+        {{.COSIGN}} sign --yes --key "{{.ROOT_DIR2}}/cosign.key" "{{.BASE_IMAGE}}@$DIGEST"
+        echo "✅ Successfully signed image: {{.BASE_IMAGE}}@$DIGEST"
     internal: true
 
 
