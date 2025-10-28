@@ -23,7 +23,7 @@ tasks:
         - IMAGE_NAME
         - VERSION
     vars:
-      IMAGE_BASE:
+      IMAGE_PREFIX:
         sh: 'PROJECT_ROOT="{{.ROOT_DIR2}}" {{.TASKFILE_DIR2}}/get-registry.sh --image'
     cmds:
       - task: build:img:prepare-docker-builder
@@ -34,11 +34,11 @@ tasks:
         vars:
           OS: '{{.ITEM.OS}}'
           ARCH: '{{.ITEM.ARCH}}'
-
+          BASE_IMAGE: '{{.IMAGE_PREFIX}}/{{.IMAGE_NAME}}'
         task: push-multi-internal
       - task: push-manifest-internal
         vars:
-          BASE_IMAGE: '{{.IMAGE_BASE}}/{{.IMAGE_NAME}}'
+          BASE_IMAGE: '{{.IMAGE_PREFIX}}/{{.IMAGE_NAME}}'
 
   push-multi-internal:
     desc: "  Build a the CMK image."
