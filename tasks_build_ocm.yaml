@@ -57,6 +57,18 @@ tasks:
     vars:
       CHART_VERSION:
         sh: "grep '^version:' {{.ROOT_DIR2}}/charts/{{.COMPONENT}}/Chart.yaml | awk '{print $2}'"
+      CHART_COMPONENTS: >
+        {{ if .CHART_COMPONENTS }}
+          {{ .CHART_COMPONENTS }}
+        {{ else }}
+          {{ .COMPONENTS }}
+        {{ end }}
+      IMG_COMPONENTS: >
+        {{ if .IMG_COMPONENTS }}
+          {{ .IMG_COMPONENTS }}
+        {{ else }}
+          {{ .COMPONENTS }}
+        {{ end }}
       compdir: '{{.LOCALTMP}}/component'
     cmds:
     - |
@@ -73,8 +85,8 @@ tasks:
         CHART_VERSION="{{.CHART_VERSION | default ""}}" \
         IMG_VERSION="{{.VERSION | default ""}}" \
         BP_COMPONENTS="{{.BP_COMPONENTS | default ""}}" \
-        CHART_COMPONENTS="{{.COMPONENTS | default ""}}" \
-        IMG_COMPONENTS="{{.COMPONENTS | default ""}}"
+        CHART_COMPONENTS="{{.CHART_COMPONENTS | default ""}}" \
+        IMG_COMPONENTS="{{.IMG_COMPONENTS | default ""}}"
     - cmd: echo "Use '$(realpath --relative-base="{{.USER_WORKING_DIR}}" "{{.OCM}}") get cv $(realpath --relative-base="{{.USER_WORKING_DIR}}" "{{.compdir}}") -o yaml' to view the generated component descriptor."
       silent: true
 
