@@ -25,6 +25,8 @@ tasks:
     vars:
       IMAGE_PREFIX:
         sh: 'PROJECT_ROOT="{{.ROOT_DIR2}}" {{.TASKFILE_DIR2}}/get-registry.sh --image'
+      IMAGE_SIGNING_ENABLED: '{{ env "IMAGE_SIGNING_ENABLED" | default "false" }}'
+      OCM_SIGNING_ENABLED: '{{ env "OCM_SIGNING_ENABLED" | default "false" }}'
     cmds:
       - task: build:img:prepare-docker-builder
       - for:
@@ -35,6 +37,8 @@ tasks:
           OS: '{{.ITEM.OS}}'
           ARCH: '{{.ITEM.ARCH}}'
           BASE_IMAGE: '{{.IMAGE_PREFIX}}/{{.IMAGE_NAME}}'
+          IMAGE_SIGNING_ENABLED: '{{.IMAGE_SIGNING_ENABLED}}'
+          OCM_SIGNING_ENABLED: '{{.OCM_SIGNING_ENABLED}}'
         task: push-multi-internal
       - task: push-manifest-internal
         vars:
@@ -58,9 +62,8 @@ tasks:
         - CMK_CORE_IMAGE_NAME
         - CMK_PLUGIN_IMAGES
         - IMAGE_NAME
-    vars:
-      IMAGE_SIGNING_ENABLED: '{{ env "IMAGE_SIGNING_ENABLED" | default "false" }}'
-      OCM_SIGNING_ENABLED: '{{ env "OCM_SIGNING_ENABLED" | default "false" }}'
+        - IMAGE_SIGNING_ENABLED
+        - OCM_SIGNING_ENABLED
     cmds:
       - '[[ "{{.OS}}" == "linux" ]] || { echo "The distroless base image does only support linux as operating system."; exit 1; }'
       - 'cat "{{.TASKFILE_DIR2}}/docker/Dockerfile.cmk" > "{{.ROOT_DIR2}}/Dockerfile.tmp"'
@@ -188,9 +191,8 @@ tasks:
       vars:
         - BASE_IMAGE
         - CMK_CORE_IMAGE_NAME
-    vars:
-      IMAGE_SIGNING_ENABLED: '{{ env "IMAGE_SIGNING_ENABLED" | default "false" }}'
-      OCM_SIGNING_ENABLED: '{{ env "OCM_SIGNING_ENABLED" | default "false" }}'
+        - IMAGE_SIGNING_ENABLED
+        - OCM_SIGNING_ENABLED
     cmd: |
         set -euo pipefail
       
