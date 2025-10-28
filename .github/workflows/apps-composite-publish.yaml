@@ -82,7 +82,6 @@ jobs:
 
       - name: Build & Push Image and OCM
         env:
-          COMPONENT_NAME: dummy-service-2
           IMAGE_SIGNING_ENABLED: ${{ inputs.image_signing_enabled }}
           COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
           COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
@@ -90,8 +89,5 @@ jobs:
           OCM_PRIVATE_KEY: ${{ secrets.OCM_PRIVATE_KEY }}
           GITHUB_ACTOR: ${{ github.actor }}
           GITHUB_TOKEN: ${{  steps.generate-token.outputs.token }}
-          CMK_CORE_IMAGE_NAME: "dummy-service"
-          CMK_PLUGIN_IMAGES: "keystore-plugins identity-management-plugins"
-          DOCKER_FILE_IDENTIFIER: "cmk"
         run: |
           task build:apps[composite]:all --verbose

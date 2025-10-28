@@ -31,8 +31,8 @@ tasks:
         sh: 'PROJECT_ROOT="{{.ROOT_DIR2}}" {{.TASKFILE_DIR2}}/get-registry.sh --image'
       IMAGE_SIGNING_ENABLED: '{{ env "IMAGE_SIGNING_ENABLED" | default "false" }}'
       OCM_SIGNING_ENABLED: '{{ env "OCM_SIGNING_ENABLED" | default "false" }}'
-      CMK_CORE_IMAGE_NAME: '{{ env "CMK_CORE_IMAGE_NAME" | default ""}}'
-      COMPONENT_NAME: '{{ env "COMPONENT_NAME"}}'
+      CORE_IMAGE_NAME: '{{ env "CORE_IMAGE_NAME" | default ""}}'
+      DESTINATION_COMPONENT_NAME: '{{ env "DESTINATION_COMPONENT_NAME"}}'
     cmds:
       - task: build:img:prepare-docker-builder
       - for:
@@ -45,7 +45,7 @@ tasks:
           BASE_IMAGE: '{{.ROOT_IMAGE}}/{{.COMPONENT_NAME}}'
           IMAGE_SIGNING_ENABLED: '{{.IMAGE_SIGNING_ENABLED}}'
           OCM_SIGNING_ENABLED: '{{.OCM_SIGNING_ENABLED}}'
-          COMPONENT_NAME: '{{.COMPONENT_NAME}}'
+          DESTINATION_COMPONENT_NAME: '{{.DESTINATION_COMPONENT_NAME}}'
           DOCKER_FILE_IDENTIFIER: '{{.DOCKER_FILE_IDENTIFIER}}'
         task: push-multi-internal
       - task: push-manifest-internal
@@ -67,9 +67,9 @@ tasks:
         - DOCKER_BUILDER_NAME
         - GITHUB_TOKEN
         - GITHUB_ACTOR
-        - CMK_CORE_IMAGE_NAME
-        - CMK_PLUGIN_IMAGES
-        - COMPONENT_NAME
+        - CORE_IMAGE_NAME
+        - PLUGIN_IMAGE_NAMES
+        - DESTINATION_COMPONENT_NAME
         - IMAGE_SIGNING_ENABLED
         - DOCKER_FILE_IDENTIFIER
     cmds:
@@ -79,8 +79,8 @@ tasks:
         set -euo pipefail
         
         
-        MAIN_IMAGE_NAME="{{.CMK_CORE_IMAGE_NAME}}"
-        PLUGIN_IMAGES="{{.CMK_PLUGIN_IMAGES}}"
+        MAIN_IMAGE_NAME="{{.CORE_IMAGE_NAME}}"
+        PLUGIN_IMAGES="{{.PLUGIN_IMAGE_NAMES}}"
         GHCR_PAT="{{.GITHUB_TOKEN}}"
         GITHUB_ACTOR="{{.GITHUB_ACTOR}}"
         
@@ -133,14 +133,14 @@ tasks:
         
         MAIN_TAG="${TAGS[$MAIN_IMAGE_NAME]}"
 
-        COMPOSITE_PATH="https://ghcr.io/v2/{{.ORG_NAME}}/images/{{.COMPONENT_NAME}}/manifests/${MAIN_TAG}"
+        COMPOSITE_PATH="https://ghcr.io/v2/{{.ORG_NAME}}/images/{{.DESTINATION_COMPONENT_NAME}}/manifests/${MAIN_TAG}"
         STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
           -H "Authorization: Bearer $TOKEN" \
           -H "Accept: application/vnd.oci.image.manifest.v1+json" \
           "$COMPOSITE_PATH")
 
         if [ "$STATUS" -eq 200 ]; then
-          echo "✅ Composite image {{.COMPONENT_NAME}} already exists for tag ${MAIN_TAG}. Exiting."
+          echo "✅ Composite image {{.DESTINATION_COMPONENT_NAME}} already exists for tag ${MAIN_TAG}. Exiting."
           exit 1
         fi
 
@@ -199,15 +199,16 @@ tasks:
     requires:
       vars:
         - BASE_IMAGE
-        - CMK_CORE_IMAGE_NAME
+        - CORE_IMAGE_NAME
         - IMAGE_SIGNING_ENABLED
     cmd: |
         set -euo pipefail
       
-        TAG=$(curl -s -H "Accept: application/vnd.github+json" "https://api.github.com/repos/{{.ORG_NAME}}/{{.CMK_CORE_IMAGE_NAME}}/tags" | jq -r '.[].name' | sort -V | tail -n1)
+        FULL_REPO="{{.ORG_NAME}}/{{.CORE_IMAGE_NAME}}"
+        TAG=$(curl -s -H "Accept: application/vnd.github+json" "https://api.github.com/repos/${FULL_REPO}/tags" | jq -r '.[].name' | sort -V | tail -n1)
       
         if [ -z "$TAG" ] || [ "$TAG" = "null" ]; then
-          echo "❌ No tags found. Looking into `repos/{{.ORG_NAME}}/{{.CMK_CORE_IMAGE_NAME}}/tags`"
+          echo "❌ No tags found. Looking into `repos/${FULL_REPO}/tags`"
           exit 1
         fi
         
