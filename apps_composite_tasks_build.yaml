@@ -53,6 +53,7 @@ tasks:
   push-multi-internal:
     desc: "  Build a the CMK image."
     deps:
+      - tools:jq
       - tools:crane
       - tools:cosign
       - tools:localtmp
@@ -99,7 +100,7 @@ tasks:
           FULL_PATH="{{.ORG_NAME}}/images/${image}"
           
           TAGS_URL="https://ghcr.io/v2/${FULL_PATH}/tags/list"
-          TAG=$(curl -s -H "Accept: application/vnd.github+json" "https://api.github.com/repos/{{.ORG_NAME}}/${image}/tags" | jq -r '.[].name' | sort -V | tail -n1)
+          TAG=$(curl -s -H "Accept: application/vnd.github+json" "https://api.github.com/repos/{{.ORG_NAME}}/${image}/tags" | {{.JQ}} -r '.[].name' | sort -V | tail -n1)
 
           if [ -z "$TAG" ] || [ "$TAG" = "null" ]; then
             echo "❌ No tags found for ${FULL_PATH}"
@@ -194,6 +195,8 @@ tasks:
 
   push-manifest-internal:
     desc: "  Push the manifest for a single component's image."
+    deps:
+      - tools:jq
     requires:
       vars:
         - BASE_IMAGE
@@ -203,7 +206,7 @@ tasks:
         set -euo pipefail
       
         FULL_REPO="{{.ORG_NAME}}/{{.CORE_IMAGE_NAME}}"
-        TAG=$(curl -s -H "Accept: application/vnd.github+json" "https://api.github.com/repos/${FULL_REPO}/tags" | jq -r '.[].name' | sort -V | tail -n1)
+        TAG=$(curl -s -H "Accept: application/vnd.github+json" "https://api.github.com/repos/${FULL_REPO}/tags" | {{.JQ}} -r '.[].name' | sort -V | tail -n1)
       
         if [ -z "$TAG" ] || [ "$TAG" = "null" ]; then
           echo "❌ No tags found. Looking into `repos/${FULL_REPO}/tags`"
