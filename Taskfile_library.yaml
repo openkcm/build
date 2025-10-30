@@ -37,6 +37,8 @@ vars:
     sh: echo "https://github.com/${GITHUB_REPOSITORY}"
   REPO_NAME:
     sh: echo "${GITHUB_REPOSITORY##*/}"
+  OCI_URL:
+    sh: echo "ghcr.io/{{.ORG_NAME}}"
 
   DOCKER_BUILDER_NAME:
     sh: echo -n "${DOCKER_BUILDER_NAME:-'{{.ORG_NAME}}-multiarch-builder'}"
