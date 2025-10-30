@@ -10,6 +10,11 @@ on:
       COSIGN_PASSWORD:
         required: false
     inputs:
+      build_push_composite_enabled:
+        description: 'Enable Building and Pushing Composite image (true|false)'
+        required: false
+        default: false
+        type: boolean
       image_signing_enabled:
         description: 'Enable image signing (true|false)'
         required: false
@@ -102,6 +107,17 @@ jobs:
           IMAGE_SIGNING_ENABLED: ${{ inputs.image_signing_enabled }}
         run: |
           task build:img:all --verbose
+
+      - name: Build & Push Composite Image
+        if: ${{ inputs.build_push_composite_enabled }}
+        env:
+          IMAGE_SIGNING_ENABLED: ${{ inputs.image_signing_enabled }}
+          COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
+          COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
+          GITHUB_ACTOR: ${{ github.actor }}
+          GITHUB_TOKEN: ${{  steps.generate-token.outputs.token }}
+        run: |
+          task build:apps[composite]:all --verbose
 
       - name: Package and Push Helm Charts
         run: |
