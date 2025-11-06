@@ -50,7 +50,7 @@ jobs:
 
       - name: Release Please
         id: github_release
-        uses: release-please-oss/release-please-action@8c118d9f927137f4074a20dad656e51fe2ae289c #v5.3.1
+        uses: googleapis/release-please-action@16a9c90856f42705d54a6fda1823352bdc62cf38 #v4.4.0
         with:
           release-type: go
           token: ${{ steps.generate-token.outputs.token }}
@@ -98,6 +98,21 @@ jobs:
         with:
           github_token: ${{ steps.generate-token.outputs.token }}
           format: json
+
+      - name: Tag major and minor versions
+        if: ${{ steps.github_release.outputs.release_created }}
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git remote add gh-token "https://${{ secrets.GITHUB_TOKEN }}@github.com/googleapis/release-please-action.git"
+          git tag -d v${{ steps.github_release.outputs.major }} || true
+          git tag -d v${{ steps.github_release.outputs.major }}.${{ steps.github_release.outputs.minor }} || true
+          git push origin :v${{ steps.github_release.outputs.major }} || true
+          git push origin :v${{ steps.github_release.outputs.major }}.${{ steps.github_release.outputs.minor }} || true
+          git tag -a v${{ steps.github_release.outputs.major }} -m "Release v${{ steps.github_release.outputs.major }}"
+          git tag -a v${{ steps.github_release.outputs.major }}.${{ steps.github_release.outputs.minor }} -m "Release v${{ steps.github_release.outputs.major }}.${{ steps.github_release.outputs.minor }}"
+          git push origin v${{ steps.github_release.outputs.major }}
+          git push origin v${{ steps.github_release.outputs.major }}.${{ steps.github_release.outputs.minor }}
 
       - name: Upload Release Artifact
         env:
