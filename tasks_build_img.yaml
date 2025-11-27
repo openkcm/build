@@ -87,7 +87,7 @@ tasks:
     cmds:
     - 'echo "Building image {{.COMPONENT}}:{{.VERSION}}-{{.OS}}-{{.ARCH}}"'
     - '[[ "{{.OS}}" == "linux" ]] || { echo "The distroless base image does only support linux as operating system."; exit 1; }'
-    - 'cat "{{.TASKFILE_DIR2}}/docker/Dockerfile.single" | sed "s|<component>|{{.BINARY_NAME}}|g" > "{{.ROOT_DIR2}}/Dockerfile.tmp"'
+    - 'cat "{{.TASKFILE_DIR2}}/docker/Dockerfile.{{.DOCKERFILE_IDENTIFIER}}" | sed "s|<component>|{{.BINARY_NAME}}|g" > "{{.ROOT_DIR2}}/Dockerfile.tmp"'
     - '( cd "{{.ROOT_DIR2}}"; docker buildx build --builder {{.DOCKER_BUILDER_NAME}} --load --build-arg COMPONENT={{.BINARY_NAME}} --platform {{.OS}}/{{.ARCH}} -t {{.IMAGE}} -f Dockerfile.tmp . )'
     - 'docker push {{.IMAGE}}'
     - 'rm -f "{{.ROOT_DIR2}}/Dockerfile.tmp"'
@@ -289,17 +289,17 @@ tasks:
         echo "⚠️ Image signing is disabled (IMAGE_SIGNING_ENABLED is not 'true'). Skipping."
         exit 0
       fi
-      
+
       set -eu
-      
+
       if [ -z "$COSIGN_PRIVATE_KEY" ] || [ -z "$COSIGN_PASSWORD" ]; then
         echo "❌ Error: Missing COSIGN_PRIVATE_KEY or COSIGN_PASSWORD." >&2
         exit 1
       fi
-      
+
       trap 'rm -f "{{.ROOT_DIR2}}/cosign.key"' EXIT
       echo "$COSIGN_PRIVATE_KEY" > "{{.ROOT_DIR2}}/cosign.key"
-      
+
       DIGEST=$({{.CRANE}} digest {{.CRANE_PLATFORM}} {{.BASE_IMAGE}}:{{.VERSION}})
       {{.COSIGN}} sign --yes --key "{{.ROOT_DIR2}}/cosign.key" "{{.BASE_IMAGE}}@$DIGEST"
       echo "✅ Successfully signed image: {{.BASE_IMAGE}}@$DIGEST"
