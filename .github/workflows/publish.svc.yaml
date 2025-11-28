@@ -25,6 +25,11 @@ on:
         required: false
         default: false
         type: boolean # Use boolean type
+      dockerfile_identifier:
+        description: 'Suffix after Dockerfile. (e.g. single, alpine, crypto-edge-operator)'
+        required: false
+        default: 'single'
+        type: string
 
 permissions:
   packages: write
@@ -33,6 +38,9 @@ permissions:
 jobs:
   artifacts:
     runs-on: ubuntu-24.04
+    env:
+      # Expose input as environment variable for Taskfiles
+      DOCKERFILE_IDENTIFIER: ${{ inputs.dockerfile_identifier }}
     steps:
       - name: Generate token from GitHub App
         id: generate-token
