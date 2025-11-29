@@ -1,4 +1,4 @@
-# Stage 1: Builder - Prepare BusyBox and minimal filesystem
+# Builder - Prepare BusyBox and minimal filesystem
 FROM alpine:latest AS builder
 
 RUN apk add --no-cache busybox
@@ -22,7 +22,7 @@ FROM scratch
 # Copy minimal filesystem
 COPY --from=builder /rootfs/ /
 
-# Copy your binaries
+# Copy binaries
 COPY --from=builder /binaries/ /binaries/
 
 # Default command

@@ -219,7 +219,7 @@ tasks:
       silent: true
     internal: true
 
-  build-and-push-one:
+  plugins-build-and-push-one:
     desc: "  Push one the multi-platform image."
     requires:
       vars:
@@ -240,12 +240,12 @@ tasks:
           OS: '{{.ITEM.OS}}'
           ARCH: '{{.ITEM.ARCH}}'
           BASE_IMAGE: '{{.IMAGE_BASE}}/{{.IMAGE_NAME}}'
-        task: build-and-push-one-internal
+        task: plugins-build-and-push-one-internal
       - vars:
           BASE_IMAGE: '{{.IMAGE_BASE}}/{{.IMAGE_NAME}}'
         task: push-multi-internal
 
-  build-and-push-one-internal:
+  plugins-build-and-push-one-internal:
     desc: "  Build a single image including all binaries. Requires the docker builder to have been prepared before."
     requires:
       vars:
@@ -259,7 +259,7 @@ tasks:
     cmds:
       - 'echo "Building image {{.IMAGE}}"'
       - '[[ "{{.OS}}" == "linux" ]] || { echo "The distroless base image does only support linux as operating system."; exit 1; }'
-      - 'cat "{{.TASKFILE_DIR2}}/docker/Dockerfile.many" > "{{.ROOT_DIR2}}/Dockerfile.tmp"'
+      - 'cat "{{.TASKFILE_DIR2}}/docker/Dockerfile.plugins" > "{{.ROOT_DIR2}}/Dockerfile.tmp"'
       - '( cd "{{.ROOT_DIR2}}"; docker buildx build --builder {{.DOCKER_BUILDER_NAME}} --load --platform {{.OS}}/{{.ARCH}} -t {{.IMAGE}} -f Dockerfile.tmp . )'
       - 'docker push {{.IMAGE}}'
       - 'rm -f "{{.ROOT_DIR2}}/Dockerfile.tmp"'
