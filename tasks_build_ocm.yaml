@@ -129,17 +129,16 @@ tasks:
           RESOLVED_ITEM="${COMP_NAME}:${COMP_VERSION}"
         fi  
       
-          # Append to comma-separated list
-          if [ "$FIRST" = true ]; then
-            RESOLVED_LIST="$RESOLVED_ITEM"
-            FIRST=false
-          else
-            RESOLVED_LIST="$RESOLVED_LIST,$RESOLVED_ITEM"
-          fi
+        if [ "$FIRST" = true ]; then
+          RESOLVED_LIST="$RESOLVED_ITEM"
+          FIRST=false
+        else
+          RESOLVED_LIST="$RESOLVED_LIST,$RESOLVED_ITEM"
+        fi
       done
       
       echo "---------------------------------------------------"
-      echo "Generated List: $RESOLVED_LIST"
+      echo "Generated List: `$RESOLVED_LIST`"
       echo "---------------------------------------------------"
         
       "{{.OCM}}" add componentversions --file "{{.compdir}}" --version "{{.VERSION}}" --create --force --templater spiff "{{.TASKFILE_DIR2}}/components.yaml" -- \
