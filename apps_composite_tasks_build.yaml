@@ -24,8 +24,8 @@ tasks:
     requires:
       vars:
         - VERSION
-        - DESTINATION_COMPONENT_NAME
-        - DOCKER_FILE_COMPOSITE_IDENTIFIER
+        - COMPOSITE_DESTINATION_COMPONENT_NAME
+        - COMPOSITE_DOCKER_FILE_IDENTIFIER
     vars:
       ROOT_IMAGE:
         sh: 'PROJECT_ROOT="{{.ROOT_DIR2}}" {{.TASKFILE_DIR2}}/get-registry.sh --image'
@@ -40,15 +40,15 @@ tasks:
         vars:
           OS: '{{.ITEM.OS}}'
           ARCH: '{{.ITEM.ARCH}}'
-          BASE_IMAGE: '{{.ROOT_IMAGE}}/{{.DESTINATION_COMPONENT_NAME}}'
+          BASE_IMAGE: '{{.ROOT_IMAGE}}/{{.COMPOSITE_DESTINATION_COMPONENT_NAME}}'
           IMAGE_SIGNING_ENABLED: '{{.IMAGE_SIGNING_ENABLED}}'
           OCM_SIGNING_ENABLED: '{{.OCM_SIGNING_ENABLED}}'
-          DESTINATION_COMPONENT_NAME: '{{.DESTINATION_COMPONENT_NAME}}'
-          DOCKER_FILE_COMPOSITE_IDENTIFIER: '{{.DOCKER_FILE_COMPOSITE_IDENTIFIER}}'
+          COMPOSITE_DESTINATION_COMPONENT_NAME: '{{.COMPOSITE_DESTINATION_COMPONENT_NAME}}'
+          COMPOSITE_DOCKER_FILE_IDENTIFIER: '{{.COMPOSITE_DOCKER_FILE_IDENTIFIER}}'
         task: push-multi-internal
       - task: push-manifest-internal
         vars:
-          BASE_IMAGE: '{{.ROOT_IMAGE}}/{{.DESTINATION_COMPONENT_NAME}}'
+          BASE_IMAGE: '{{.ROOT_IMAGE}}/{{.COMPOSITE_DESTINATION_COMPONENT_NAME}}'
 
   push-multi-internal:
     desc: "  Build a the composite image."
@@ -66,20 +66,20 @@ tasks:
         - DOCKER_BUILDER_NAME
         - GITHUB_TOKEN
         - GITHUB_ACTOR
-        - CORE_IMAGE_NAME
-        - PLUGIN_IMAGE_NAMES
-        - DESTINATION_COMPONENT_NAME
+        - COMPOSITE_CORE_IMAGE_NAME
+        - COMPOSITE_PLUGINS_IMAGE_NAME
+        - COMPOSITE_DESTINATION_COMPONENT_NAME
         - IMAGE_SIGNING_ENABLED
-        - DOCKER_FILE_COMPOSITE_IDENTIFIER
+        - COMPOSITE_DOCKER_FILE_IDENTIFIER
     cmds:
       - '[[ "{{.OS}}" == "linux" ]] || { echo "The distroless base image does only support linux as operating system."; exit 1; }'
-      - 'cat "{{.TASKFILE_DIR2}}/docker/Dockerfile.{{.DOCKER_FILE_COMPOSITE_IDENTIFIER}}" > "{{.ROOT_DIR2}}/Dockerfile.tmp"'
+      - 'cat "{{.TASKFILE_DIR2}}/docker/Dockerfile.{{.COMPOSITE_DOCKER_FILE_IDENTIFIER}}" > "{{.ROOT_DIR2}}/Dockerfile.tmp"'
       - |
         set -euo pipefail
         
         
-        MAIN_IMAGE_NAME="{{.CORE_IMAGE_NAME}}"
-        PLUGIN_IMAGES="{{.PLUGIN_IMAGE_NAMES}}"
+        MAIN_IMAGE_NAME="{{.COMPOSITE_CORE_IMAGE_NAME}}"
+        PLUGIN_IMAGES="{{.COMPOSITE_PLUGINS_IMAGE_NAME}}"
         GHCR_PAT="{{.GITHUB_TOKEN}}"
         GITHUB_ACTOR="{{.GITHUB_ACTOR}}"
         
@@ -132,10 +132,10 @@ tasks:
         
         MAIN_TAG="${TAGS[$MAIN_IMAGE_NAME]}"
 
-        # COMPOSITE_PATH="https://ghcr.io/v2/{{.ORG_NAME}}/images/{{.DESTINATION_COMPONENT_NAME}}/manifests/${MAIN_TAG}"
+        # COMPOSITE_PATH="https://ghcr.io/v2/{{.ORG_NAME}}/images/{{.COMPOSITE_DESTINATION_COMPONENT_NAME}}/manifests/${MAIN_TAG}"
         # STATUS=$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: Bearer $TOKEN" -H "Accept: application/vnd.oci.image.manifest.v1+json" "$COMPOSITE_PATH")
         # if [ "$STATUS" -eq 200 ]; then
-        #   echo "✅ Composite image {{.DESTINATION_COMPONENT_NAME}} already exists for tag ${MAIN_TAG}. Exiting."
+        #   echo "✅ Composite image {{.COMPOSITE_DESTINATION_COMPONENT_NAME}} already exists for tag ${MAIN_TAG}. Exiting."
         #   exit 1
         # fi
 
@@ -196,12 +196,12 @@ tasks:
     requires:
       vars:
         - BASE_IMAGE
-        - CORE_IMAGE_NAME
+        - COMPOSITE_CORE_IMAGE_NAME
         - IMAGE_SIGNING_ENABLED
     cmd: |
         set -euo pipefail
       
-        FULL_REPO="{{.ORG_NAME}}/{{.CORE_IMAGE_NAME}}"
+        FULL_REPO="{{.ORG_NAME}}/{{.COMPOSITE_CORE_IMAGE_NAME}}"
         TAG=$(curl -s -H "Accept: application/vnd.github+json" "https://api.github.com/repos/${FULL_REPO}/tags" | {{.JQ}} -r '.[].name' | sort -V | tail -n1)
       
         if [ -z "$TAG" ] || [ "$TAG" = "null" ]; then
