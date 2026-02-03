@@ -29,4 +29,4 @@ COPY --from=builder /rootfs/ /
 # Copy dependencies from other repos
 COPY --from=dummy-plugins /binaries/dummy** /etc/plugins/dummy/
 
-CMD ["/bin/ls", "-lrt", "/", "/etc/plugins/dummy/"]
+ENTRYPOINT ["/bin/ls", "-lrt", "/", "/etc/plugins/dummy/"]
