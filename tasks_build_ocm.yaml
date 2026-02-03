@@ -130,6 +130,6 @@ tasks:
       
       trap 'rm -f "{{.ROOT_DIR2}}/ocm.key"' EXIT
       echo "$OCM_PRIVATE_KEY" > "{{.ROOT_DIR2}}/ocm.key"
-      "{{.OCM}}" sign componentversion --signature "{{.OCM_SIGNATURE_NAME}}" --private-key="{{.ROOT_DIR2}}/ocm.key" "{{.COMPONENT}}"
+      "{{.OCM}}" sign componentversions --signature "{{.OCM_SIGNATURE_NAME}}" --private-key="{{.ROOT_DIR2}}/ocm.key" "{{.COMPONENT}}"
   
       echo "✅ OCM component successfully signed."
