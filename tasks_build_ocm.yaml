@@ -69,6 +69,8 @@ tasks:
       compdir: '{{.LOCALTMP}}/component'
     cmds:
     - |
+      set -euo pipefail
+      
       TARGET_LIST="{{.IMG_COMPONENTS}}"
       
       if [ -z "$TARGET_LIST" ]; then
