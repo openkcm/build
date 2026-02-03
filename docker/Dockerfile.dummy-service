@@ -9,6 +9,6 @@ FROM ghcr.io/openkcm/images/dummy-service:${DUMMY_SERVICE_IMAGE}
 WORKDIR /
 
 # Copy dependencies from other repos
-COPY --from=keystore-plugins /binaries/dummy** /etc/plugins/dummy/
+COPY --from=dummy-plugins /binaries/dummy** /etc/plugins/dummy/
 
 CMD ["./dummy-service"]
