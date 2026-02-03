@@ -104,44 +104,45 @@ tasks:
       }
       
       CLEAN_LIST=$(echo "$TARGET_LIST" | tr ',' ' ')
-      VERSION_MAP_JSON="{"
+      RESOLVED_LIST=""
       FIRST=true
       
-      echo "🔍 Resolving versions for: $CLEAN_LIST"
-        
       for item in $CLEAN_LIST; do
         COMP_NAME=""
         COMP_VERSION=""
-        
+    
         if [[ "$item" == *:* ]]; then
-          COMP_NAME="${item%%:*}"
-          COMP_VERSION="${item#*:}"
-          echo "   👉 $COMP_NAME: Using explicit version $COMP_VERSION"
-        else
+          # Case A: Version already exists (e.g. comp:v1)
+          echo "   👉 $item (Version preserved)"
+          RESOLVED_ITEM="$item"
+          else
+          # Case B: No version -> Fetch it
           COMP_NAME="$item"
           echo "   🔄 $COMP_NAME: Fetching latest tag..."
-        
+          
           COMP_VERSION=$(get_latest_tag "$COMP_NAME")
         
           if [[ "$COMP_VERSION" == "null" ]]; then
-            echo "   ❌ Error: No tags found for $COMP_NAME. Exiting."
+            echo "   ❌ Error: No tags found for $COMP_NAME."
             exit 1
           fi
-          echo "      ✅ Found: $COMP_VERSION"
-        fi
-        
-        if [ "$FIRST" = true ]; then
-          FIRST=false
-        else
-          VERSION_MAP_JSON="$VERSION_MAP_JSON, "
-        fi
+            echo "      ✅ Found: $COMP_VERSION"
+            RESOLVED_ITEM="${COMP_NAME}:${COMP_VERSION}"
+          fi  
       
-        VERSION_MAP_JSON="$VERSION_MAP_JSON\"$COMP_NAME\": \"$COMP_VERSION\""
+          # Append to comma-separated list
+          if [ "$FIRST" = true ]; then
+            RESOLVED_LIST="$RESOLVED_ITEM"
+            FIRST=false
+          else
+            RESOLVED_LIST="$RESOLVED_LIST,$RESOLVED_ITEM"
+          fi
       done
-        
-      VERSION_MAP_JSON="${VERSION_MAP_JSON}"
       
-      echo "VERSION_MAP_JSON=${VERSION_MAP_JSON}"
+      echo "---------------------------------------------------"
+      echo "Generated List: $RESOLVED_LIST"
+      echo "---------------------------------------------------"
+      export IMG_COMPONENTS_RESOLVED="$RESOLVED_LIST"
         
       "{{.OCM}}" add componentversions --file "{{.compdir}}" --version "{{.VERSION}}" --create --force --templater spiff "{{.TASKFILE_DIR2}}/components.yaml" -- \
         VERSION="{{.VERSION}}" \
@@ -154,7 +155,7 @@ tasks:
         COMPONENTS="{{.COMPONENTS | trimSuffix " " | replace " " ","}}" \
         CD_VERSION="{{.CD_VERSION | default ""}}" \
         CHART_VERSION="{{.CHART_VERSION | default ""}}" \
-        IMG_VERSION="{{.VERSION | default ""}}" \
+        IMG_VERSION="$IMG_COMPONENTS_RESOLVED" \
         IMG_VERSION_MAP=$VERSION_MAP_JSON \
         BP_COMPONENTS="{{.BP_COMPONENTS | default ""}}" \
         CHART_COMPONENTS="{{.CHART_COMPONENTS | default ""}}" \
