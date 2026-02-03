@@ -25,7 +25,7 @@ tasks:
       vars:
         - VERSION
         - DESTINATION_COMPONENT_NAME
-        - DOCKER_FILE_IDENTIFIER
+        - DOCKER_FILE_COMPOSITE_IDENTIFIER
     vars:
       ROOT_IMAGE:
         sh: 'PROJECT_ROOT="{{.ROOT_DIR2}}" {{.TASKFILE_DIR2}}/get-registry.sh --image'
@@ -44,14 +44,14 @@ tasks:
           IMAGE_SIGNING_ENABLED: '{{.IMAGE_SIGNING_ENABLED}}'
           OCM_SIGNING_ENABLED: '{{.OCM_SIGNING_ENABLED}}'
           DESTINATION_COMPONENT_NAME: '{{.DESTINATION_COMPONENT_NAME}}'
-          DOCKER_FILE_IDENTIFIER: '{{.DOCKER_FILE_IDENTIFIER}}'
+          DOCKER_FILE_COMPOSITE_IDENTIFIER: '{{.DOCKER_FILE_COMPOSITE_IDENTIFIER}}'
         task: push-multi-internal
       - task: push-manifest-internal
         vars:
           BASE_IMAGE: '{{.ROOT_IMAGE}}/{{.DESTINATION_COMPONENT_NAME}}'
 
   push-multi-internal:
-    desc: "  Build a the CMK image."
+    desc: "  Build a the composite image."
     deps:
       - tools:jq
       - tools:crane
@@ -70,10 +70,10 @@ tasks:
         - PLUGIN_IMAGE_NAMES
         - DESTINATION_COMPONENT_NAME
         - IMAGE_SIGNING_ENABLED
-        - DOCKER_FILE_IDENTIFIER
+        - DOCKER_FILE_COMPOSITE_IDENTIFIER
     cmds:
       - '[[ "{{.OS}}" == "linux" ]] || { echo "The distroless base image does only support linux as operating system."; exit 1; }'
-      - 'cat "{{.TASKFILE_DIR2}}/docker/Dockerfile.{{.DOCKER_FILE_IDENTIFIER}}" > "{{.ROOT_DIR2}}/Dockerfile.tmp"'
+      - 'cat "{{.TASKFILE_DIR2}}/docker/Dockerfile.{{.DOCKER_FILE_COMPOSITE_IDENTIFIER}}" > "{{.ROOT_DIR2}}/Dockerfile.tmp"'
       - |
         set -euo pipefail
         
