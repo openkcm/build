@@ -68,11 +68,11 @@ tasks:
       compdir: '{{.LOCALTMP}}/component'
     cmds:
     - |
-      TARGET_LIST="$IMG_COMPONENTS"
+      TARGET_LIST="{{.IMG_COMPONENTS}}"
       
       if [ -z "$TARGET_LIST" ]; then
         echo "ℹ️  IMG_COMPONENTS is empty. Falling back to COMPONENTS."
-        TARGET_LIST="$COMPONENTS"
+        TARGET_LIST="{{.COMPONENTS}}"
       fi
       
       if [ -z "$TARGET_LIST" ]; then
