@@ -97,7 +97,7 @@ tasks:
       
         echo "$image_name=$response"
       
-        local tag=$(echo "$response" | {{.JQ}} -r '.tags[]' | sort -V | tail -n 1)
+        local tag=$(echo "$response" | {{.JQ}} -r '.tags[]' | grep -v "linux" | sort -V | tail -n 1)
         echo "$tag"
       }
       
