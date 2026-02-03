@@ -112,11 +112,9 @@ tasks:
         COMP_VERSION=""
     
         if [[ "$item" == *:* ]]; then
-          # Case A: Version already exists (e.g. comp:v1)
           echo "   👉 $item (Version preserved)"
           RESOLVED_ITEM="$item"
-          else
-          # Case B: No version -> Fetch it
+        else
           COMP_NAME="$item"
           echo "   🔄 $COMP_NAME: Fetching latest tag..."
           
@@ -126,9 +124,10 @@ tasks:
             echo "   ❌ Error: No tags found for $COMP_NAME."
             exit 1
           fi
-            echo "      ✅ Found: $COMP_VERSION"
-            RESOLVED_ITEM="${COMP_NAME}:${COMP_VERSION}"
-          fi  
+          
+          echo "      ✅ Found: $COMP_VERSION"
+          RESOLVED_ITEM="${COMP_NAME}:${COMP_VERSION}"
+        fi  
       
           # Append to comma-separated list
           if [ "$FIRST" = true ]; then
