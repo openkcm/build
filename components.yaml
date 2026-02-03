@@ -74,8 +74,7 @@ sources:
 resources:
 - <<<: (( sum[funcs.splitIgnoreEmpty(",", funcs.ignoreDisabled(defaults.BP_COMPONENTS))|[]|s,comp|-> s *templates.blueprint] ))
 - <<<: (( sum[funcs.splitIgnoreEmpty(",", funcs.ignoreDisabled(defaults.CHART_COMPONENTS))|[]|s,cv|-> ("cvs" = split(":", cv)) ("comp" = cvs[0], "chart_version" = (cvs[1] || defaults.CHART_VERSION)) s *templates.chart] ))
-- <<<: (( sum[funcs.splitIgnoreEmpty(",", funcs.ignoreDisabled(defaults.IMG_COMPONENTS))|[]|s,cv|-> ("cvs" = split(":", cv)) ("comp" = cvs[0]) ("version_map" = (values.IMG_VERSION_MAP ? yaml.parse(values.IMG_VERSION_MAP) : {})) ("img_version" = (cvs[1] || (version_map[comp] || defaults.IMG_VERSION))) s *templates.image] ))
-
+- <<<: (( sum[funcs.splitIgnoreEmpty(",", funcs.ignoreDisabled(defaults.IMG_COMPONENTS))|[]|s,cv|-> ("cvs" = split(":", cv)) ("comp" = cvs[0]) ("img_version" = (cvs[1] || (defaults.VERSION_MAP_OBJ[comp] || defaults.IMG_VERSION))) s *templates.image] ))
 
 # ##########################################################################
 # # Everything below this is temporary stuff only required during rendering and will not be part of the generated component descriptor.
@@ -88,6 +87,7 @@ defaults:
   BP_COMPONENTS: (( funcs.notEmpty(values.BP_PATH || "") ? ( funcs.notEmpty(values.BP_COMPONENTS || "") ? replace(values.BP_COMPONENTS, " ", ",") :replace(values.COMPONENTS, " ", ",") ) :"" ))
   CHART_COMPONENTS: (( funcs.notEmpty(values.CHART_COMPONENTS || "") ? replace(values.CHART_COMPONENTS, " ", ",") :replace(values.COMPONENTS, " ", ",") ))
   IMG_COMPONENTS: (( funcs.notEmpty(values.IMG_COMPONENTS || "") ? replace(values.IMG_COMPONENTS, " ", ",") :replace(values.COMPONENTS, " ", ",") ))
+  VERSION_MAP_OBJ: (( values.IMG_VERSION_MAP ? yaml.parse(values.IMG_VERSION_MAP) :{} ))
 
 funcs:
   <<<: (( &temporary ))
