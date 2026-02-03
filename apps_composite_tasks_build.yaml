@@ -131,13 +131,35 @@ tasks:
         done
         
         MAIN_TAG="${TAGS[$MAIN_IMAGE_NAME]}"
-
-        # COMPOSITE_PATH="https://ghcr.io/v2/{{.ORG_NAME}}/images/{{.COMPOSITE_DESTINATION_COMPONENT_NAME}}/manifests/${MAIN_TAG}"
-        # STATUS=$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: Bearer $TOKEN" -H "Accept: application/vnd.oci.image.manifest.v1+json" "$COMPOSITE_PATH")
-        # if [ "$STATUS" -eq 200 ]; then
-        #   echo "✅ Composite image {{.COMPOSITE_DESTINATION_COMPONENT_NAME}} already exists for tag ${MAIN_TAG}. Exiting."
-        #   exit 1
-        # fi
+        
+        # Start with the clean MAIN_TAG (no numbers)
+        CANDIDATE_TAG="${MAIN_TAG}"
+        COUNTER=1
+        
+        while true; do
+          COMPOSITE_PATH="https://ghcr.io/v2/{{.ORG_NAME}}/images/{{.COMPOSITE_DESTINATION_COMPONENT_NAME}}/manifests/${CANDIDATE_TAG}"
+        
+          # Check status
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: Bearer $TOKEN" -H "Accept: application/vnd.oci.image.manifest.v1+json" "$COMPOSITE_PATH")
+          
+          if [ "$STATUS" -eq 404 ]; then
+            # 404 means the tag does not exist yet, so it is safe to use.
+            echo "✅ Found available tag: ${CANDIDATE_TAG}"
+            break
+          elif [ "$STATUS" -eq 200 ]; then
+            # 200 means the tag exists. generate the next candidate (e.g., v1.0.0-1, v1.0.0-2)
+            echo "⚠️ Tag ${CANDIDATE_TAG} already exists. Trying next increment..."
+            CANDIDATE_TAG="${MAIN_TAG}-${COUNTER}"
+            COUNTER=$((COUNTER + 1))
+          else
+            # Handle unexpected errors (e.g., 401 Unauthorized, 500 Server Error)
+            echo "❌ Unexpected status code ($STATUS) while checking tag ${CANDIDATE_TAG}. Exiting."
+            exit 1
+          fi
+        done
+        
+        # Finally, update the MAIN_TAG variable to the free one found
+        MAIN_TAG="${CANDIDATE_TAG}"
 
         if [ "$CHANGED" -eq 0 ]; then
           echo "ℹ️  No image updates detected. Nothing to build."
