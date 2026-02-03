@@ -60,12 +60,112 @@ tasks:
       - COMMIT
       - CHART_COMPONENTS
       - IMG_COMPONENTS
+      - GITHUB_TOKEN
+      - GITHUB_ACTOR
     vars:
       CHART_VERSION:
         sh: "grep '^version:' {{.ROOT_DIR2}}/charts/{{.COMPONENT}}/Chart.yaml | awk '{print $2}'"
       compdir: '{{.LOCALTMP}}/component'
     cmds:
     - |
+      TARGET_LIST="$IMG_COMPONENTS"
+      
+      if [ -z "$TARGET_LIST" ]; then
+        echo "ℹ️  IMG_COMPONENTS is empty. Falling back to COMPONENTS."
+        TARGET_LIST="$COMPONENTS"
+      fi
+      
+      if [ -z "$TARGET_LIST" ]; then
+        echo "⚠️  Warning: Both IMG_COMPONENTS and COMPONENTS are empty. Nothing to process."
+        export IMG_VERSION_MAP="{}"
+        exit 0
+      fi
+      
+      
+      GHCR_PAT="{{.GITHUB_TOKEN}}"
+      GITHUB_ACTOR="{{.GITHUB_ACTOR}}"
+    
+      get_ghcr_token() {
+        local repo="$1"
+        curl -fsSL "https://ghcr.io/token?scope=repository:${repo}:pull" \
+          -u "${GITHUB_ACTOR}:${GHCR_PAT}" | jq -r '.token'
+      }
+        
+      # ------------------------------------------------------------------------------
+      # Helper Function: Fetch Latest Tag from GitHub API
+      # ------------------------------------------------------------------------------
+      get_latest_tag() {
+        local image_name="$1"
+      
+        local token=$(get_ghcr_token "{{.ORG_NAME}}/images/${image_name}")
+      
+        # We use the GitHub API because it returns versions pre-sorted by 'updated_at'.
+        # This ensures we get the most recently pushed tag, not just the highest number.
+        local response=$(curl -s -H "Authorization: Bearer $token" \
+        -H "Accept: application/vnd.github.v3+json" \
+        "https://api.github.com/orgs/${ORG_NAME}/packages/container/${image_name}/versions?per_page=1")
+      
+        # Parse the response with jq to extract the first tag of the most recent version
+        # The 'select' ensures we don't pick a version that has no tags (untagged digest)
+        local tag=$(echo "$response" | jq -r '.[0].metadata.container.tags[0] // empty')
+        
+        if [ -z "$tag" ]; then
+          echo "null"
+        else
+          echo "$tag"
+        fi
+      }
+      
+      # ------------------------------------------------------------------------------
+      # Main Execution
+      # ------------------------------------------------------------------------------
+      
+      # 1. Normalize the list: Replace commas with spaces
+      CLEAN_LIST="${TARGET_LIST//,/ }"
+        
+      # 2. Start the JSON string
+      VERSION_MAP_JSON="{"
+      FIRST=true
+      
+      echo "🔍 Resolving versions for: $CLEAN_LIST"
+        
+      for item in $CLEAN_LIST; do
+        COMP_NAME=""
+        COMP_VERSION=""
+        
+        # Check if a version is explicitly provided (contains ":")
+        if [[ "$item" == *:* ]]; then
+          COMP_NAME="${item%%:*}"
+          COMP_VERSION="${item#*:}"
+          echo "   👉 $COMP_NAME: Using explicit version $COMP_VERSION"
+        else
+          # No version provided. Fetch latest from registry.
+          COMP_NAME="$item"
+          echo "   🔄 $COMP_NAME: Fetching latest tag..."
+        
+          COMP_VERSION=$(get_latest_tag "$COMP_NAME")
+        
+          if [[ "$COMP_VERSION" == "null" ]]; then
+            echo "   ❌ Error: No tags found for $COMP_NAME. Exiting."
+            exit 1
+          fi
+          echo "      ✅ Found: $COMP_VERSION"
+        fi
+        
+        # 3. Append to JSON map
+        if [ "$FIRST" = true ]; then
+          FIRST=false
+        else
+          VERSION_MAP_JSON="$VERSION_MAP_JSON, "
+        fi
+      
+        # Construct "key": "value"
+        VERSION_MAP_JSON="$VERSION_MAP_JSON\"$COMP_NAME\": \"$COMP_VERSION\""
+      done
+        
+      # 4. Close JSON
+      VERSION_MAP_JSON="$VERSION_MAP_JSON}"
+        
       "{{.OCM}}" add componentversions --file "{{.compdir}}" --version "{{.VERSION}}" --create --force --templater spiff "{{.TASKFILE_DIR2}}/components.yaml" -- \
         VERSION="{{.VERSION}}" \
         ORG_NAME="{{.ORG_NAME}}" \
@@ -78,6 +178,7 @@ tasks:
         CD_VERSION="{{.CD_VERSION | default ""}}" \
         CHART_VERSION="{{.CHART_VERSION | default ""}}" \
         IMG_VERSION="{{.VERSION | default ""}}" \
+        IMG_VERSION_MAP="$VERSION_MAP_JSON" \
         BP_COMPONENTS="{{.BP_COMPONENTS | default ""}}" \
         CHART_COMPONENTS="{{.CHART_COMPONENTS | default ""}}" \
         IMG_COMPONENTS="{{.IMG_COMPONENTS | default ""}}"
