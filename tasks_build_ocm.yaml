@@ -105,8 +105,8 @@ tasks:
           echo "$tag"
         fi
       }
-     
-      CLEAN_LIST="${TARGET_LIST//,/ }"
+      
+      CLEAN_LIST=$(echo "$TARGET_LIST" | tr ',' ' ')
       VERSION_MAP_JSON="{"
       FIRST=true
       
