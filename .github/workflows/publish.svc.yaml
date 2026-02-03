@@ -59,20 +59,20 @@ jobs:
           version: 3.x
           repo-token: ${{ steps.generate-token.outputs.token }}
 
-#      - name: Run trivy repository security scanner
-#        uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8 #v0.33.1
-#        with:
-#          token-setup-trivy: ${{ steps.generate-token.outputs.token }}
-#          scan-type: repository
-#          format: json
-#          output: trivy-repository-vuln.json
-#          severity: CRITICAL,HIGH,MEDIUM
-#
-#      - name: Run tfsec security scanner
-#        uses: aquasecurity/tfsec-action@b466648d6e39e7c75324f25d83891162a721f2d6 #v1.0.3
-#        with:
-#          github_token:  ${{ steps.generate-token.outputs.token }}
-#          format: json
+      - name: Run trivy repository security scanner
+        uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8 #v0.33.1
+        with:
+          token-setup-trivy: ${{ steps.generate-token.outputs.token }}
+          scan-type: repository
+          format: json
+          output: trivy-repository-vuln.json
+          severity: CRITICAL,HIGH,MEDIUM
+
+      - name: Run tfsec security scanner
+        uses: aquasecurity/tfsec-action@b466648d6e39e7c75324f25d83891162a721f2d6 #v1.0.3
+        with:
+          github_token:  ${{ steps.generate-token.outputs.token }}
+          format: json
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@29109295f81e9208d7d86ff1c6c12d2833863392 # v3.6.0
@@ -94,34 +94,34 @@ jobs:
         uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3.11.1
         with:
           version: latest
-#
-#      - name: Set up Go
-#        uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00 # v6.0.0
-#        with:
-#          go-version-file: go.mod
-#
-#      - name: Build and Push Images
-#        env:
-#          COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
-#          COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
-#          IMAGE_SIGNING_ENABLED: ${{ inputs.image_signing_enabled }}
-#        run: |
-#          task build:img:all --verbose
-#
-#      - name: Build & Push Composite Image
-#        if: ${{ inputs.build_push_composite_enabled }}
-#        env:
-#          IMAGE_SIGNING_ENABLED: ${{ inputs.image_signing_enabled }}
-#          COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
-#          COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
-#          GITHUB_ACTOR: ${{ github.actor }}
-#          GITHUB_TOKEN: ${{  steps.generate-token.outputs.token }}
-#        run: |
-#          task build:apps[composite]:all --verbose
-#
-#      - name: Package and Push Helm Charts
-#        run: |
-#          task build:helm:all --verbose
+
+      - name: Set up Go
+        uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00 # v6.0.0
+        with:
+          go-version-file: go.mod
+
+      - name: Build and Push Images
+        env:
+          COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
+          COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
+          IMAGE_SIGNING_ENABLED: ${{ inputs.image_signing_enabled }}
+        run: |
+          task build:img:all --verbose
+
+      - name: Build & Push Composite Image
+        if: ${{ inputs.build_push_composite_enabled }}
+        env:
+          IMAGE_SIGNING_ENABLED: ${{ inputs.image_signing_enabled }}
+          COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
+          COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
+          GITHUB_ACTOR: ${{ github.actor }}
+          GITHUB_TOKEN: ${{  steps.generate-token.outputs.token }}
+        run: |
+          task build:apps[composite]:all --verbose
+
+      - name: Package and Push Helm Charts
+        run: |
+          task build:helm:all --verbose
 
       - name: Build and Push OCM Component
         env:
