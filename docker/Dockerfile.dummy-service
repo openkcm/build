@@ -1,6 +1,21 @@
 ARG DUMMY_SERVICE_IMAGE
 ARG DUMMY_PLUGINS_IMAGE
 
+
+# Builder - Prepare BusyBox and minimal filesystem
+FROM alpine:latest AS builder
+
+RUN apk add --no-cache busybox
+
+# Create a minimal root filesystem
+RUN mkdir -p /rootfs/bin /rootfs/lib /rootfs/binaries && \
+    cp /bin/busybox /rootfs/busybox && \
+    cp /lib/ld-musl-*.so.1 /rootfs/lib/ && \
+    # install busybox symlinks inside /rootfs/bin
+    chroot /rootfs /busybox --install -s /bin
+
+
+
 FROM ghcr.io/openkcm/images/dummy-plugins:${DUMMY_PLUGINS_IMAGE} AS dummy-plugins
 
 # --- Stage 2: main base image ---
@@ -8,7 +23,10 @@ FROM ghcr.io/openkcm/images/dummy-service:${DUMMY_SERVICE_IMAGE}
 
 WORKDIR /
 
+# Copy minimal filesystem
+COPY --from=builder /rootfs/ /
+
 # Copy dependencies from other repos
 COPY --from=dummy-plugins /binaries/dummy** /etc/plugins/dummy/
 
-CMD ["./dummy-service"]
+CMD ["/bin/ls", "-lrt", "/", "/etc/plugins/dummy/"]
