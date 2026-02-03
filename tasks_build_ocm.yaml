@@ -90,13 +90,12 @@ tasks:
       
       get_latest_tag() {
         local image_name="$1"
-      
         local repo="{{.ORG_NAME}}/images/$image_name"
+      
         local token=$(curl -fsSL "https://ghcr.io/token?scope=repository:$repo:pull"  -u "$GITHUB_ACTOR:$GHCR_PAT" | {{.JQ}} -r '.token')
+        local response=$(curl -s -H "Authorization: Bearer $token" -H "Accept: application/vnd.github+json" "https://ghcr.io/v2/{{.ORG_NAME}}/images/$image_name/tags/list")
       
-        local response=$(curl -s -H "Authorization: Bearer $token" -H "Accept: application/vnd.github+json" "https://ghcr.io/v2/{{.ORG_NAME}}/images/$image_name/tags/list"
         local tag=$(echo "$response" | {{.JQ}} -r '.tags[]' | grep -v "latest" | sort -V | tail -n 1)
-      
         echo "$tag"
       }
       
