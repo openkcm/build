@@ -220,8 +220,21 @@ tasks:
         - BASE_IMAGE
         - COMPOSITE_CORE_IMAGE_NAME
         - IMAGE_SIGNING_ENABLED
+        - GITHUB_TOKEN
+        - GITHUB_ACTOR
     cmd: |
         set -euo pipefail
+      
+        GHCR_PAT="{{.GITHUB_TOKEN}}"
+        GITHUB_ACTOR="{{.GITHUB_ACTOR}}"
+        
+        get_ghcr_token() {
+          local repo="$1"
+          curl -fsSL "https://ghcr.io/token?scope=repository:${repo}:pull" \
+            -u "${GITHUB_ACTOR}:${GHCR_PAT}" | jq -r '.token'
+        }
+        
+        mkdir -p .ghcr_state
       
         FULL_REPO="{{.ORG_NAME}}/{{.COMPOSITE_CORE_IMAGE_NAME}}"
         TAG=$(curl -s -H "Accept: application/vnd.github+json" "https://api.github.com/repos/${FULL_REPO}/tags" | {{.JQ}} -r '.[].name' | sort -V | tail -n1)
@@ -230,6 +243,36 @@ tasks:
           echo "❌ No tags found. Looking into `repos/${FULL_REPO}/tags`"
           exit 1
         fi
+      
+        # 1. Initialize variables
+        CANDIDATE_TAG="${TAG}"
+        COUNTER=1
+        TOKEN=$(get_ghcr_token "{{.ORG_NAME}}/images/{{.COMPOSITE_DESTINATION_COMPONENT_NAME}}")
+        while true; do
+          # Check if this specific tag already exists in the registry
+          COMPOSITE_PATH="https://ghcr.io/v2/{{.ORG_NAME}}/images/{{.COMPOSITE_DESTINATION_COMPONENT_NAME}}/manifests/${CANDIDATE_TAG}"
+        
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: Bearer $TOKEN" -H "Accept: application/vnd.oci.image.manifest.v1+json" "$COMPOSITE_PATH")
+          
+          if [ "$STATUS" -eq 404 ]; then
+            # 404 means the tag is FREE. We can use it.
+            echo "✅ Tag ${CANDIDATE_TAG} is available."
+            break
+          elif [ "$STATUS" -eq 200 ]; then
+            # 200 means tag EXISTS. We must increment.
+            # Uses hyphen format: v2.0.39 -> v2.0.39-1
+            echo "⚠️ Tag ${CANDIDATE_TAG} already exists. Incrementing..."
+            CANDIDATE_TAG="${TAG}-${COUNTER}"
+            COUNTER=$((COUNTER + 1))
+          else
+            echo "❌ Error checking tag status (HTTP $STATUS). Exiting."
+            exit 1
+          fi
+        done
+          
+          # 2. CRITICAL: Update the global TAG variable so the next docker command uses the new one
+        TAG="${CANDIDATE_TAG}"
+        echo "Final Tag to use: $TAG"
         
         docker manifest push {{.BASE_IMAGE}}:$TAG
   
