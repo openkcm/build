@@ -105,7 +105,6 @@ tasks:
           echo "$tag"
         fi
       }
-      
      
       CLEAN_LIST="${TARGET_LIST//,/ }"
       VERSION_MAP_JSON="{"
@@ -143,7 +142,7 @@ tasks:
         VERSION_MAP_JSON="$VERSION_MAP_JSON\"$COMP_NAME\": \"$COMP_VERSION\""
       done
         
-      VERSION_MAP_JSON="$VERSION_MAP_JSON}"
+      VERSION_MAP_JSON="${VERSION_MAP_JSON}"
       
       echo "VERSION_MAP_JSON=${VERSION_MAP_JSON}"
         
