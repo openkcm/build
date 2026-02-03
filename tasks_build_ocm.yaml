@@ -165,6 +165,8 @@ tasks:
         
       # 4. Close JSON
       VERSION_MAP_JSON="$VERSION_MAP_JSON}"
+      
+      echo "VERSION_MAP_JSON=${VERSION_MAP_JSON}"
         
       "{{.OCM}}" add componentversions --file "{{.compdir}}" --version "{{.VERSION}}" --create --force --templater spiff "{{.TASKFILE_DIR2}}/components.yaml" -- \
         VERSION="{{.VERSION}}" \
@@ -178,7 +180,7 @@ tasks:
         CD_VERSION="{{.CD_VERSION | default ""}}" \
         CHART_VERSION="{{.CHART_VERSION | default ""}}" \
         IMG_VERSION="{{.VERSION | default ""}}" \
-        IMG_VERSION_MAP="$VERSION_MAP_JSON" \
+        IMG_VERSION_MAP="${VERSION_MAP_JSON}" \
         BP_COMPONENTS="{{.BP_COMPONENTS | default ""}}" \
         CHART_COMPONENTS="{{.CHART_COMPONENTS | default ""}}" \
         IMG_COMPONENTS="{{.IMG_COMPONENTS | default ""}}"
