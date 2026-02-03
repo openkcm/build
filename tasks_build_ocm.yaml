@@ -152,7 +152,7 @@ tasks:
         COMPONENTS="{{.COMPONENTS | trimSuffix " " | replace " " ","}}" \
         CD_VERSION="{{.CD_VERSION | default ""}}" \
         CHART_VERSION="{{.CHART_VERSION | default ""}}" \
-        IMG_VERSION="{{.VERSION}}" \
+        IMG_VERSION="{{.VERSION | default ""}}" \
         BP_COMPONENTS="{{.BP_COMPONENTS | default ""}}" \
         CHART_COMPONENTS="{{.CHART_COMPONENTS | default ""}}" \
         IMG_COMPONENTS="$RESOLVED_LIST"
