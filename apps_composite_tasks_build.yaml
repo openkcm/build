@@ -133,11 +133,7 @@ tasks:
         MAIN_TAG="${TAGS[$MAIN_IMAGE_NAME]}"
 
         # COMPOSITE_PATH="https://ghcr.io/v2/{{.ORG_NAME}}/images/{{.DESTINATION_COMPONENT_NAME}}/manifests/${MAIN_TAG}"
-        # STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
-          -H "Authorization: Bearer $TOKEN" \
-          -H "Accept: application/vnd.oci.image.manifest.v1+json" \
-          "$COMPOSITE_PATH")
-
+        # STATUS=$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: Bearer $TOKEN" -H "Accept: application/vnd.oci.image.manifest.v1+json" "$COMPOSITE_PATH")
         # if [ "$STATUS" -eq 200 ]; then
         #   echo "✅ Composite image {{.DESTINATION_COMPONENT_NAME}} already exists for tag ${MAIN_TAG}. Exiting."
         #   exit 1
