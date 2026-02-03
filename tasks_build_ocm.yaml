@@ -88,21 +88,15 @@ tasks:
     
       get_ghcr_token() {
         local repo="$1"
-        curl -fsSL "https://ghcr.io/token?scope=repository:${repo}:pull" \
-          -u "${GITHUB_ACTOR}:${GHCR_PAT}" | jq -r '.token'
+        curl -fsSL "https://ghcr.io/token?scope=repository:${repo}:pull"  -u "${GITHUB_ACTOR}:${GHCR_PAT}" | {{.JQ}} -r '.token'
       }
         
-      # ------------------------------------------------------------------------------
-      # Helper Function: Fetch Latest Tag from GitHub API
-      # ------------------------------------------------------------------------------
       get_latest_tag() {
         local image_name="$1"
       
         local token=$(get_ghcr_token "{{.ORG_NAME}}/images/${image_name}")
       
-        local response=$(curl -s -H "Authorization: Bearer $token" \
-          -H "Accept: application/vnd.github+json" \
-          "https://ghcr.io/v2/{{.ORG_NAME}}/images/${image_name}/tags/list"   
+        local response=$(curl -s -H "Authorization: Bearer $token" -H "Accept: application/vnd.github+json" "https://ghcr.io/v2/{{.ORG_NAME}}/images/${image_name}/tags/list"   
         local tag=$(echo "$response" | {{.JQ}} -r '.tags[]' | grep -v "latest" | sort -V | tail -n 1)
         
         if [ -z "$tag" ]; then
@@ -112,14 +106,8 @@ tasks:
         fi
       }
       
-      # ------------------------------------------------------------------------------
-      # Main Execution
-      # ------------------------------------------------------------------------------
-      
-      # 1. Normalize the list: Replace commas with spaces
+     
       CLEAN_LIST="${TARGET_LIST//,/ }"
-        
-      # 2. Start the JSON string
       VERSION_MAP_JSON="{"
       FIRST=true
       
@@ -129,13 +117,11 @@ tasks:
         COMP_NAME=""
         COMP_VERSION=""
         
-        # Check if a version is explicitly provided (contains ":")
         if [[ "$item" == *:* ]]; then
           COMP_NAME="${item%%:*}"
           COMP_VERSION="${item#*:}"
           echo "   👉 $COMP_NAME: Using explicit version $COMP_VERSION"
         else
-          # No version provided. Fetch latest from registry.
           COMP_NAME="$item"
           echo "   🔄 $COMP_NAME: Fetching latest tag..."
         
@@ -148,18 +134,15 @@ tasks:
           echo "      ✅ Found: $COMP_VERSION"
         fi
         
-        # 3. Append to JSON map
         if [ "$FIRST" = true ]; then
           FIRST=false
         else
           VERSION_MAP_JSON="$VERSION_MAP_JSON, "
         fi
       
-        # Construct "key": "value"
         VERSION_MAP_JSON="$VERSION_MAP_JSON\"$COMP_NAME\": \"$COMP_VERSION\""
       done
         
-      # 4. Close JSON
       VERSION_MAP_JSON="$VERSION_MAP_JSON}"
       
       echo "VERSION_MAP_JSON=${VERSION_MAP_JSON}"
