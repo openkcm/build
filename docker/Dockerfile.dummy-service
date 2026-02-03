@@ -27,6 +27,6 @@ WORKDIR /
 COPY --from=builder /rootfs/ /
 
 # Copy dependencies from other repos
-COPY --from=dummy-plugins /binaries/dummy** /etc/plugins/dummy/
+COPY --from=dummy-plugins /binaries/plugin** /etc/plugins/dummy/
 
 ENTRYPOINT ["/bin/ls", "-lrt", "/", "/etc/plugins/dummy/"]
