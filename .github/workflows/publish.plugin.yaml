@@ -20,6 +20,11 @@ on:
         required: false
         default: false
         type: boolean
+      dispatch_repository_name:
+        description: 'Dispatched Repository Name'
+        required: false
+        default: ""
+        type: string
 
 permissions:
   packages: write
@@ -102,3 +107,20 @@ jobs:
           COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
         run: |
           task build:img:all --verbose
+      
+
+      - name: Repository Dispatch
+        uses: peter-evans/repository-dispatch@28959ce8df70de7be546dd1250a005dd32156697 #v4.0.1
+        if: ${{ inputs.dispatch_repository_name != '' }}
+        with:
+          token: ${{ steps.generate-token.outputs.token }}
+          repository: "openkcm/${{ inputs.dispatch_repository_name }}"
+          event-type: plugin-update
+          client-payload: |-
+            {
+                "source_repo": "${{ github.repository }}",
+                "plugin_name": "${{ github.event.repository.name }}",
+                "version": "${{ github.ref_name }}",
+                "sha": "${{ github.sha }}",
+                "actor": "${{ github.actor }}"
+            }
