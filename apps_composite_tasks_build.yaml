@@ -165,6 +165,8 @@ tasks:
         IMAGE_TAG="{{.BASE_IMAGE}}:$MAIN_TAG"
         MULTI_ARCH_IMAGE_TAG="${IMAGE_TAG}-{{.OS}}-{{.ARCH}}"
         
+        echo "docker buildx build --load --builder {{.DOCKER_BUILDER_NAME}} ${BUILD_ARGS[@]} --platform {{.OS}}/{{.ARCH}} -t $MULTI_ARCH_IMAGE_TAG -f {{.ROOT_DIR2}}/Dockerfile.tmp ."
+        
         docker buildx build --load --builder {{.DOCKER_BUILDER_NAME}} ${BUILD_ARGS[@]} --platform {{.OS}}/{{.ARCH}} -t $MULTI_ARCH_IMAGE_TAG -f {{.ROOT_DIR2}}/Dockerfile.tmp .
         docker push $MULTI_ARCH_IMAGE_TAG
         docker manifest create  $IMAGE_TAG --amend $MULTI_ARCH_IMAGE_TAG
