@@ -61,7 +61,7 @@ tasks:
       - COMMIT
       - CHART_COMPONENTS
       - IMG_COMPONENTS
-      - GITHUB_TOKEN
+      - GHCR_PAT
       - GITHUB_ACTOR
     vars:
       CHART_VERSION:
@@ -85,7 +85,7 @@ tasks:
       fi
       
       
-      GHCR_PAT="{{.GITHUB_TOKEN}}"
+      GHCR_PAT="{{.GHCR_PAT}}"
       GITHUB_ACTOR="{{.GITHUB_ACTOR}}"
       
       get_latest_tag() {
