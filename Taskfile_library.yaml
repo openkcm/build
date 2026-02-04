@@ -31,6 +31,19 @@ includes:
       - c
 
 vars:
+  ORG_NAME:
+    sh: echo "${GITHUB_REPOSITORY%%/*}"
+  REPO_URL:
+    sh: echo "https://github.com/${GITHUB_REPOSITORY}"
+  REPO_NAME:
+    sh: echo "${GITHUB_REPOSITORY##*/}"
+  OCI_URL:
+    sh: echo "ghcr.io/{{.ORG_NAME}}"
+
+  DOCKER_BUILDER_NAME:
+    sh: echo -n "${DOCKER_BUILDER_NAME:-'{{.ORG_NAME}}-multiarch-builder'}"
+  DOCKER_FILE_IDENTIFIER: '{{ if .DOCKER_FILE_IDENTIFIER }}{{.DOCKER_FILE_IDENTIFIER}}{{ else }}single{{ end }}'
+
   # whacky workarounds for incorrect paths in the special variables
   # see https://github.com/go-task/task/issues/2056 and https://github.com/go-task/task/issues/2057
   ROOT_DIR2: '{{.ROOT_DIR | trimSuffix "/common" | trimSuffix "/hack"}}'
@@ -64,6 +77,8 @@ vars:
   HELM: '{{ .HELM | default (print .LOCALBIN "/helm") }}'
   YAML2JSON: '{{ .YAML2JSON | default (print .LOCALBIN "/yaml2json") }}'
   OCM: '{{ .OCM | default (print .LOCALBIN "/ocm") }}'
+  CRANE: '{{ .CRANE | default (print .LOCALBIN "/crane") }}'
+  COSIGN: '{{ .COSIGN | default (print .LOCALBIN "/cosign") }}'
   ENVTEST: '{{ .ENVTEST | default (print .LOCALBIN "/setup-envtest") }}'
 
   # separator strings
@@ -74,8 +89,11 @@ vars:
   BLD_SEP:     "BUILD ARTIFACTS ### build / bld / b ############################################"
   BLD_BIN_SEP: "BINARY BUILD --- bin -----------------------------------------------------------"
   BLD_IMG_SEP: "IMAGE BUILD --- img ------------------------------------------------------------"
+  BLD_CMK_IMG_SEP: "CMK IMAGE BUILD --- img ------------------------------------------------------------"
   BLD_HLM_SEP: "HELM CHART BUILD --- helm ------------------------------------------------------"
   BLD_OCM_SEP: "OCM COMPONENT BUILD --- ocm ----------------------------------------------------"
+  BLD_CRANE_SEP: "CRANE BUILD --- crane ----------------------------------------------------"
+  BLD_COSIGN_SEP: "COSIGN BUILD --- cosign ----------------------------------------------------"
   RLS_SEP:     "RELEASE MANAGEMENT ### release / rls / r #######################################"
   CYCLONEDXGOMOD_SEP: "CycloneDX Software Bill of Materials (SBOM) from Go modules ### cyclonedxgomod / cdxgomod / c #######################################"
 

@@ -2,6 +2,27 @@ name: ci
 
 on:
   workflow_call:
+    inputs:
+      run_task_tests:
+        description: "Run task tests"
+        required: false
+        type: boolean
+        default: true
+      run_makefile_tests:
+        description: "Run makefile tests"
+        required: false
+        type: boolean
+        default: false
+      makefile_test_name:
+        description: "Makefile task test name"
+        required: false
+        type: string
+        default: "test"
+      makefile_test_coverage_reports_path:
+        description: "Coverage report paths (space-separated)"
+        required: false
+        type: string
+        default: "cover.html cover.out"
 
 permissions:
   contents: read
@@ -54,5 +75,27 @@ jobs:
       - name: task validate
         run: task validate --verbose
 
-      - name: task test
+      - name: task unit tests
+        if: ${{ inputs.run_task_tests }}
         run: task test --verbose
+
+      - name: makefile advanced tests
+        if: ${{ inputs.run_makefile_tests }}
+        run: |
+          # Install bash if missing
+          if ! command -v bash >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y bash
+          fi
+          
+          # Run Makefile tests
+          make "${{ inputs.makefile_test_name }}"
+
+      - name: upload test coverage
+        if: ${{ inputs.run_makefile_tests }}
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: coverage-report
+          path: ${{ inputs.makefile_test_coverage_reports_path }}
+          if-no-files-found: warn
+          retention-days: 30

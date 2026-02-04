@@ -31,6 +31,12 @@ tasks:
     vars:
       HELM_REGISTRY:
         sh: 'PROJECT_ROOT="{{.ROOT_DIR2}}" {{.TASKFILE_DIR2}}/get-registry.sh --helm'
+      COMPONENTS: >
+        {{ if .CHART_COMPONENTS }}
+          {{ .CHART_COMPONENTS }}
+        {{ else }}
+          {{ .COMPONENTS }}
+        {{ end }}
     deps:
     cmds:
     - for:
@@ -68,6 +74,12 @@ tasks:
     vars:
       HELM_REGISTRY:
         sh: 'PROJECT_ROOT="{{.ROOT_DIR2}}" {{.TASKFILE_DIR2}}/get-registry.sh --helm'
+      COMPONENTS: >
+        {{ if .CHART_COMPONENTS }}
+          {{ .CHART_COMPONENTS }}
+        {{ else }}
+          {{ .COMPONENTS }}
+        {{ end }}
     cmds:
     - for:
         var: COMPONENTS

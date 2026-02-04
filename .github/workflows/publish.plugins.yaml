@@ -2,19 +2,24 @@ name: Publish
 
 on:
   workflow_call:
+    secrets:
+      COSIGN_PRIVATE_KEY:
+        required: false
+      COSIGN_PASSWORD:
+        required: false
+    inputs:
+      image_signing_enabled:
+        description: 'Enable image signing (true|false)'
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   packages: write
   contents: read
 
 jobs:
-  tag:
-    if: |
-      github.event_name == 'pull_request' &&
-      github.event.pull_request.merged == true &&
-      contains(github.event.pull_request.title, 'chore(main)') &&
-      contains(github.event.pull_request.title, 'release') &&
-      contains(github.event.pull_request.labels.*.name, 'release')
+  artifacts:
     runs-on: ubuntu-24.04
     steps:
       - name: Generate token from GitHub App
@@ -83,6 +88,11 @@ jobs:
         with:
           go-version-file: go.mod
 
-      - name: Build and Push Images
+      - name: Build and Push
+        env:
+          IMAGE_SIGNING_ENABLED: ${{ inputs.image_signing_enabled }}
+          COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
+          COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
+          IMAGE_NAME: ${{ github.event.repository.name }}
         run: |
-          task build:img:all --verbose
+          task build-and-push --verbose

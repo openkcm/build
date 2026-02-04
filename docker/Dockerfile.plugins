@@ -1,0 +1,29 @@
+# Builder - Prepare BusyBox and minimal filesystem
+FROM alpine:latest AS builder
+
+RUN apk add --no-cache busybox
+
+# Create a minimal root filesystem
+RUN mkdir -p /rootfs/bin /rootfs/lib /rootfs/binaries && \
+    cp /bin/busybox /rootfs/busybox && \
+    cp /lib/ld-musl-*.so.1 /rootfs/lib/ && \
+    # install busybox symlinks inside /rootfs/bin
+    chroot /rootfs /busybox --install -s /bin
+
+
+ARG TARGETOS
+ARG TARGETARCH
+
+COPY bin/** /binaries/
+RUN find /binaries -type f ! -name "*.$TARGETOS-$TARGETARCH" -delete
+
+FROM scratch
+
+# Copy minimal filesystem
+COPY --from=builder /rootfs/ /
+
+# Copy binaries
+COPY --from=builder /binaries/ /binaries/
+
+# Default command
+CMD ["/bin/ls", "-lrt", "/binaries/"]

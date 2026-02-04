@@ -4,10 +4,9 @@ includes:
   build:bin:
     taskfile: tasks_build_bin.yaml
     internal: true
-
-vars:
-  DOCKER_BUILDER_NAME:
-    sh: 'echo -n ${DOCKER_BUILDER_NAME:-"openkcm-multiarch-builder"}'
+  tools:
+    taskfile: tasks_tools.yaml
+    internal: true
 
 tasks:
   # This is a dummy task that serves as a separator between task namespaces in the 'task -l' output.
@@ -82,12 +81,23 @@ tasks:
       - ARCH
       - IMAGE_BASE
       - DOCKER_BUILDER_NAME
+    vars:
+      IMAGE: '{{.IMAGE_BASE}}/{{.COMPONENT}}:{{.VERSION}}-{{.OS}}-{{.ARCH}}'
+      BINARY_NAME: '{{(regexReplaceAll "\\/" .COMPONENT "-") | lower}}'
+      DOCKER_FILE_IDENTIFIER: '{{.DOCKER_FILE_IDENTIFIER}}'
     cmds:
     - 'echo "Building image {{.COMPONENT}}:{{.VERSION}}-{{.OS}}-{{.ARCH}}"'
     - '[[ "{{.OS}}" == "linux" ]] || { echo "The distroless base image does only support linux as operating system."; exit 1; }'
-    - 'cat "{{.TASKFILE_DIR2}}/Dockerfile" | sed "s/<component>/{{.COMPONENT}}/g" > "{{.ROOT_DIR2}}/Dockerfile.tmp"'
-    - '( cd "{{.ROOT_DIR2}}"; docker buildx build --builder {{.DOCKER_BUILDER_NAME}} --load --build-arg COMPONENT={{.COMPONENT}} --platform {{.OS}}/{{.ARCH}} -t {{.IMAGE_BASE}}/{{.COMPONENT}}:{{.VERSION}}-{{.OS}}-{{.ARCH}} -f Dockerfile.tmp . )'
+    - 'cat "{{.TASKFILE_DIR2}}/docker/Dockerfile.{{.DOCKER_FILE_IDENTIFIER}}" | sed "s|<component>|{{.BINARY_NAME}}|g" > "{{.ROOT_DIR2}}/Dockerfile.tmp"'
+    - '( cd "{{.ROOT_DIR2}}"; docker buildx build --builder {{.DOCKER_BUILDER_NAME}} --load --build-arg COMPONENT={{.BINARY_NAME}} --platform {{.OS}}/{{.ARCH}} -t {{.IMAGE}} -f Dockerfile.tmp . )'
+    - 'docker push {{.IMAGE}}'
     - 'rm -f "{{.ROOT_DIR2}}/Dockerfile.tmp"'
+    - vars:
+        VERSION: '{{.VERSION}}-{{.OS}}-{{.ARCH}}'
+        BASE_IMAGE: '{{.IMAGE_BASE}}/{{.COMPONENT}}'
+        CRANE_PLATFORM: '--platform={{.OS}}/{{.ARCH}}'
+      task: sign
+      silent: true
     internal: true
 
   build-multi-raw:
@@ -154,6 +164,12 @@ tasks:
     cmds:
     - 'echo "Pushing image {{.COMPONENT}}:{{.VERSION}}-{{.OS}}-{{.ARCH}}"'
     - 'docker push {{.IMAGE_BASE}}/{{.COMPONENT}}:{{.VERSION}}-{{.OS}}-{{.ARCH}}'
+    - vars:
+        VERSION: '{{.VERSION}}-{{.OS}}-{{.ARCH}}'
+        BASE_IMAGE: '{{.IMAGE_BASE}}/{{.COMPONENT}}'
+        CRANE_PLATFORM: '--platform={{.OS}}/{{.ARCH}}'
+      task: sign
+      silent: true
     internal: true
 
   push-multi:
@@ -178,23 +194,117 @@ tasks:
         var: COMPONENTS
         as: COMPONENT
       vars:
-        IMG: '{{.IMAGE_BASE}}/{{.COMPONENT}}:{{.VERSION}}'
+        BASE_IMAGE: '{{.IMAGE_BASE}}/{{.COMPONENT}}'
       task: push-multi-internal
 
   push-multi-internal:
-    desc: "  Build and push the multi-platform manifest for a single component's image. Individual platform-specific images must have been pushed before."
+    desc: "  Push the multi-platform manifest for a single component's image. Individual platform-specific images must have been pushed before."
     requires:
       vars:
-      - IMG
+      - VERSION
+      - BASE_IMAGE
     cmds:
     - for:
         matrix:
           OS: ["linux"] # distroless base image only supports linux
           ARCH: ["amd64", "arm64"]
-      cmd: 'docker manifest create {{.IMG}} --amend {{.IMG}}-{{.ITEM.OS}}-{{.ITEM.ARCH}}'
-    - 'echo "Pushing image {{.IMG}}"'
-    - 'docker manifest push {{.IMG}}'
+      cmd: 'docker manifest create {{.BASE_IMAGE}}:{{.VERSION}} --amend {{.BASE_IMAGE}}:{{.VERSION}}-{{.ITEM.OS}}-{{.ITEM.ARCH}}'
+    - 'echo "Pushing manifest {{.BASE_IMAGE}}:{{.VERSION}}"'
+    - 'docker manifest push {{.BASE_IMAGE}}:{{.VERSION}}'
+    - vars:
+        VERSION: '{{.VERSION}}'
+        BASE_IMAGE: '{{.BASE_IMAGE}}'
+        CRANE_PLATFORM: ''
+      task: sign
+      silent: true
     internal: true
+
+  plugins-build-and-push-one:
+    desc: "  Push one the multi-platform image."
+    requires:
+      vars:
+        - IMAGE_NAME
+        - VERSION
+    vars:
+      IMAGE_BASE:
+        sh: 'PROJECT_ROOT="{{.ROOT_DIR2}}" {{.TASKFILE_DIR2}}/get-registry.sh --image'
+    deps:
+      - build:bin:all
+    cmds:
+      - task: prepare-docker-builder
+      - for:
+          matrix:
+            OS: [ "linux" ] # distroless base image only supports linux
+            ARCH: ["amd64", "arm64"]
+        vars:
+          OS: '{{.ITEM.OS}}'
+          ARCH: '{{.ITEM.ARCH}}'
+          BASE_IMAGE: '{{.IMAGE_BASE}}/{{.IMAGE_NAME}}'
+        task: plugins-build-and-push-one-internal
+      - vars:
+          BASE_IMAGE: '{{.IMAGE_BASE}}/{{.IMAGE_NAME}}'
+        task: push-multi-internal
+
+  plugins-build-and-push-one-internal:
+    desc: "  Build a single image including all binaries. Requires the docker builder to have been prepared before."
+    requires:
+      vars:
+        - BASE_IMAGE
+        - OS
+        - ARCH
+        - VERSION
+        - DOCKER_BUILDER_NAME
+    vars:
+      IMAGE: '{{.BASE_IMAGE}}:{{.VERSION}}-{{.OS}}-{{.ARCH}}'
+    cmds:
+      - 'echo "Building image {{.IMAGE}}"'
+      - '[[ "{{.OS}}" == "linux" ]] || { echo "The distroless base image does only support linux as operating system."; exit 1; }'
+      - 'cat "{{.TASKFILE_DIR2}}/docker/Dockerfile.plugins" > "{{.ROOT_DIR2}}/Dockerfile.tmp"'
+      - '( cd "{{.ROOT_DIR2}}"; docker buildx build --builder {{.DOCKER_BUILDER_NAME}} --load --platform {{.OS}}/{{.ARCH}} -t {{.IMAGE}} -f Dockerfile.tmp . )'
+      - 'docker push {{.IMAGE}}'
+      - 'rm -f "{{.ROOT_DIR2}}/Dockerfile.tmp"'
+      - vars:
+          VERSION: '{{.VERSION}}-{{.OS}}-{{.ARCH}}'
+          BASE_IMAGE: '{{.BASE_IMAGE}}'
+          CRANE_PLATFORM: '--platform={{.OS}}/{{.ARCH}}'
+        task: sign
+        silent: true
+    internal: true
+
+  sign:
+    desc: "  Sign image."
+    requires:
+      vars:
+        - VERSION
+        - BASE_IMAGE
+        - CRANE_PLATFORM
+    deps:
+      - tools:crane
+      - tools:cosign
+      - tools:localtmp
+    vars:
+      IMAGE_SIGNING_ENABLED: '{{ env "IMAGE_SIGNING_ENABLED" | default "false" }}'
+    silent: true
+    cmd: |
+      if [ "{{.IMAGE_SIGNING_ENABLED}}" != "true" ]; then
+        echo "⚠️ Image signing is disabled (IMAGE_SIGNING_ENABLED is not 'true'). Skipping."
+        exit 0
+      fi
+
+      set -eu
+
+      if [ -z "$COSIGN_PRIVATE_KEY" ] || [ -z "$COSIGN_PASSWORD" ]; then
+        echo "❌ Error: Missing COSIGN_PRIVATE_KEY or COSIGN_PASSWORD." >&2
+        exit 1
+      fi
+
+      trap 'rm -f "{{.ROOT_DIR2}}/cosign.key"' EXIT
+      echo "$COSIGN_PRIVATE_KEY" > "{{.ROOT_DIR2}}/cosign.key"
+
+      DIGEST=$({{.CRANE}} digest {{.CRANE_PLATFORM}} {{.BASE_IMAGE}}:{{.VERSION}})
+      {{.COSIGN}} sign --yes --key "{{.ROOT_DIR2}}/cosign.key" "{{.BASE_IMAGE}}@$DIGEST"
+      echo "✅ Successfully signed image: {{.BASE_IMAGE}}@$DIGEST"
+
 
   tag:
     desc: "  Adds an additional tag to the multi-platform image. Image must have been built and pushed before."

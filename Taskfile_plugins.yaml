@@ -1,0 +1,28 @@
+version: 3
+
+# This Taskfile is meant to be included for controller repos.
+# In addition to the library tasks, it contains tasks for building binaries and images.
+
+run: once
+method: checksum
+
+includes:
+  lib:
+    taskfile: Taskfile_library.yaml
+    flatten: true
+  build:
+    taskfile: tasks_build.yaml
+    aliases:
+    - bld
+    - b
+
+tasks:
+
+  # The following tasks are non-namespaced aliases for the most important namespaced tasks.
+  # This helps with visibility on 'task -l'.
+
+  build-and-push:
+    desc: "  Binary generation, build all artifacts and push to the respective registries."
+    run: once
+    deps:
+      - build:img:plugins-build-and-push-one

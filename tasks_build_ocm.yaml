@@ -23,6 +23,8 @@ tasks:
         sh: 'PROJECT_ROOT="{{.ROOT_DIR2}}" {{.TASKFILE_DIR2}}/get-registry.sh --image'
       COMMIT:
         sh: '( cd "{{.ROOT_DIR2}}"; git rev-parse HEAD )'
+      CHART_COMPONENTS: '{{ if .CHART_COMPONENTS }}{{.CHART_COMPONENTS}}{{ else }}{{.COMPONENTS}}{{ end }}'
+      IMG_COMPONENTS: '{{ if .IMG_COMPONENTS }}{{.IMG_COMPONENTS}}{{ else }}{{.COMPONENTS}}{{ end }}'
     cmds:
     - task: build
       for:
@@ -36,6 +38,8 @@ tasks:
         CHART_REGISTRY: '{{.CHART_REGISTRY}}'
         IMAGE_REGISTRY: '{{.IMAGE_REGISTRY}}'
         COMMIT: '{{.COMMIT}}'
+        CHART_COMPONENTS: '{{.CHART_COMPONENTS}}'
+        IMG_COMPONENTS: '{{.IMG_COMPONENTS}}'
     - task: push
 
   build:
@@ -54,6 +58,8 @@ tasks:
       - CHART_REGISTRY
       - IMAGE_REGISTRY
       - COMMIT
+      - CHART_COMPONENTS
+      - IMG_COMPONENTS
     vars:
       CHART_VERSION:
         sh: "grep '^version:' {{.ROOT_DIR2}}/charts/{{.COMPONENT}}/Chart.yaml | awk '{print $2}'"
@@ -62,6 +68,7 @@ tasks:
     - |
       "{{.OCM}}" add componentversions --file "{{.compdir}}" --version "{{.VERSION}}" --create --force --templater spiff "{{.TASKFILE_DIR2}}/components.yaml" -- \
         VERSION="{{.VERSION}}" \
+        ORG_NAME="{{.ORG_NAME}}" \
         CHART_REGISTRY="{{.CHART_REGISTRY}}" \
         IMG_REGISTRY="{{.IMAGE_REGISTRY}}" \
         COMMIT="{{.COMMIT}}" \
@@ -72,8 +79,8 @@ tasks:
         CHART_VERSION="{{.CHART_VERSION | default ""}}" \
         IMG_VERSION="{{.VERSION | default ""}}" \
         BP_COMPONENTS="{{.BP_COMPONENTS | default ""}}" \
-        CHART_COMPONENTS="{{.COMPONENTS | default ""}}" \
-        IMG_COMPONENTS="{{.COMPONENTS | default ""}}"
+        CHART_COMPONENTS="{{.CHART_COMPONENTS | default ""}}" \
+        IMG_COMPONENTS="{{.IMG_COMPONENTS | default ""}}"
     - cmd: echo "Use '$(realpath --relative-base="{{.USER_WORKING_DIR}}" "{{.OCM}}") get cv $(realpath --relative-base="{{.USER_WORKING_DIR}}" "{{.compdir}}") -o yaml' to view the generated component descriptor."
       silent: true
 
@@ -93,4 +100,36 @@ tasks:
         sh: 'if [[ -n ${OVERWRITE_COMPONENTS:-} ]] && [[ ${OVERWRITE_COMPONENTS} != "false" ]]; then echo -n "--overwrite"; fi'
       compdir: '{{.LOCALTMP}}/component'
     cmds:
+    - vars:
+        COMPONENT: '{{.compdir}}'
+      task: sign
+      silent: true
     - '"{{.OCM}}" transfer componentversions "{{.compdir}}" "{{.COMPONENT_REGISTRY}}" {{.overwrite_mod}}'
+
+  sign:
+    desc: "  Sign OCM."
+    requires:
+      vars:
+        - COMPONENT
+    vars:
+      OCM_SIGNING_ENABLED: '{{ env "OCM_SIGNING_ENABLED" | default "false" }}'
+      OCM_SIGNATURE_NAME: 'pipeline-signature'
+    silent: true
+    cmd: |
+      if [ "{{.OCM_SIGNING_ENABLED}}" != "true" ]; then
+        echo "⚠️ OCM signing is disabled (OCM_SIGNING_ENABLED is not 'true'). Skipping."
+        exit 0
+      fi
+      
+      set -eu
+      
+      if [ -z "$OCM_PRIVATE_KEY" ]; then
+        echo "❌ Error: Missing private key for signing." >&2
+        exit 1
+      fi
+      
+      trap 'rm -f "{{.ROOT_DIR2}}/ocm.key"' EXIT
+      echo "$OCM_PRIVATE_KEY" > "{{.ROOT_DIR2}}/ocm.key"
+      "{{.OCM}}" sign componentversion --signature "{{.OCM_SIGNATURE_NAME}}" --private-key="{{.ROOT_DIR2}}/ocm.key" "{{.COMPONENT}}"
+  
+      echo "✅ OCM component successfully signed."

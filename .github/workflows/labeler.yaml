@@ -45,13 +45,6 @@ jobs:
         run: |
           cp ./hack/common/.github/labeler.yml .github/labeler.yml
 
-#      - name: Sync labels
-#        uses: crazy-max/ghaction-github-labeler@24d110aa46a59976b8a7f35518cb7f14f434c916 #v5.3.0
-#        with:
-#          yaml-file: .github/labeler.yml
-#        env:
-#          GITHUB_TOKEN: ${{ steps.generate-token.outputs.token || github.token }}
-
       - name: Run labeler
         if: steps.init.outputs.internal_pr == 'true'
         uses: actions/labeler@634933edcd8ababfe52f92936142cc22ac488b1b #v6.0.1
