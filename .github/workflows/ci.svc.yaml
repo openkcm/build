@@ -12,6 +12,16 @@ on:
         required: false
         type: boolean
         default: false
+      makefile_test_name:
+        description: "Makefile task test name"
+        required: false
+        type: string
+        default: "test"
+      makefile_test_coverage_reports_path:
+        description: "Coverage report paths (space-separated)"
+        required: false
+        type: string
+        default: "cover.html cover.out"
 
 permissions:
   contents: read
@@ -78,5 +88,13 @@ jobs:
           fi
           
           # Run Makefile tests
-          make test
+          make "${{ inputs.makefile_test_name }}"
 
+      - name: upload test coverage
+        if: ${{ inputs.run_makefile_tests }}
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: coverage-report
+          path: ${{ inputs.makefile_test_coverage_reports_path }}
+          if-no-files-found: warn
+          retention-days: 30
