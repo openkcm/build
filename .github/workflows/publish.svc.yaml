@@ -115,7 +115,7 @@ jobs:
           COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
           COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
           GITHUB_ACTOR: ${{ github.actor }}
-          GITHUB_TOKEN: ${{  steps.generate-token.outputs.token }}
+          GHCR_PAT: ${{  steps.generate-token.outputs.token }}
         run: |
           task build:apps[composite]:all --verbose
 

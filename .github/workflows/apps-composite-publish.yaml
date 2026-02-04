@@ -88,6 +88,6 @@ jobs:
           OCM_SIGNING_ENABLED: ${{ inputs.ocm_signing_enabled }}
           OCM_PRIVATE_KEY: ${{ secrets.OCM_PRIVATE_KEY }}
           GITHUB_ACTOR: ${{ github.actor }}
-          GITHUB_TOKEN: ${{  steps.generate-token.outputs.token }}
+          GHCR_PAT: ${{  steps.generate-token.outputs.token }}
         run: |
           task build:apps[composite]:all --verbose

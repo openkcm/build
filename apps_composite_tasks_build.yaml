@@ -64,9 +64,9 @@ tasks:
         - ARCH
         - VERSION
         - DOCKER_BUILDER_NAME
-        - GITHUB_TOKEN
+        - GHCR_PAT
         - GITHUB_ACTOR
-        - COMPOSITE_CORE_IMAGE_NAME
+        - COMPOSITE_BASE_IMAGE_NAME
         - COMPOSITE_PLUGINS_IMAGE_NAME
         - COMPOSITE_DESTINATION_COMPONENT_NAME
         - IMAGE_SIGNING_ENABLED
@@ -78,9 +78,9 @@ tasks:
         set -euo pipefail
         
         
-        MAIN_IMAGE_NAME="{{.COMPOSITE_CORE_IMAGE_NAME}}"
+        BASE_IMAGE_NAME="{{.COMPOSITE_BASE_IMAGE_NAME}}"
         PLUGIN_IMAGES="{{.COMPOSITE_PLUGINS_IMAGE_NAME}}"
-        GHCR_PAT="{{.GITHUB_TOKEN}}"
+        GHCR_PAT="{{.GHCR_PAT}}"
         GITHUB_ACTOR="{{.GITHUB_ACTOR}}"
         
         get_ghcr_token() {
@@ -91,7 +91,7 @@ tasks:
 
         mkdir -p .ghcr_state
         
-        WATCHED_IMAGES="$MAIN_IMAGE_NAME $PLUGIN_IMAGES"
+        WATCHED_IMAGES="$BASE_IMAGE_NAME $PLUGIN_IMAGES"
         declare -A DIGESTS
         declare -A TAGS
         CHANGED=0
@@ -130,7 +130,7 @@ tasks:
           fi
         done
         
-        MAIN_TAG="${TAGS[$MAIN_IMAGE_NAME]}"
+        MAIN_TAG="${TAGS[$BASE_IMAGE_NAME]}"
         
         # Start with the clean MAIN_TAG (no numbers)
         CANDIDATE_TAG="${MAIN_TAG}"
@@ -218,14 +218,14 @@ tasks:
     requires:
       vars:
         - BASE_IMAGE
-        - COMPOSITE_CORE_IMAGE_NAME
+        - COMPOSITE_BASE_IMAGE_NAME
         - IMAGE_SIGNING_ENABLED
-        - GITHUB_TOKEN
+        - GHCR_PAT
         - GITHUB_ACTOR
     cmd: |
         set -euo pipefail
       
-        GHCR_PAT="{{.GITHUB_TOKEN}}"
+        GHCR_PAT="{{.GHCR_PAT}}"
         GITHUB_ACTOR="{{.GITHUB_ACTOR}}"
         
         get_ghcr_token() {
@@ -236,7 +236,7 @@ tasks:
         
         mkdir -p .ghcr_state
       
-        FULL_REPO="{{.ORG_NAME}}/{{.COMPOSITE_CORE_IMAGE_NAME}}"
+        FULL_REPO="{{.ORG_NAME}}/{{.COMPOSITE_BASE_IMAGE_NAME}}"
         TAG=$(curl -s -H "Accept: application/vnd.github+json" "https://api.github.com/repos/${FULL_REPO}/tags" | {{.JQ}} -r '.[].name' | sort -V | tail -n1)
       
         if [ -z "$TAG" ] || [ "$TAG" = "null" ]; then
