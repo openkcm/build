@@ -9,6 +9,8 @@ includes:
     taskfile: tasks_build_helm.yaml
   ocm:
     taskfile: tasks_build_ocm.yaml
+  apps[composite]:
+    taskfile: apps_composite_tasks_build.yaml
 
 tasks:
   # This is a dummy task that serves as a separator between task namespaces in the 'task -l' output.

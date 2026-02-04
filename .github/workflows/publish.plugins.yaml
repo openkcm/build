@@ -3,8 +3,6 @@ name: Publish
 on:
   workflow_call:
     secrets:
-      OCM_PRIVATE_KEY:
-        required: false
       COSIGN_PRIVATE_KEY:
         required: false
       COSIGN_PASSWORD:
@@ -12,11 +10,6 @@ on:
     inputs:
       image_signing_enabled:
         description: 'Enable image signing (true|false)'
-        required: false
-        default: false
-        type: boolean
-      ocm_signing_enabled:
-        description: 'Enable OCM signing (true|false)'
         required: false
         default: false
         type: boolean
