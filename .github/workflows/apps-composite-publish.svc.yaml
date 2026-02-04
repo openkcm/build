@@ -23,14 +23,11 @@ on:
 
 permissions:
   packages: write
-  contents: write
+  contents: read
 
 jobs:
   push-composite:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write  # needed for caching state
-      packages: write
     steps:
       - name: Generate token from GitHub App
         id: generate-token
