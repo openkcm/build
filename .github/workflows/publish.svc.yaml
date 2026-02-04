@@ -32,7 +32,7 @@ permissions:
 
 jobs:
   artifacts:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     steps:
       - name: Generate token from GitHub App
         id: generate-token
@@ -115,7 +115,7 @@ jobs:
           COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
           COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
           GITHUB_ACTOR: ${{ github.actor }}
-          GITHUB_TOKEN: ${{  steps.generate-token.outputs.token }}
+          GHCR_PAT: ${{  steps.generate-token.outputs.token }}
         run: |
           task build:apps[composite]:all --verbose
 
@@ -127,5 +127,7 @@ jobs:
         env:
           OCM_PRIVATE_KEY: ${{ secrets.OCM_PRIVATE_KEY }}
           OCM_SIGNING_ENABLED: ${{ inputs.ocm_signing_enabled }}
+          GITHUB_ACTOR: ${{ github.actor }}
+          GHCR_PAT: ${{  steps.generate-token.outputs.token }}
         run: |
           task build:ocm:all --verbose
