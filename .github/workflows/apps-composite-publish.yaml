@@ -1,8 +1,6 @@
-name: Release CMK
+name: Publish Composite
 
 on:
-  schedule:
-    - cron: '*/10 * * * *'   # every 10 minutes
   workflow_call:
     secrets:
       OCM_PRIVATE_KEY:
@@ -91,3 +89,12 @@ jobs:
           GHCR_PAT: ${{  steps.generate-token.outputs.token }}
         run: |
           task build:apps[composite]:all --verbose
+          
+      - name: Build and Push OCM Component
+        env:
+          OCM_PRIVATE_KEY: ${{ secrets.OCM_PRIVATE_KEY }}
+          OCM_SIGNING_ENABLED: ${{ inputs.ocm_signing_enabled }}
+          GITHUB_ACTOR: ${{ github.actor }}
+          GHCR_PAT: ${{  steps.generate-token.outputs.token }}
+        run: |
+          task build:ocm:all --verbose

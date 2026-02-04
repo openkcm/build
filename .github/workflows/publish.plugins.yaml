@@ -125,6 +125,5 @@ jobs:
                 "plugin_name": "${{ github.event.repository.name }}",
                 "version": "${{ github.ref_name }}",
                 "sha": "${{ github.sha }}",
-                "actor": "${{ github.actor }}",
-                "branch": "main"
+                "actor": "${{ github.actor }}"
             }
