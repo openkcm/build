@@ -1,8 +1,6 @@
-name: Release CMK
+name: Publish Composite
 
 on:
-  schedule:
-    - cron: '*/10 * * * *'   # every 10 minutes
   workflow_call:
     secrets:
       OCM_PRIVATE_KEY:
@@ -25,14 +23,11 @@ on:
 
 permissions:
   packages: write
-  contents: write
+  contents: read
 
 jobs:
   push-composite:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write  # needed for caching state
-      packages: write
     steps:
       - name: Generate token from GitHub App
         id: generate-token
@@ -88,6 +83,15 @@ jobs:
           OCM_SIGNING_ENABLED: ${{ inputs.ocm_signing_enabled }}
           OCM_PRIVATE_KEY: ${{ secrets.OCM_PRIVATE_KEY }}
           GITHUB_ACTOR: ${{ github.actor }}
-          GITHUB_TOKEN: ${{  steps.generate-token.outputs.token }}
+          GHCR_PAT: ${{  steps.generate-token.outputs.token }}
         run: |
           task build:apps[composite]:all --verbose
+          
+      - name: Build and Push OCM Component
+        env:
+          OCM_PRIVATE_KEY: ${{ secrets.OCM_PRIVATE_KEY }}
+          OCM_SIGNING_ENABLED: ${{ inputs.ocm_signing_enabled }}
+          GITHUB_ACTOR: ${{ github.actor }}
+          GHCR_PAT: ${{  steps.generate-token.outputs.token }}
+        run: |
+          task build:ocm:all --verbose
