@@ -48,6 +48,7 @@ tasks:
     deps:
     - tools:ocm
     - tools:localtmp
+    - tools:jq
     requires:
       vars:
       - COMPONENTS
@@ -60,12 +61,100 @@ tasks:
       - COMMIT
       - CHART_COMPONENTS
       - IMG_COMPONENTS
+      - GHCR_PAT
+      - GITHUB_ACTOR
     vars:
       CHART_VERSION:
         sh: "grep '^version:' {{.ROOT_DIR2}}/charts/{{.COMPONENT}}/Chart.yaml | awk '{print $2}'"
       compdir: '{{.LOCALTMP}}/component'
     cmds:
     - |
+      set -euo pipefail
+      
+      TARGET_LIST="{{.IMG_COMPONENTS}}"
+      
+      if [ -z "$TARGET_LIST" ]; then
+        echo "ℹ️  IMG_COMPONENTS is empty. Falling back to COMPONENTS."
+        TARGET_LIST="{{.COMPONENTS}}"
+      fi
+      
+      if [ -z "$TARGET_LIST" ]; then
+        echo "⚠️  Warning: Both IMG_COMPONENTS and COMPONENTS are empty. Nothing to process."
+        export IMG_VERSION_MAP="{}"
+        exit 0
+      fi
+      
+      
+      GHCR_PAT="{{.GHCR_PAT}}"
+      GITHUB_ACTOR="{{.GITHUB_ACTOR}}"
+      
+      get_latest_tag() {
+        local image_name="$1"
+        local main_tag="{{.VERSION}}"
+      
+        local repo="{{.ORG_NAME}}/images/$image_name"
+        local token=$(curl -fsSL "https://ghcr.io/token?scope=repository:$repo:pull"  -u "$GITHUB_ACTOR:$GHCR_PAT" | {{.JQ}} -r '.token')
+      
+        local candidate_tag="${main_tag}"
+        local last_found_tag="${main_tag}" 
+        local counter=1
+      
+        while true; do
+          local url="https://ghcr.io/v2/{{.ORG_NAME}}/images/${image_name}/manifests/${candidate_tag}"
+          local status=$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: Bearer $token" -H "Accept: application/vnd.oci.image.manifest.v1+json" "$url")
+          
+          if [ "$status" -eq 200 ]; then
+            # ✅ FOUND: This tag exists. Remember it, and try the next increment.
+            last_found_tag="${candidate_tag}"
+            
+            candidate_tag="${main_tag}-${counter}"
+            counter=$((counter + 1))
+          elif [ "$status" -eq 404 ]; then
+            # ❌ MISSING: We hit the end of the chain.
+            break
+          else
+            echo "❌ Error ($status) checking $candidate_tag" >&2
+            break
+          fi
+        done
+      
+        echo "$last_found_tag"
+      }
+      
+      CLEAN_LIST=$(echo "$TARGET_LIST" | tr ',' ' ')
+      RESOLVED_LIST=""
+      FIRST=true
+      
+      for item in $CLEAN_LIST; do
+        COMP_NAME=""
+        COMP_VERSION=""
+    
+        if [[ "$item" == *:* ]]; then
+          echo "   👉 $item (Version preserved)"
+          RESOLVED_ITEM="$item"
+        else
+          COMP_NAME="$item"
+          echo "   🔄 $COMP_NAME: Fetching latest tag..."
+          
+          COMP_VERSION=$(get_latest_tag "$COMP_NAME")
+        
+          if [[ "$COMP_VERSION" == "null" ]]; then
+            echo "   ❌ Error: No tags found for $COMP_NAME."
+            exit 1
+          fi
+          
+          echo "      ✅ Found: $COMP_VERSION"
+          RESOLVED_ITEM="${COMP_NAME}:${COMP_VERSION}"
+        fi  
+      
+        if [ "$FIRST" = true ]; then
+          RESOLVED_LIST="$RESOLVED_ITEM"
+          FIRST=false
+        else
+          RESOLVED_LIST="$RESOLVED_LIST,$RESOLVED_ITEM"
+        fi
+      done
+      
       "{{.OCM}}" add componentversions --file "{{.compdir}}" --version "{{.VERSION}}" --create --force --templater spiff "{{.TASKFILE_DIR2}}/components.yaml" -- \
         VERSION="{{.VERSION}}" \
         ORG_NAME="{{.ORG_NAME}}" \
@@ -80,7 +169,7 @@ tasks:
         IMG_VERSION="{{.VERSION | default ""}}" \
         BP_COMPONENTS="{{.BP_COMPONENTS | default ""}}" \
         CHART_COMPONENTS="{{.CHART_COMPONENTS | default ""}}" \
-        IMG_COMPONENTS="{{.IMG_COMPONENTS | default ""}}"
+        IMG_COMPONENTS="$RESOLVED_LIST"
     - cmd: echo "Use '$(realpath --relative-base="{{.USER_WORKING_DIR}}" "{{.OCM}}") get cv $(realpath --relative-base="{{.USER_WORKING_DIR}}" "{{.compdir}}") -o yaml' to view the generated component descriptor."
       silent: true
 
@@ -130,6 +219,6 @@ tasks:
       
       trap 'rm -f "{{.ROOT_DIR2}}/ocm.key"' EXIT
       echo "$OCM_PRIVATE_KEY" > "{{.ROOT_DIR2}}/ocm.key"
-      "{{.OCM}}" sign componentversion --signature "{{.OCM_SIGNATURE_NAME}}" --private-key="{{.ROOT_DIR2}}/ocm.key" "{{.COMPONENT}}"
+      "{{.OCM}}" sign componentversions --signature "{{.OCM_SIGNATURE_NAME}}" --private-key="{{.ROOT_DIR2}}/ocm.key" "{{.COMPONENT}}"
   
       echo "✅ OCM component successfully signed."

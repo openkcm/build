@@ -53,7 +53,7 @@ tasks:
     - for:
         var: COMPONENTS
         as: COMPONENT
-      cmd: 'CGO_ENABLED=0 GOOS={{.OS}} GOARCH={{.ARCH}} go build -a -o {{.ROOT_DIR2}}/bin/{{(regexReplaceAll "\\/" .COMPONENT "-") | lower}}.{{.OS}}-{{.ARCH}} -ldflags "{{.LDFLAGS}}" {{.ROOT_DIR2}}/cmd/{{.COMPONENT}}'
+      cmd: 'CGO_ENABLED=0 GOOS={{.OS}} GOARCH={{.ARCH}} go build {{.BUILD_TAGS}} -a -o {{.ROOT_DIR2}}/bin/{{(regexReplaceAll "\\/" .COMPONENT "-") | lower}}.{{.OS}}-{{.ARCH}} -ldflags "{{.BUILD_LDFLAGS}}" {{.ROOT_DIR2}}/cmd/{{.COMPONENT}}/'
 
   build-multi-raw:
     desc: "  Build multi-platform binaries. Skips code generation/validation tasks."
