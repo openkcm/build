@@ -41,7 +41,7 @@ jobs:
           app-id: ${{ secrets.APP_PUSH_TAG_ID }}
           private-key: ${{ secrets.APP_PUSH_TAG_PRIVATE_KEY }}
           permission-packages: write
-          skip-token-revoke: true
+          skip-token-revoke: false
 
       - name: Checkout code
         uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
@@ -89,7 +89,7 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          password: ${{ steps.generate-token.outputs.token }}
 
       - name: Set up Docker Buildx
         timeout-minutes: 5
