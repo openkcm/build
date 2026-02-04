@@ -32,7 +32,7 @@ permissions:
 
 jobs:
   artifacts:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     steps:
       - name: Generate token from GitHub App
         id: generate-token
@@ -48,6 +48,7 @@ jobs:
           fetch-tags: true
           fetch-depth: 0
           submodules: recursive
+          ref: ${{ github.event.client_payload.branch || 'main' }}
 
       - name: Checkout build (taskfiles) repo
         run: |
