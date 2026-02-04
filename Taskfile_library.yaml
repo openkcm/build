@@ -68,6 +68,8 @@ vars:
     sh: '{{.TASKFILE_DIR2}}/generate-ldflags.sh'
   BUILD_TAGS: '{{ if .GO_BUILD_TAGS }} -tags {{.GO_BUILD_TAGS}}{{ else }}{{ end }}'
 
+  SKIP_VALIDATION_TESTS: 'false'
+
   LOCALBIN: '{{ env "LOCALBIN" | default ( .LOCALBIN | default (print .ROOT_DIR2 "/bin") ) }}'
   LOCALTMP: '{{ env "LOCALTMP" | default ( .LOCALTMP | default (print .ROOT_DIR2 "/tmp") ) }}'
   CONTROLLER_GEN: '{{ .CONTROLLER_GEN | default (print .LOCALBIN "/controller-gen") }}'

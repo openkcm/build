@@ -21,6 +21,7 @@ tasks:
     - task: test
 
   test:
+    if: '[ "{{.SKIP_VALIDATION_TESTS}}" = "true" ]'
     desc: "  Run all tests."
     run: once
     vars:
