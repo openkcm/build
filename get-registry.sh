@@ -2,10 +2,6 @@
 
 set -euo pipefail
 
-
-REPO_URL=$(git config --get remote.origin.url)
-REPO_NAME=$(basename "$REPO_URL")
-
 if [[ -z ${BASE_REGISTRY:-} ]]; then
   BASE_REGISTRY=ghcr.io/openkcm
 fi

@@ -18,9 +18,9 @@ tasks:
     run: once
     vars:
       CHART_REGISTRY:
-        sh: 'PROJECT_ROOT="{{.ROOT_DIR2}}" {{.TASKFILE_DIR2}}/get-registry.sh --helm'
+        sh: 'PROJECT_ROOT="{{.ROOT_DIR2}}" REPO_NAME="{{.REPO_NAME}}" {{.TASKFILE_DIR2}}/get-registry.sh --helm'
       IMAGE_REGISTRY:
-        sh: 'PROJECT_ROOT="{{.ROOT_DIR2}}" {{.TASKFILE_DIR2}}/get-registry.sh --image'
+        sh: 'PROJECT_ROOT="{{.ROOT_DIR2}}" REPO_NAME="{{.REPO_NAME}}" {{.TASKFILE_DIR2}}/get-registry.sh --image'
       COMMIT:
         sh: '( cd "{{.ROOT_DIR2}}"; git rev-parse HEAD )'
       CHART_COMPONENTS: '{{ if .CHART_COMPONENTS }}{{.CHART_COMPONENTS}}{{ else }}{{.COMPONENTS}}{{ end }}'
@@ -184,7 +184,7 @@ tasks:
       - LOCALTMP
     vars:
       COMPONENT_REGISTRY:
-        sh: 'PROJECT_ROOT="{{.ROOT_DIR2}}" {{.TASKFILE_DIR2}}/get-registry.sh --component'
+        sh: 'PROJECT_ROOT="{{.ROOT_DIR2}}" REPO_NAME="{{.REPO_NAME}}" {{.TASKFILE_DIR2}}/get-registry.sh --component'
       overwrite_mod:
         sh: 'if [[ -n ${OVERWRITE_COMPONENTS:-} ]] && [[ ${OVERWRITE_COMPONENTS} != "false" ]]; then echo -n "--overwrite"; fi'
       compdir: '{{.LOCALTMP}}/component'

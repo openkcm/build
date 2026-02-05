@@ -59,7 +59,7 @@ tasks:
       - ARCH
     vars:
       IMAGE_BASE:
-        sh: 'PROJECT_ROOT="{{.ROOT_DIR2}}" {{.TASKFILE_DIR2}}/get-registry.sh --image'
+        sh: 'PROJECT_ROOT="{{.ROOT_DIR2}}" REPO_NAME="{{.REPO_NAME}}" {{.TASKFILE_DIR2}}/get-registry.sh --image'
     cmds:
     - task: prepare-docker-builder
     - for:
@@ -160,7 +160,7 @@ tasks:
       - ARCH
     vars:
       IMAGE_BASE:
-        sh: 'PROJECT_ROOT="{{.ROOT_DIR2}}" {{.TASKFILE_DIR2}}/get-registry.sh --image'
+        sh: 'PROJECT_ROOT="{{.ROOT_DIR2}}" REPO_NAME="{{.REPO_NAME}}" {{.TASKFILE_DIR2}}/get-registry.sh --image'
     cmds:
     - 'echo "Pushing image {{.COMPONENT}}:{{.VERSION}}-{{.OS}}-{{.ARCH}}"'
     - 'docker push {{.IMAGE_BASE}}/{{.COMPONENT}}:{{.VERSION}}-{{.OS}}-{{.ARCH}}'
@@ -176,7 +176,7 @@ tasks:
     desc: "  Push the multi-platform image. Images must have been built before."
     vars:
       IMAGE_BASE:
-        sh: 'PROJECT_ROOT="{{.ROOT_DIR2}}" {{.TASKFILE_DIR2}}/get-registry.sh --image'
+        sh: 'PROJECT_ROOT="{{.ROOT_DIR2}}" REPO_NAME="{{.REPO_NAME}}" {{.TASKFILE_DIR2}}/get-registry.sh --image'
     requires:
       vars:
       - COMPONENTS
@@ -227,7 +227,7 @@ tasks:
         - VERSION
     vars:
       IMAGE_BASE:
-        sh: 'PROJECT_ROOT="{{.ROOT_DIR2}}" {{.TASKFILE_DIR2}}/get-registry.sh --image'
+        sh: 'PROJECT_ROOT="{{.ROOT_DIR2}}" REPO_NAME="{{.REPO_NAME}}" {{.TASKFILE_DIR2}}/get-registry.sh --image'
     deps:
       - build:bin:all
     cmds:
@@ -313,7 +313,7 @@ tasks:
       msg: "No tag specified. Do so by calling 'task {{.TASK}} -- <tag>'."
     vars:
       IMAGE_BASE:
-        sh: 'PROJECT_ROOT="{{.ROOT_DIR2}}" {{.TASKFILE_DIR2}}/get-registry.sh --image'
+        sh: 'PROJECT_ROOT="{{.ROOT_DIR2}}" REPO_NAME="{{.REPO_NAME}}" {{.TASKFILE_DIR2}}/get-registry.sh --image'
       TAG: '{{index (.CLI_ARGS | splitList " ") 0}}'
     requires:
       vars:

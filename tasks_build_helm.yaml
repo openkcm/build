@@ -30,7 +30,7 @@ tasks:
       - COMPONENTS
     vars:
       HELM_REGISTRY:
-        sh: 'PROJECT_ROOT="{{.ROOT_DIR2}}" {{.TASKFILE_DIR2}}/get-registry.sh --helm'
+        sh: 'PROJECT_ROOT="{{.ROOT_DIR2}}" REPO_NAME="{{.REPO_NAME}}" {{.TASKFILE_DIR2}}/get-registry.sh --helm'
       COMPONENTS: >
         {{ if .CHART_COMPONENTS }}
           {{ .CHART_COMPONENTS }}
@@ -73,7 +73,7 @@ tasks:
       - COMPONENTS
     vars:
       HELM_REGISTRY:
-        sh: 'PROJECT_ROOT="{{.ROOT_DIR2}}" {{.TASKFILE_DIR2}}/get-registry.sh --helm'
+        sh: 'PROJECT_ROOT="{{.ROOT_DIR2}}" REPO_NAME="{{.REPO_NAME}}" {{.TASKFILE_DIR2}}/get-registry.sh --helm'
       COMPONENTS: >
         {{ if .CHART_COMPONENTS }}
           {{ .CHART_COMPONENTS }}

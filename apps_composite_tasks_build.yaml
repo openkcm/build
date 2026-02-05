@@ -28,7 +28,7 @@ tasks:
         - COMPOSITE_DOCKER_FILE_IDENTIFIER
     vars:
       ROOT_IMAGE:
-        sh: 'PROJECT_ROOT="{{.ROOT_DIR2}}" {{.TASKFILE_DIR2}}/get-registry.sh --image'
+        sh: 'PROJECT_ROOT="{{.ROOT_DIR2}}" REPO_NAME="{{.REPO_NAME}}"  {{.TASKFILE_DIR2}}/get-registry.sh --image'
       IMAGE_SIGNING_ENABLED: '{{ env "IMAGE_SIGNING_ENABLED" | default "false" }}'
       OCM_SIGNING_ENABLED: '{{ env "OCM_SIGNING_ENABLED" | default "false" }}'
     cmds:
