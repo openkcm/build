@@ -23,12 +23,13 @@ tasks:
         sh: 'PROJECT_ROOT="{{.ROOT_DIR2}}" REPO_NAME="{{.REPO_NAME}}" {{.TASKFILE_DIR2}}/get-registry.sh --image'
       COMMIT:
         sh: '( cd "{{.ROOT_DIR2}}"; git rev-parse HEAD )'
-      CHART_COMPONENTS: '{{ if .CHART_COMPONENTS }}{{.CHART_COMPONENTS}}{{ else }}{{.COMPONENTS}}{{ end }}'
-      IMG_COMPONENTS: '{{ if .IMG_COMPONENTS }}{{.IMG_COMPONENTS}}{{ else }}{{.COMPONENTS}}{{ end }}'
+      CHART_COMPONENTS: '{{ .CHART_COMPONENTS | default .COMPONENTS }}'
+      IMG_COMPONENTS: '{{ .IMG_COMPONENTS | default .COMPONENTS }}'
+      OCM_COMPONENTS: '{{ .OCM_COMPONENTS | default .CHART_COMPONENTS | default .COMPONENTS }}'
     cmds:
     - task: build
       for:
-        var: CHART_COMPONENTS
+        var: OCM_COMPONENTS
       vars:
         COMPONENTS: '{{.COMPONENTS}}'
         COMPONENT: '{{.ITEM}}'
