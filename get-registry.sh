@@ -11,10 +11,10 @@ if [[ -z ${BASE_REGISTRY:-} ]]; then
 fi
 
 if [[ -z ${IMAGE_REGISTRY:-} ]]; then
-  IMAGE_REGISTRY=$BASE_REGISTRY/images/$REPO_NAME
+  IMAGE_REGISTRY=$BASE_REGISTRY/$REPO_NAME/images
 fi
 if [[ -z ${CHART_REGISTRY:-} ]]; then
-  CHART_REGISTRY=$BASE_REGISTRY/charts
+  CHART_REGISTRY=$BASE_REGISTRY/$REPO_NAME/charts
 fi
 if [[ -z ${COMPONENT_REGISTRY:-} ]]; then
   COMPONENT_REGISTRY=$BASE_REGISTRY/components
