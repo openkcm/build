@@ -28,7 +28,7 @@ tasks:
     cmds:
     - task: build
       for:
-        var: COMPONENTS
+        var: CHART_COMPONENTS
       vars:
         COMPONENTS: '{{.COMPONENTS}}'
         COMPONENT: '{{.ITEM}}'
