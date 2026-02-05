@@ -2,12 +2,16 @@
 
 set -euo pipefail
 
+
+REPO_URL=$(git config --get remote.origin.url)
+REPO_NAME=$(basename "$REPO_URL")
+
 if [[ -z ${BASE_REGISTRY:-} ]]; then
   BASE_REGISTRY=ghcr.io/openkcm
 fi
 
 if [[ -z ${IMAGE_REGISTRY:-} ]]; then
-  IMAGE_REGISTRY=$BASE_REGISTRY/images
+  IMAGE_REGISTRY=$BASE_REGISTRY/images/$REPO_NAME
 fi
 if [[ -z ${CHART_REGISTRY:-} ]]; then
   CHART_REGISTRY=$BASE_REGISTRY/charts
