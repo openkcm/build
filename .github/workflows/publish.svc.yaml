@@ -41,7 +41,7 @@ jobs:
           app-id: ${{ secrets.APP_PUSH_TAG_ID }}
           private-key: ${{ secrets.APP_PUSH_TAG_PRIVATE_KEY }}
           owner: ${{ github.repository_owner }}
-          permission-organization-packages: write
+#          permission-organization-packages: write
           permission-packages: write
 
       - name: Checkout code
