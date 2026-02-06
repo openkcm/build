@@ -18,11 +18,16 @@ on:
         required: false
         type: string
         default: "test"
-      makefile_test_coverage_reports_path:
+      makefile_test_coverage_report_paths:
         description: "Coverage report paths (space-separated)"
         required: false
         type: string
         default: "cover.html cover.out"
+      sonar_go_coverage_report_paths:
+        description: "Path to Go coverage file"
+        required: false
+        type: string
+        default: "sonar-coverage.out"
 
 permissions:
   contents: read
@@ -93,7 +98,7 @@ jobs:
           make "${{ inputs.makefile_test_name }}"
 
       - name: SonarQube Scan
-        uses: SonarSource/sonarqube-scan-action@a31c9398be7ace6bbfaf30c0bd5d415f843d45e9 # # v7.0.0
+        uses: SonarSource/sonarqube-scan-action@a31c9398be7ace6bbfaf30c0bd5d415f843d45e9 # v7.0.0
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
@@ -101,13 +106,15 @@ jobs:
             -Dsonar.projectKey=${{ github.repository_owner }}_${{ github.event.repository.name }}
             -Dsonar.projectName=${{ github.event.repository.name }}
             -Dsonar.organization=${{ github.repository_owner }}
+            -Dsonar.go.coverage.reportPaths=${{ inputs.sonar_go_coverage_report_paths }}
 
-      - name: upload test coverage
-        if: ${{ inputs.run_makefile_tests }}
+      - name: upload coverages
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
           name: coverage-report
-          path: ${{ inputs.makefile_test_coverage_reports_path }}
+          path: |
+            ${{ inputs.makefile_test_coverage_report_paths }}
+            ${{ inputs.sonar_go_coverage_report_paths }}
           if-no-files-found: warn
           retention-days: 30
 
