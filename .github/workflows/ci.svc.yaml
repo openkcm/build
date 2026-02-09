@@ -121,6 +121,5 @@ jobs:
           name: coverage-report
           path: |
             ${{ inputs.makefile_test_coverage_report_paths }}
-            ${{ inputs.sonar_go_coverage_report_paths }}
           if-no-files-found: warn
           retention-days: 30
