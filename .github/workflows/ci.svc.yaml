@@ -98,6 +98,7 @@ jobs:
           make "${{ inputs.makefile_test_name }}"
 
       - name: SonarQube Scan
+        if: ${{ github.ref_type != 'tag' }}
         uses: SonarSource/sonarqube-scan-action@a31c9398be7ace6bbfaf30c0bd5d415f843d45e9 # v7.0.0
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
@@ -109,6 +110,7 @@ jobs:
             -Dsonar.go.coverage.reportPaths=${{ inputs.sonar_go_coverage_report_paths }}
 
       - name: SonarQube Quality Gate check
+        if: ${{ github.ref_type != 'tag' }}
         id: sonarqube-quality-gate-check
         uses: SonarSource/sonarqube-quality-gate-action@cf038b0e0cdecfa9e56c198bbb7d21d751d62c3b # v1.2.0
         with:
