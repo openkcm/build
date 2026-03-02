@@ -20,11 +20,40 @@ tasks:
       silent: true
 
   all:
-    desc: "  Push the multi-platform image for CMK including the plugins."
+    desc: "Push the multi-platform image for many composite images including the plugins."
     requires:
       vars:
         - VERSION
-        - COMPOSITE_DESTINATION_COMPONENT_NAME
+    vars:
+      # Construct the fallback list if the single variable is used
+      FALLBACK_LIST:
+        - COMPOSITE_COMPONENT_NAME: "{{.COMPOSITE_COMPONENT_NAME}}"
+          COMPOSITE_DOCKER_FILE_IDENTIFIER: "{{.COMPOSITE_DOCKER_FILE_IDENTIFIER}}"
+          COMPOSITE_BASE_IMAGE_NAME: "{{.COMPOSITE_BASE_IMAGE_NAME}}"
+          COMPOSITE_PLUGINS_IMAGE_NAME: "{{.COMPOSITE_PLUGINS_IMAGE_NAME}}"
+      # Determine which list to iterate over
+      ACTIVE_COMPONENTS:
+        ref: '{{if .COMPOSITE_COMPONENTS}}COMPOSITE_COMPONENTS{{else}}FALLBACK_LIST{{end}}'
+    preconditions:
+      - sh: '[[ -n "{{.COMPOSITE_COMPONENTS}}" ]] || [[ -n "{{.COMPOSITE_COMPONENT_NAME}}" ]]'
+        msg: "Error: Provide either COMPOSITE_COMPONENTS (list) or COMPOSITE_COMPONENT_NAME (variable)."
+    cmds:
+      - for: { var: ACTIVE_COMPONENTS }
+        task: single
+        vars:
+          VERSION: "{{.VERSION}}"
+          COMPOSITE_COMPONENT_NAME: "{{.ITEM.COMPOSITE_COMPONENT_NAME}}"
+          COMPOSITE_DOCKER_FILE_IDENTIFIER: "{{.ITEM.COMPOSITE_DOCKER_FILE_IDENTIFIER}}"
+          COMPOSITE_BASE_IMAGE_NAME: "{{.ITEM.COMPOSITE_BASE_IMAGE_NAME}}"
+          COMPOSITE_PLUGINS_IMAGE_NAME: "{{.ITEM.COMPOSITE_PLUGINS_IMAGE_NAME}}"
+
+
+  single:
+    desc: "  Push the multi-platform image for composite image that does including the plugins."
+    requires:
+      vars:
+        - VERSION
+        - COMPOSITE_COMPONENT_NAME
         - COMPOSITE_DOCKER_FILE_IDENTIFIER
     vars:
       ROOT_IMAGE:
@@ -40,15 +69,15 @@ tasks:
         vars:
           OS: '{{.ITEM.OS}}'
           ARCH: '{{.ITEM.ARCH}}'
-          BASE_IMAGE: '{{.ROOT_IMAGE}}/{{.COMPOSITE_DESTINATION_COMPONENT_NAME}}'
+          BASE_IMAGE: '{{.ROOT_IMAGE}}/{{.COMPOSITE_COMPONENT_NAME}}'
           IMAGE_SIGNING_ENABLED: '{{.IMAGE_SIGNING_ENABLED}}'
           OCM_SIGNING_ENABLED: '{{.OCM_SIGNING_ENABLED}}'
-          COMPOSITE_DESTINATION_COMPONENT_NAME: '{{.COMPOSITE_DESTINATION_COMPONENT_NAME}}'
+          COMPOSITE_COMPONENT_NAME: '{{.COMPOSITE_COMPONENT_NAME}}'
           COMPOSITE_DOCKER_FILE_IDENTIFIER: '{{.COMPOSITE_DOCKER_FILE_IDENTIFIER}}'
         task: push-multi-internal
       - task: push-manifest-internal
         vars:
-          BASE_IMAGE: '{{.ROOT_IMAGE}}/{{.COMPOSITE_DESTINATION_COMPONENT_NAME}}'
+          BASE_IMAGE: '{{.ROOT_IMAGE}}/{{.COMPOSITE_COMPONENT_NAME}}'
 
   push-multi-internal:
     desc: "  Build a the composite image."
@@ -68,7 +97,7 @@ tasks:
         - GITHUB_ACTOR
         - COMPOSITE_BASE_IMAGE_NAME
         - COMPOSITE_PLUGINS_IMAGE_NAME
-        - COMPOSITE_DESTINATION_COMPONENT_NAME
+        - COMPOSITE_COMPONENT_NAME
         - IMAGE_SIGNING_ENABLED
         - COMPOSITE_DOCKER_FILE_IDENTIFIER
     cmds:
@@ -137,7 +166,7 @@ tasks:
         COUNTER=1
         
         while true; do
-          COMPOSITE_PATH="https://ghcr.io/v2/{{.ORG_NAME}}/images/{{.COMPOSITE_DESTINATION_COMPONENT_NAME}}/manifests/${CANDIDATE_TAG}"
+          COMPOSITE_PATH="https://ghcr.io/v2/{{.ORG_NAME}}/images/{{.COMPOSITE_COMPONENT_NAME}}/manifests/${CANDIDATE_TAG}"
         
           # Check status
           STATUS=$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: Bearer $TOKEN" -H "Accept: application/vnd.oci.image.manifest.v1+json" "$COMPOSITE_PATH")
@@ -248,10 +277,10 @@ tasks:
         # 1. Initialize variables
         CANDIDATE_TAG="${TAG}"
         COUNTER=1
-        TOKEN=$(get_ghcr_token "{{.ORG_NAME}}/images/{{.COMPOSITE_DESTINATION_COMPONENT_NAME}}")
+        TOKEN=$(get_ghcr_token "{{.ORG_NAME}}/images/{{.COMPOSITE_COMPONENT_NAME}}")
         while true; do
           # Check if this specific tag already exists in the registry
-          COMPOSITE_PATH="https://ghcr.io/v2/{{.ORG_NAME}}/images/{{.COMPOSITE_DESTINATION_COMPONENT_NAME}}/manifests/${CANDIDATE_TAG}"
+          COMPOSITE_PATH="https://ghcr.io/v2/{{.ORG_NAME}}/images/{{.COMPOSITE_COMPONENT_NAME}}/manifests/${CANDIDATE_TAG}"
         
           STATUS=$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: Bearer $TOKEN" -H "Accept: application/vnd.oci.image.manifest.v1+json" "$COMPOSITE_PATH")
           
