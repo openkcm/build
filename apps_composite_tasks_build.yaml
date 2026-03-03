@@ -143,32 +143,35 @@ tasks:
         declare -A DIGESTS
         declare -A TAGS
         CHANGED=0
+        
+        
+        RESPONSE=$(curl -s -H "Accept: application/vnd.github+json" "https://api.github.com/repos/{{.ORG_NAME}}/{{.REPO_NAME}}/tags")
+        TAG="null"
+        if echo "$RESPONSE" | {{.JQ}} -e 'type == "array"' > /dev/null; then
+          TAG=$(echo "$RESPONSE" | {{.JQ}} -r '.[].name' | sort -V | tail -n1)
+        else
+          echo "Error fetching tags for https://api.github.com/repos/{{.ORG_NAME}}/{{.REPO_NAME}}/tags -> ${RESPONSE}"
+          exit 1
+        fi
+      
+        if [ -z "$TAG" ] || [ "$TAG" = "null" ]; then
+          echo "❌ No tags found"
+          exit 1
+        fi
+      
+        echo "Using https://api.github.com/repos/{{.ORG_NAME}}/{{.REPO_NAME}}/tags -> ${TAG}"
 
         for image in $WATCHED_IMAGES; do
-          RESPONSE=$(curl -s -H "Accept: application/vnd.github+json" "https://api.github.com/repos/{{.ORG_NAME}}/{{.REPO_NAME}}/tags")
-          
-          TAG="null"
-          if echo "$RESPONSE" | {{.JQ}} -e 'type == "array"' > /dev/null; then
-            TAG=$(echo "$RESPONSE" | {{.JQ}} -r '.[].name' | sort -V | tail -n1)
-          else
-            echo "Error fetching tags for ${image} -> ${RESPONSE}"
-            exit 1
-          fi
-  
-          if [ -z "$TAG" ] || [ "$TAG" = "null" ]; then
-            echo "❌ No tags found"
-            exit 1
-          fi
-        
-          echo "Using ${image} tag: ${TAG}"
-
           FULL_PATH="{{.ORG_NAME}}/{{.REPO_NAME}}/images/${image}"
           TOKEN=$(get_ghcr_token "${FULL_PATH}")
-          MANIFEST_URL="https://ghcr.io/v2/${FULL_PATH}/manifests/${TAG}-{{.OS}}-{{.ARCH}}"
-          DIGEST=$(curl -fsSLI \
-            -H "Authorization: Bearer $TOKEN" \
-            -H "Accept: application/vnd.oci.image.manifest.v1+json" \
-            "$MANIFEST_URL" | grep -i 'Docker-Content-Digest' | awk '{print $2}' | tr -d '\r')
+          
+          DIGEST_RESPONSE=$(curl -fsSLI -H "Authorization: Bearer $TOKEN" -H "Accept: application/vnd.oci.image.manifest.v1+json" \
+            "https://ghcr.io/v2/${FULL_PATH}/manifests/${TAG}-{{.OS}}-{{.ARCH}}")
+        
+          echo "Digest Response: ${DIGEST_RESPONSE}"
+        
+          DIGEST=$(echo "$DIGEST_RESPONSE" | grep -i 'Docker-Content-Digest' | awk '{print $2}' | tr -d '\r')
+          echo "Digest: $DIGEST"
 
           if [ -z "$DIGEST" ]; then
             echo "❌ Could not retrieve digest for ${FULL_PATH}:${TAG}"
