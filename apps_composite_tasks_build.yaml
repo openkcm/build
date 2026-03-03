@@ -148,8 +148,17 @@ tasks:
           FULL_PATH="{{.ORG_NAME}}/images/${image}"
           
           TAGS_URL="https://ghcr.io/v2/${FULL_PATH}/tags/list"
-          TAG=$(curl -s -H "Accept: application/vnd.github+json" "https://api.github.com/repos/{{.ORG_NAME}}/${image}/tags" | {{.JQ}} -r '.[].name' | sort -V | tail -n1)
+          declare -A TAG
 
+          RESPONSE=$(curl -s -H "Accept: application/vnd.github+json" "https://api.github.com/repos/{{.ORG_NAME}}/${image}/tags")
+          
+          if echo "$RESPONSE" | {{.JQ}} -e 'type == "array"' > /dev/null; then
+            TAG=$(echo "$RESPONSE" | {{.JQ}} -r '.[].name' | sort -V | tail -n1)
+          else
+            echo "Error fetching tags for ${IMAGE_NAME}: ${ERROR_MSG} -> ${RESPONSE}"
+            exit 1
+          fi
+  
           if [ -z "$TAG" ] || [ "$TAG" = "null" ]; then
             echo "❌ No tags found for ${FULL_PATH}"
             exit 1
