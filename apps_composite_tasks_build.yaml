@@ -246,7 +246,9 @@ tasks:
         BUILD_ARGS=()
   
         for image in $WATCHED_IMAGES; do
-          VAR_NAME=$(echo "$image" | tr '[:lower:]-' '[:upper:]_')
+          read -r image_repo image_name <<< $(parse_image_repo "${image}")
+        
+          VAR_NAME=$(echo "$image_name" | tr '[:lower:]-' '[:upper:]_')
           VALUE=${TAGS[$image]}
           if [ -z "$VALUE" ]; then
             echo "❌ Tag missing for image: $image"
