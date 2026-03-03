@@ -38,6 +38,9 @@ tasks:
         - VERSION
     cmds:
       - for: { var: COMPOSITE_COMPONENTS }
+        cmd: echo "Looping over {{.ITEM.COMPONENT_NAME}} with base {{.ITEM.BASE_IMAGE_NAME}}"
+
+      - for: { var: COMPOSITE_COMPONENTS }
         task: single
         vars:
           VERSION: "{{.VERSION}}"
