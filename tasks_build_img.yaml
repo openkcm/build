@@ -362,7 +362,7 @@ tasks:
       # Use a shell conditional instead of the Task 'if' to force execution
       - |
         if [ "{{.IS_SINGLE}}" == "true" ]; then
-          task single-image-mode --verbose
+          task build:img:single-image-mode --verbose
         else
-          task multi-image-mode --verbose
+          task build:img:multi-image-mode --verbose
         fi
