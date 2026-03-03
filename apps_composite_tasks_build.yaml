@@ -145,9 +145,6 @@ tasks:
         CHANGED=0
 
         for image in $WATCHED_IMAGES; do
-          FULL_PATH="{{.ORG_NAME}}/{{.REPO_NAME}}/images/${image}"
-          
-          TAGS_URL="https://ghcr.io/v2/${FULL_PATH}/tags/list"
           declare -A TAG
 
           RESPONSE=$(curl -s -H "Accept: application/vnd.github+json" "https://api.github.com/repos/{{.ORG_NAME}}/{{.REPO_NAME}}/tags")
@@ -160,10 +157,11 @@ tasks:
           fi
   
           if [ -z "$TAG" ] || [ "$TAG" = "null" ]; then
-            echo "❌ No tags found for ${FULL_PATH}"
+            echo "❌ No tags found"
             exit 1
           fi
 
+          FULL_PATH="{{.ORG_NAME}}/{{.REPO_NAME}}/images/${image}"
           TOKEN=$(get_ghcr_token "${FULL_PATH}")
           MANIFEST_URL="https://ghcr.io/v2/${FULL_PATH}/manifests/${TAG}-{{.OS}}-{{.ARCH}}"
           DIGEST=$(curl -fsSLI \
