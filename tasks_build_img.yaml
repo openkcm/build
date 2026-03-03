@@ -356,6 +356,8 @@ tasks:
   all:
     desc: "Build and push. Defaults to multi-image mode unless SINGLE_IMAGE_MODE=true."
     cmds:
+      - cmd: echo "is single mode enabled={{.SINGLE_IMAGE_MODE}}"
+
       - task: single-image-mode
         if: 'eq .SINGLE_IMAGE_MODE "true"'
 
