@@ -25,6 +25,7 @@ tasks:
       vars:
         - VERSION
     cmds:
+      - echo "Executing branch logic for COMPOSITE_COMPONENTS={{.COMPOSITE_COMPONENTS}}"
       - task: all-batch
         if: '[[ -n "{{.COMPOSITE_COMPONENTS}}" ]]'
       - task: all-single
