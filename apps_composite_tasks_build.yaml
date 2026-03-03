@@ -30,12 +30,7 @@ tasks:
           COMPOSITE_DOCKER_FILE_IDENTIFIER: "{{.COMPOSITE_DOCKER_FILE_IDENTIFIER}}"
           COMPOSITE_BASE_IMAGE_NAME: "{{.COMPOSITE_BASE_IMAGE_NAME}}"
           COMPOSITE_PLUGINS_IMAGE_NAME: "{{.COMPOSITE_PLUGINS_IMAGE_NAME}}"
-      ACTIVE_COMPONENTS: >
-        {{ if .COMPOSITE_COMPONENTS }}
-          {{ .COMPOSITE_COMPONENTS }}
-        {{ else }}
-          {{ .FALLBACK_LIST }}
-        {{ end }}
+      ACTIVE_COMPONENTS: '{{ if .COMPOSITE_COMPONENTS }}{{.COMPOSITE_COMPONENTS}}{{else}}{{.FALLBACK_LIST}}{{end}}'
     preconditions:
       - sh: '[[ -n "{{.COMPOSITE_COMPONENTS}}" ]] || [[ -n "{{.COMPOSITE_COMPONENT_NAME}}" ]]'
         msg: "Error: Provide either COMPOSITE_COMPONENTS (list) or COMPOSITE_COMPONENT_NAME (variable)."
