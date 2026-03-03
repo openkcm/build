@@ -356,13 +356,14 @@ tasks:
   all:
     desc: "Build and push. Defaults to multi-image mode unless SINGLE_IMAGE_MODE=true."
     vars:
-      # This ensures SINGLE_IMAGE_MODE is never empty/null during evaluation
-      SINGLE_IMAGE_MODE: '{{.SINGLE_IMAGE_MODE | default "false"}}'
+      # We create a normalized variable.
+      # This ensures that even if SINGLE_IMAGE_MODE is empty, IS_SINGLE is "false".
+      IS_SINGLE: '{{if eq .SINGLE_IMAGE_MODE "true"}}true{{else}}false{{end}}'
     cmds:
-      - echo "Mode is -> {{.SINGLE_IMAGE_MODE}}"
+      - echo "Branching logic -> IS_SINGLE is {{.IS_SINGLE}}"
 
       - task: single-image-mode
-        if: 'eq .SINGLE_IMAGE_MODE "true"'
+        if: 'eq .IS_SINGLE "true"'
 
       - task: multi-image-mode
-        if: 'eq .SINGLE_IMAGE_MODE "false"'
+        if: 'eq .IS_SINGLE "false"'
