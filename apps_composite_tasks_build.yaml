@@ -24,15 +24,19 @@ tasks:
     requires:
       vars:
         - VERSION
-    vars:
-      FALLBACK_LIST:
-        - COMPONENT_NAME: "{{.COMPOSITE_COMPONENT_NAME}}"
-          DOCKER_FILE_IDENTIFIER: "{{.COMPOSITE_DOCKER_FILE_IDENTIFIER}}"
-          BASE_IMAGE_NAME: "{{.COMPOSITE_BASE_IMAGE_NAME}}"
-          PLUGINS_IMAGE_NAME: "{{.COMPOSITE_PLUGINS_IMAGE_NAME}}"
-      ACTIVE_COMPONENTS: '{{ if .COMPOSITE_COMPONENTS}}{{.COMPOSITE_COMPONENTS}}{{else}}.FALLBACK_LIST{{end}}'
     cmds:
-      - for: { var: ACTIVE_COMPONENTS }
+      - task: all-batch
+        if: '[[ -n "{{.COMPOSITE_COMPONENTS}}" ]]'
+      - task: all-single
+        if: '[[ -z "{{.COMPOSITE_COMPONENTS}}" ]]'
+
+  all-batch:
+    internal: true
+    requires:
+      vars:
+        - VERSION
+    cmds:
+      - for: { var: COMPOSITE_COMPONENTS }
         task: single
         vars:
           VERSION: "{{.VERSION}}"
@@ -41,6 +45,19 @@ tasks:
           COMPOSITE_BASE_IMAGE_NAME: "{{.ITEM.BASE_IMAGE_NAME}}"
           COMPOSITE_PLUGINS_IMAGE_NAME: "{{.ITEM.PLUGINS_IMAGE_NAME}}"
 
+  all-single:
+    internal: true
+    requires:
+      vars:
+        - VERSION
+    cmds:
+      - task: single
+        vars:
+          VERSION: "{{.VERSION}}"
+          COMPOSITE_COMPONENT_NAME: "{{.COMPOSITE_COMPONENT_NAME}}"
+          COMPOSITE_DOCKER_FILE_IDENTIFIER: "{{.COMPOSITE_DOCKER_FILE_IDENTIFIER}}"
+          COMPOSITE_BASE_IMAGE_NAME: "{{.COMPOSITE_BASE_IMAGE_NAME}}"
+          COMPOSITE_PLUGINS_IMAGE_NAME: "{{.COMPOSITE_PLUGINS_IMAGE_NAME}}"
 
   single:
     desc: "  Push the multi-platform image for composite image that does including the plugins."
