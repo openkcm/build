@@ -25,15 +25,17 @@ tasks:
       vars:
         - VERSION
     vars:
-      # Construct the fallback list if the single variable is used
       FALLBACK_LIST:
         - COMPOSITE_COMPONENT_NAME: "{{.COMPOSITE_COMPONENT_NAME}}"
           COMPOSITE_DOCKER_FILE_IDENTIFIER: "{{.COMPOSITE_DOCKER_FILE_IDENTIFIER}}"
           COMPOSITE_BASE_IMAGE_NAME: "{{.COMPOSITE_BASE_IMAGE_NAME}}"
           COMPOSITE_PLUGINS_IMAGE_NAME: "{{.COMPOSITE_PLUGINS_IMAGE_NAME}}"
-      # Determine which list to iterate over
-      ACTIVE_COMPONENTS:
-        ref: '{{if .COMPOSITE_COMPONENTS}}COMPOSITE_COMPONENTS{{else}}FALLBACK_LIST{{end}}'
+      ACTIVE_COMPONENTS: >
+        {{ if .COMPOSITE_COMPONENTS }}
+          {{ .COMPOSITE_COMPONENTS }}
+        {{ else }}
+          {{ .FALLBACK_LIST }}
+        {{ end }}
     preconditions:
       - sh: '[[ -n "{{.COMPOSITE_COMPONENTS}}" ]] || [[ -n "{{.COMPOSITE_COMPONENT_NAME}}" ]]'
         msg: "Error: Provide either COMPOSITE_COMPONENTS (list) or COMPOSITE_COMPONENT_NAME (variable)."
