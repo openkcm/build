@@ -356,14 +356,13 @@ tasks:
   all:
     desc: "Build and push. Defaults to multi-image mode unless SINGLE_IMAGE_MODE=true."
     vars:
-      # We create a normalized variable.
-      # This ensures that even if SINGLE_IMAGE_MODE is empty, IS_SINGLE is "false".
       IS_SINGLE: '{{if eq .SINGLE_IMAGE_MODE "true"}}true{{else}}false{{end}}'
     cmds:
-      - echo "Branching logic -> IS_SINGLE is {{.IS_SINGLE}}"
-
-      - task: single-image-mode
-        if: 'eq .IS_SINGLE "true"'
-
-      - task: multi-image-mode
-        if: 'eq .IS_SINGLE "false"'
+      - echo "Executing branch logic for IS_SINGLE={{.IS_SINGLE}}"
+      # Use a shell conditional instead of the Task 'if' to force execution
+      - |
+        if [ "{{.IS_SINGLE}}" == "true" ]; then
+          task single-image-mode --verbose
+        else
+          task multi-image-mode --verbose
+        fi
