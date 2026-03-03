@@ -150,22 +150,6 @@ tasks:
 
         mkdir -p .ghcr_state
         
-        RESPONSE=$(curl -s -H "Accept: application/vnd.github+json" "https://api.github.com/repos/{{.ORG_NAME}}/{{.REPO_NAME}}/tags")
-        TAG="null"
-        if echo "$RESPONSE" | {{.JQ}} -e 'type == "array"' > /dev/null; then
-          TAG=$(echo "$RESPONSE" | {{.JQ}} -r '.[].name' | sort -V | tail -n1)
-        else
-          echo "Error fetching tags for https://api.github.com/repos/{{.ORG_NAME}}/{{.REPO_NAME}}/tags -> ${RESPONSE}"
-          exit 1
-        fi
-      
-        if [ -z "$TAG" ] || [ "$TAG" = "null" ]; then
-          echo "❌ No tags found"
-          exit 1
-        fi
-      
-        echo "Using https://api.github.com/repos/{{.ORG_NAME}}/{{.REPO_NAME}}/tags -> ${TAG}"
-        
         WATCHED_IMAGES="$BASE_IMAGE_NAME $PLUGIN_IMAGES"
         declare -A DIGESTS
         declare -A TAGS
@@ -180,7 +164,23 @@ tasks:
         
           TOKEN=$(get_ghcr_token "${FULL_PATH}")
         
-           echo "Token received for: ${FULL_PATH}"
+          echo "Token received for: ${FULL_PATH}"
+        
+          TAG_RESPONSE=$(curl -s -H "Accept: application/vnd.github+json" "https://api.github.com/repos/{{.ORG_NAME}}/${image_repo}/tags")
+          TAG="null"
+          if echo "$TAG_RESPONSE" | {{.JQ}} -e 'type == "array"' > /dev/null; then
+            TAG=$(echo "$TAG_RESPONSE" | {{.JQ}} -r '.[].name' | sort -V | tail -n1)
+          else
+            echo "Error fetching tags for https://api.github.com/repos/{{.ORG_NAME}}/${image_repo}/tags -> ${TAG_RESPONSE}"
+            exit 1
+          fi
+          
+          if [ -z "$TAG" ] || [ "$TAG" = "null" ]; then
+            echo "❌ No tags found"
+            exit 1
+          fi
+          
+          echo "Using https://api.github.com/repos/{{.ORG_NAME}}/${image_repo}/tags -> ${TAG}"
           
           DIGEST_RESPONSE=$(curl -fsSLI -H "Authorization: Bearer $TOKEN" -H "Accept: application/vnd.oci.image.manifest.v1+json" \
             "https://ghcr.io/v2/${FULL_PATH}/manifests/${TAG}-{{.OS}}-{{.ARCH}}")
