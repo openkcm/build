@@ -219,12 +219,13 @@ tasks:
       silent: true
     internal: true
 
-  plugins-build-and-push-one:
+  build-and-push-one:
     desc: "  Push one the multi-platform image."
     requires:
       vars:
         - IMAGE_NAME
         - VERSION
+        - DOCKER_FILE_IDENTIFIER
     vars:
       IMAGE_BASE:
         sh: 'PROJECT_ROOT="{{.ROOT_DIR2}}" REPO_NAME="{{.REPO_NAME}}" {{.TASKFILE_DIR2}}/get-registry.sh --image'
@@ -240,12 +241,12 @@ tasks:
           OS: '{{.ITEM.OS}}'
           ARCH: '{{.ITEM.ARCH}}'
           BASE_IMAGE: '{{.IMAGE_BASE}}/{{.IMAGE_NAME}}'
-        task: plugins-build-and-push-one-internal
+        task: _build-and-push-one-internal
       - vars:
           BASE_IMAGE: '{{.IMAGE_BASE}}/{{.IMAGE_NAME}}'
         task: push-multi-internal
 
-  plugins-build-and-push-one-internal:
+  _build-and-push-one-internal:
     desc: "  Build a single image including all binaries. Requires the docker builder to have been prepared before."
     requires:
       vars:
@@ -254,12 +255,13 @@ tasks:
         - ARCH
         - VERSION
         - DOCKER_BUILDER_NAME
+        - DOCKER_FILE_IDENTIFIER
     vars:
       IMAGE: '{{.BASE_IMAGE}}:{{.VERSION}}-{{.OS}}-{{.ARCH}}'
     cmds:
       - 'echo "Building image {{.IMAGE}}"'
       - '[[ "{{.OS}}" == "linux" ]] || { echo "The distroless base image does only support linux as operating system."; exit 1; }'
-      - 'cat "{{.TASKFILE_DIR2}}/docker/Dockerfile.plugins" > "{{.ROOT_DIR2}}/Dockerfile.tmp"'
+      - 'cat "{{.TASKFILE_DIR2}}/docker/Dockerfile.{{.DOCKER_FILE_IDENTIFIER}}" > "{{.ROOT_DIR2}}/Dockerfile.tmp"'
       - '( cd "{{.ROOT_DIR2}}"; docker buildx build --builder {{.DOCKER_BUILDER_NAME}} --load --platform {{.OS}}/{{.ARCH}} -t {{.IMAGE}} -f Dockerfile.tmp . )'
       - 'docker push {{.IMAGE}}'
       - 'rm -f "{{.ROOT_DIR2}}/Dockerfile.tmp"'
@@ -326,8 +328,40 @@ tasks:
         as: COMPONENT
       cmd: 'docker buildx imagetools create "{{.IMAGE_BASE}}/{{.COMPONENT}}:{{.VERSION}}" --tag "{{.IMAGE_BASE}}/{{.COMPONENT}}:{{.TAG}}"'
 
-  all:
-    desc: "  Build binaries and images for multiple operating systems and architectures and push them to the registry."
+  single-image-mode:
+    desc: "Build binaries and one image for multiple operating systems and architectures."
+    vars:
+      # Ensure we capture the external variable, defaulting to empty for the check
+      IMAGE_NAME: '{{.IMAGE_NAME | default ""}}'
+      DOCKER_FILE_IDENTIFIER: '{{.DOCKER_FILE_IDENTIFIER | default ""}}'
+    preconditions:
+      # Standard POSIX shell check: -n tests if the string length is non-zero
+      - sh: '[ -n "{{.IMAGE_NAME}}" ]'
+        msg: "Error: SINGLE_IMAGE_MODE is active, but IMAGE_NAME must be specified via CLI or ENV."
+      - sh: '[ -n "{{.DOCKER_FILE_IDENTIFIER}}" ]'
+        msg: "Error: DOCKER_FILE_IDENTIFIER must be specified for this mode."
     cmds:
-    - task: build-multi
-    - task: push-multi
+      - task: build-and-push-one
+        vars:
+          VERSION: '{{.VERSION}}'
+          IMAGE_NAME: '{{.IMAGE_NAME}}'
+          DOCKER_FILE_IDENTIFIER: '{{.DOCKER_FILE_IDENTIFIER}}'
+
+  multi-image-mode:
+    desc: "Build binaries and images for multiple operating systems and architectures."
+    cmds:
+      - task: build-multi
+      - task: push-multi
+
+  all:
+    desc: "Build and push. Defaults to multi-image mode unless SINGLE_IMAGE_MODE=true."
+    vars:
+      IS_SINGLE: '{{eq .SINGLE_IMAGE_MODE "true"}}'
+    cmds:
+      # If SINGLE_IMAGE_MODE explicitly true, run single
+      - task: single-image-mode
+        if: '{{.IS_SINGLE}}'
+
+      # Otherwise (default), run multi
+      - task: multi-image-mode
+        if: 'not {{.IS_SINGLE}}'
