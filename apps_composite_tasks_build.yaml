@@ -159,6 +159,8 @@ tasks:
             echo "❌ No tags found"
             exit 1
           fi
+        
+          echo "Using ${image} tag: ${TAG}"
 
           FULL_PATH="{{.ORG_NAME}}/{{.REPO_NAME}}/images/${image}"
           TOKEN=$(get_ghcr_token "${FULL_PATH}")
