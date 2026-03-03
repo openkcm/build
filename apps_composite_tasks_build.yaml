@@ -172,10 +172,15 @@ tasks:
         CHANGED=0
 
         for image in $WATCHED_IMAGES; do
-          read -r inage_repo image_name <<< $(parse_image_repo "${image}")
+          read -r image_repo image_name <<< $(parse_image_repo "${image}")
         
-          FULL_PATH="{{.ORG_NAME}}/${inage_repo}/images/${image_name}"
+          FULL_PATH="{{.ORG_NAME}}/${image_repo}/images/${image_name}"
+        
+          echo "Getting token for: ${FULL_PATH}"
+        
           TOKEN=$(get_ghcr_token "${FULL_PATH}")
+        
+           echo "Token received for: ${FULL_PATH}"
           
           DIGEST_RESPONSE=$(curl -fsSLI -H "Authorization: Bearer $TOKEN" -H "Accept: application/vnd.oci.image.manifest.v1+json" \
             "https://ghcr.io/v2/${FULL_PATH}/manifests/${TAG}-{{.OS}}-{{.ARCH}}")
@@ -320,8 +325,8 @@ tasks:
         
         mkdir -p .ghcr_state
       
-        read -r inage_repo image_name <<< $(parse_image_repo "{{.COMPOSITE_BASE_IMAGE_NAME}}")
-        FULL_REPO="{{.ORG_NAME}}/${inage_repo}/${image_name}"
+        read -r image_repo image_name <<< $(parse_image_repo "{{.COMPOSITE_BASE_IMAGE_NAME}}")
+        FULL_REPO="{{.ORG_NAME}}/${image_repo}/${image_name}"
         TAG=$(curl -s -H "Accept: application/vnd.github+json" "https://api.github.com/repos/${FULL_REPO}/tags" | {{.JQ}} -r '.[].name' | sort -V | tail -n1)
       
         if [ -z "$TAG" ] || [ "$TAG" = "null" ]; then
