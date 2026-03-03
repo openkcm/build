@@ -358,6 +358,8 @@ tasks:
     vars:
       IS_SINGLE: '{{eq (.SINGLE_IMAGE_MODE | default "false") "true"}}'
     cmds:
+      - cmd: echo "task single or multi {{.IS_SINGLE}}"
+
       # If SINGLE_IMAGE_MODE explicitly true, run single
       - task: single-image-mode
         if: '{{.IS_SINGLE}}'
