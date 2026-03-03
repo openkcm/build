@@ -356,7 +356,7 @@ tasks:
   all:
     desc: "Build and push. Defaults to multi-image mode unless SINGLE_IMAGE_MODE=true."
     vars:
-      IS_SINGLE: '{{eq .SINGLE_IMAGE_MODE "true"}}'
+      IS_SINGLE: '{{eq (.SINGLE_IMAGE_MODE | default "false") "true"}}'
     cmds:
       # If SINGLE_IMAGE_MODE explicitly true, run single
       - task: single-image-mode
