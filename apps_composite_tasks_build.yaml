@@ -155,7 +155,7 @@ tasks:
           if echo "$RESPONSE" | {{.JQ}} -e 'type == "array"' > /dev/null; then
             TAG=$(echo "$RESPONSE" | {{.JQ}} -r '.[].name' | sort -V | tail -n1)
           else
-            echo "Error fetching tags for ${IMAGE_NAME}: ${ERROR_MSG} -> ${RESPONSE}"
+            echo "Error fetching tags for ${image} -> ${RESPONSE}"
             exit 1
           fi
   
