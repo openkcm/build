@@ -8,10 +8,6 @@ includes:
     taskfile: tasks_tools.yaml
     internal: true
 
-vars:
-  # This sets a global default for the entire file
-  SINGLE_IMAGE_MODE: '{{.SINGLE_IMAGE_MODE | default "false"}}'
-
 tasks:
   # This is a dummy task that serves as a separator between task namespaces in the 'task -l' output.
   "---":
