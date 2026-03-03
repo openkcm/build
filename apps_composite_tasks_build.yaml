@@ -145,12 +145,12 @@ tasks:
         CHANGED=0
 
         for image in $WATCHED_IMAGES; do
-          FULL_PATH="{{.ORG_NAME}}/images/${image}"
+          FULL_PATH="{{.ORG_NAME}}/{{.REPO_NAME}}/images/${image}"
           
           TAGS_URL="https://ghcr.io/v2/${FULL_PATH}/tags/list"
           declare -A TAG
 
-          RESPONSE=$(curl -s -H "Accept: application/vnd.github+json" "https://api.github.com/repos/{{.ORG_NAME}}/${image}/tags")
+          RESPONSE=$(curl -s -H "Accept: application/vnd.github+json" "https://api.github.com/repos/{{.ORG_NAME}}/{{.REPO_NAME}}/${image}/tags")
           
           if echo "$RESPONSE" | {{.JQ}} -e 'type == "array"' > /dev/null; then
             TAG=$(echo "$RESPONSE" | {{.JQ}} -r '.[].name' | sort -V | tail -n1)
@@ -194,7 +194,7 @@ tasks:
         COUNTER=1
         
         while true; do
-          COMPOSITE_PATH="https://ghcr.io/v2/{{.ORG_NAME}}/images/{{.COMPOSITE_COMPONENT_NAME}}/manifests/${CANDIDATE_TAG}"
+          COMPOSITE_PATH="https://ghcr.io/v2/{{.ORG_NAME}}/{{.REPO_NAME}}/images/{{.COMPOSITE_COMPONENT_NAME}}/manifests/${CANDIDATE_TAG}"
         
           # Check status
           STATUS=$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: Bearer $TOKEN" -H "Accept: application/vnd.oci.image.manifest.v1+json" "$COMPOSITE_PATH")
@@ -305,10 +305,10 @@ tasks:
         # 1. Initialize variables
         CANDIDATE_TAG="${TAG}"
         COUNTER=1
-        TOKEN=$(get_ghcr_token "{{.ORG_NAME}}/images/{{.COMPOSITE_COMPONENT_NAME}}")
+        TOKEN=$(get_ghcr_token "{{.ORG_NAME}}/{{.REPO_NAME}}/images/{{.COMPOSITE_COMPONENT_NAME}}")
         while true; do
           # Check if this specific tag already exists in the registry
-          COMPOSITE_PATH="https://ghcr.io/v2/{{.ORG_NAME}}/images/{{.COMPOSITE_COMPONENT_NAME}}/manifests/${CANDIDATE_TAG}"
+          COMPOSITE_PATH="https://ghcr.io/v2/{{.ORG_NAME}}/{{.REPO_NAME}}/images/{{.COMPOSITE_COMPONENT_NAME}}/manifests/${CANDIDATE_TAG}"
         
           STATUS=$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: Bearer $TOKEN" -H "Accept: application/vnd.oci.image.manifest.v1+json" "$COMPOSITE_PATH")
           
