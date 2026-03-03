@@ -44,10 +44,10 @@ tasks:
         task: single
         vars:
           VERSION: '{{.VERSION}}'
-          COMPOSITE_COMPONENT_NAME: '{{.ITEM.COMPONENT_NAME}}'
-          COMPOSITE_DOCKER_FILE_IDENTIFIER: '{{.ITEM.DOCKER_FILE_IDENTIFIER}}'
-          COMPOSITE_BASE_IMAGE_NAME: '{{.ITEM.BASE_IMAGE_NAME}}'
-          COMPOSITE_PLUGINS_IMAGE_NAME: '{{.ITEM.PLUGINS_IMAGE_NAME}}'
+          COMPOSITE_COMPONENT_NAME: '{{.ITEM.COMPONENT_NAME | default ""}}'
+          COMPOSITE_DOCKER_FILE_IDENTIFIER: '{{.ITEM.DOCKER_FILE_IDENTIFIER | default ""}}'
+          COMPOSITE_BASE_IMAGE_NAME: '{{.ITEM.BASE_IMAGE_NAME | default ""}}'
+          COMPOSITE_PLUGINS_IMAGE_NAME: '{{.ITEM.PLUGINS_IMAGE_NAME | default ""}}'
 
   all-single:
     internal: true
@@ -70,6 +70,8 @@ tasks:
         - VERSION
         - COMPOSITE_COMPONENT_NAME
         - COMPOSITE_DOCKER_FILE_IDENTIFIER
+        - COMPOSITE_BASE_IMAGE_NAME
+        - COMPOSITE_PLUGINS_IMAGE_NAME
     vars:
       ROOT_IMAGE:
         sh: 'PROJECT_ROOT="{{.ROOT_DIR2}}" REPO_NAME="{{.REPO_NAME}}"  {{.TASKFILE_DIR2}}/get-registry.sh --image'
