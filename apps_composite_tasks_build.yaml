@@ -91,6 +91,8 @@ tasks:
           OCM_SIGNING_ENABLED: '{{.OCM_SIGNING_ENABLED}}'
           COMPOSITE_COMPONENT_NAME: '{{.COMPOSITE_COMPONENT_NAME}}'
           COMPOSITE_DOCKER_FILE_IDENTIFIER: '{{.COMPOSITE_DOCKER_FILE_IDENTIFIER}}'
+          COMPOSITE_PLUGINS_IMAGE_NAME: '{{.COMPOSITE_PLUGINS_IMAGE_NAME}}'
+          COMPOSITE_BASE_IMAGE_NAME: '{{.COMPOSITE_BASE_IMAGE_NAME}}'
         task: push-multi-internal
       - task: push-manifest-internal
         vars:
