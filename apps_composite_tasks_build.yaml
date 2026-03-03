@@ -145,10 +145,9 @@ tasks:
         CHANGED=0
 
         for image in $WATCHED_IMAGES; do
-          declare -A TAG
-
           RESPONSE=$(curl -s -H "Accept: application/vnd.github+json" "https://api.github.com/repos/{{.ORG_NAME}}/{{.REPO_NAME}}/tags")
           
+          TAG="null"
           if echo "$RESPONSE" | {{.JQ}} -e 'type == "array"' > /dev/null; then
             TAG=$(echo "$RESPONSE" | {{.JQ}} -r '.[].name' | sort -V | tail -n1)
           else
