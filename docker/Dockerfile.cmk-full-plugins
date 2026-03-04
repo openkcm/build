@@ -1,0 +1,32 @@
+ARG CMK_FULL_BASE_IMAGE
+ARG DUMMY_PLUGINS_IMAGE
+
+
+# Builder - Prepare BusyBox and minimal filesystem
+FROM alpine:latest AS builder
+
+RUN apk add --no-cache busybox
+
+# Create a minimal root filesystem
+RUN mkdir -p /rootfs/bin /rootfs/lib /rootfs/binaries && \
+    cp /bin/busybox /rootfs/busybox && \
+    cp /lib/ld-musl-*.so.1 /rootfs/lib/ && \
+    # install busybox symlinks inside /rootfs/bin
+    chroot /rootfs /busybox --install -s /bin
+
+
+
+FROM ghcr.io/openkcm/dummy-plugins/images/dummy-plugins:${DUMMY_PLUGINS_IMAGE} AS dummy-plugins
+
+# --- Stage 2: main base image ---
+FROM ghcr.io/openkcm/dummy-service/images/cmk-full-base:${CMK_FULL_BASE_IMAGE}
+
+WORKDIR /
+
+# Copy minimal filesystem
+COPY --from=builder /rootfs/ /
+
+# Copy dependencies from other repos
+COPY --from=dummy-plugins /binaries/plugin** /etc/plugins/dummy/
+
+ENTRYPOINT ["/bin/ls", "-lrt", "/", "/etc/plugins/dummy/"]
