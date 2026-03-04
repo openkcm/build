@@ -356,8 +356,8 @@ tasks:
   all:
     desc: "Build and push. Defaults to multi-image mode unless SINGLE_IMAGE_MODE=true."
     cmds:
-      - echo "Executing branch logic for IS_SINGLE={{.IS_SINGLE}}"
+      - echo "Executing branch logic for SINGLE_IMAGE_MODE={{.SINGLE_IMAGE_MODE}}"
       - task: single-image-mode
-      - if: '[ "{{.SINGLE_IMAGE_MODE}}" == "true" ]'
+        if: '[ "{{.SINGLE_IMAGE_MODE}}" == "true" ]'
       - task: multi-image-mode
-      - if: '[ "{{.SINGLE_IMAGE_MODE}}" != "true" ]'
+        if: '[ "{{.SINGLE_IMAGE_MODE}}" != "true" ]'
