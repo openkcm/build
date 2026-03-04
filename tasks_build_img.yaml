@@ -334,8 +334,8 @@ tasks:
       # Standard POSIX shell check: -n tests if the string length is non-zero
       - sh: '[ -n "{{.SINGLE_IMAGE_NAME}}" ]'
         msg: "Error: SINGLE_IMAGE_MODE is active, but SINGLE_IMAGE_NAME must be specified via CLI or ENV."
-      - sh: '[ -n "{{.DOCKER_FILE_IDENTIFIER}}" ]'
-        msg: "Error: DOCKER_FILE_IDENTIFIER must be specified for this mode."
+      - sh: '[ -n "{{.SINGLE_DOCKER_FILE_IDENTIFIER}}" ]'
+        msg: "Error: SINGLE_DOCKER_FILE_IDENTIFIER must be specified for this mode."
     cmds:
       - task: build-and-push-one
         vars:
