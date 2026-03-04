@@ -42,7 +42,9 @@ vars:
 
   DOCKER_BUILDER_NAME:
     sh: echo -n "${DOCKER_BUILDER_NAME:-'{{.ORG_NAME}}-multiarch-builder'}"
+
   DOCKER_FILE_IDENTIFIER: '{{ .DOCKER_FILE_IDENTIFIER | default "single" }}'
+  SINGLE_DOCKER_FILE_IDENTIFIER: '{{ .SINGLE_DOCKER_FILE_IDENTIFIER | default .DOCKER_FILE_IDENTIFIER}}'
 
   # whacky workarounds for incorrect paths in the special variables
   # see https://github.com/go-task/task/issues/2056 and https://github.com/go-task/task/issues/2057
