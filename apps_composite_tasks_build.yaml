@@ -329,11 +329,13 @@ tasks:
         mkdir -p .ghcr_state
       
         read -r image_repo image_name <<< $(parse_image_repo "{{.COMPOSITE_BASE_IMAGE_NAME}}")
-        FULL_REPO="{{.ORG_NAME}}/${image_repo}/${image_name}"
-        TAG=$(curl -s -H "Accept: application/vnd.github+json" "https://api.github.com/repos/${FULL_REPO}/tags" | {{.JQ}} -r '.[].name' | sort -V | tail -n1)
       
-        if [ -z "$TAG" ] || [ "$TAG" = "null" ]; then
-          echo "❌ No tags found. Looking into `repos/${FULL_REPO}/tags`"
+        TAG_RESPONSE=$(curl -s -H "Accept: application/vnd.github+json" "https://api.github.com/repos/{{.ORG_NAME}}/${image_repo}/tags")
+        TAG="null"
+        if echo "$TAG_RESPONSE" | {{.JQ}} -e 'type == "array"' > /dev/null; then
+          TAG=$(echo "$TAG_RESPONSE" | {{.JQ}} -r '.[].name' | sort -V | tail -n1)
+        else
+          echo "Error fetching tags for https://api.github.com/repos/{{.ORG_NAME}}/${image_repo}/tags -> ${TAG_RESPONSE}"
           exit 1
         fi
       
