@@ -97,6 +97,7 @@ tasks:
       - task: push-manifest-internal
         vars:
           BASE_IMAGE: '{{.ROOT_IMAGE}}/{{.COMPOSITE_COMPONENT_NAME}}'
+          COMPOSITE_BASE_IMAGE_NAME: '{{.COMPOSITE_BASE_IMAGE_NAME}}'
 
   push-multi-internal:
     desc: "  Build a the composite image."
