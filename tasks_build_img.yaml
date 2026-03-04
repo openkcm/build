@@ -241,6 +241,8 @@ tasks:
           OS: '{{.ITEM.OS}}'
           ARCH: '{{.ITEM.ARCH}}'
           BASE_IMAGE: '{{.IMAGE_BASE}}/{{.SINGLE_IMAGE_NAME}}'
+          DOCKER_FILE_IDENTIFIER: '{{.DOCKER_FILE_IDENTIFIER}'
+          VERSION: '{{.VERSION}'
         task: _build-and-push-one-internal
       - vars:
           BASE_IMAGE: '{{.IMAGE_BASE}}/{{.SINGLE_IMAGE_NAME}}'
@@ -330,6 +332,8 @@ tasks:
 
   single-image-mode:
     desc: "Build binaries and one image for multiple operating systems and architectures."
+    vars:
+      DOCKER_FILE_IDENTIFIER: '{{if .SINGLE_DOCKER_FILE_IDENTIFIER}}{{.SINGLE_DOCKER_FILE_IDENTIFIER}}{{else}}{{.DOCKER_FILE_IDENTIFIER}}{{end}}'
     preconditions:
       # Standard POSIX shell check: -n tests if the string length is non-zero
       - sh: '[ -n "{{.SINGLE_IMAGE_NAME}}" ]'
@@ -337,11 +341,16 @@ tasks:
       - sh: '[ -n "{{.SINGLE_DOCKER_FILE_IDENTIFIER}}" ]'
         msg: "Error: SINGLE_DOCKER_FILE_IDENTIFIER must be specified for this mode."
     cmds:
+      - |
+        echo "SINGLE_IMAGE_NAME={{.SINGLE_IMAGE_NAME}}"
+        echo "SINGLE_DOCKER_FILE_IDENTIFIER={{.SINGLE_DOCKER_FILE_IDENTIFIER}}"
+        echo "DOCKER_FILE_IDENTIFIER={{.DOCKER_FILE_IDENTIFIER}}"
+
       - task: build-and-push-one
         vars:
           VERSION: '{{.VERSION}}'
           SINGLE_IMAGE_NAME: '{{.SINGLE_IMAGE_NAME}}'
-          DOCKER_FILE_IDENTIFIER: '{{.SINGLE_DOCKER_FILE_IDENTIFIER | default .DOCKER_FILE_IDENTIFIER}}'
+          DOCKER_FILE_IDENTIFIER: '{{.DOCKER_FILE_IDENTIFIER}}'
 
   multi-image-mode:
     desc: "Build binaries and images for multiple operating systems and architectures."
