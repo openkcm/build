@@ -223,7 +223,7 @@ tasks:
     desc: "  Push one the multi-platform image."
     requires:
       vars:
-        - IMAGE_NAME
+        - SINGLE_IMAGE_NAME
         - VERSION
         - DOCKER_FILE_IDENTIFIER
     vars:
@@ -240,10 +240,10 @@ tasks:
         vars:
           OS: '{{.ITEM.OS}}'
           ARCH: '{{.ITEM.ARCH}}'
-          BASE_IMAGE: '{{.IMAGE_BASE}}/{{.IMAGE_NAME}}'
+          BASE_IMAGE: '{{.IMAGE_BASE}}/{{.SINGLE_IMAGE_NAME}}'
         task: _build-and-push-one-internal
       - vars:
-          BASE_IMAGE: '{{.IMAGE_BASE}}/{{.IMAGE_NAME}}'
+          BASE_IMAGE: '{{.IMAGE_BASE}}/{{.SINGLE_IMAGE_NAME}}'
         task: push-multi-internal
 
   _build-and-push-one-internal:
@@ -332,19 +332,19 @@ tasks:
     desc: "Build binaries and one image for multiple operating systems and architectures."
     vars:
       # Ensure we capture the external variable, defaulting to empty for the check
-      IMAGE_NAME: '{{.IMAGE_NAME | default ""}}'
-      DOCKER_FILE_IDENTIFIER: '{{.DOCKER_FILE_IDENTIFIER | default ""}}'
+      SINGLE_IMAGE_NAME: '{{.SINGLE_IMAGE_NAME}}'
+      DOCKER_FILE_IDENTIFIER: '{{.DOCKER_FILE_IDENTIFIER}}'
     preconditions:
       # Standard POSIX shell check: -n tests if the string length is non-zero
-      - sh: '[ -n "{{.IMAGE_NAME}}" ]'
-        msg: "Error: SINGLE_IMAGE_MODE is active, but IMAGE_NAME must be specified via CLI or ENV."
+      - sh: '[ -n "{{.SINGLE_IMAGE_NAME}}" ]'
+        msg: "Error: SINGLE_IMAGE_MODE is active, but SINGLE_IMAGE_NAME must be specified via CLI or ENV."
       - sh: '[ -n "{{.DOCKER_FILE_IDENTIFIER}}" ]'
         msg: "Error: DOCKER_FILE_IDENTIFIER must be specified for this mode."
     cmds:
       - task: build-and-push-one
         vars:
           VERSION: '{{.VERSION}}'
-          IMAGE_NAME: '{{.IMAGE_NAME}}'
+          SINGLE_IMAGE_NAME: '{{.SINGLE_IMAGE_NAME}}'
           DOCKER_FILE_IDENTIFIER: '{{.DOCKER_FILE_IDENTIFIER}}'
 
   multi-image-mode:
@@ -355,14 +355,9 @@ tasks:
 
   all:
     desc: "Build and push. Defaults to multi-image mode unless SINGLE_IMAGE_MODE=true."
-    vars:
-      IS_SINGLE: '{{if eq .SINGLE_IMAGE_MODE "true"}}true{{else}}false{{end}}'
     cmds:
       - echo "Executing branch logic for IS_SINGLE={{.IS_SINGLE}}"
-      # Use a shell conditional instead of the Task 'if' to force execution
-      - |
-        if [ "{{.IS_SINGLE}}" == "true" ]; then
-          task build:img:single-image-mode --verbose
-        else
-          task build:img:multi-image-mode --verbose
-        fi
+      - task: single-image-mode
+      - if: '[ "{{.SINGLE_IMAGE_MODE}}" == "true" ]'
+      - task: multi-image-mode
+      - if: '[ "{{.SINGLE_IMAGE_MODE}}" != "true" ]'

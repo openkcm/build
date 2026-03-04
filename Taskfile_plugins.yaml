@@ -24,7 +24,7 @@ tasks:
   build-and-push:
     desc: "  Binary generation, build all artifacts and push to the respective registries."
     run: once
+    vars:
+      DOCKER_FILE_IDENTIFIER: 'plugins'
     deps:
       - task: build:img:build-and-push-one
-        vars:
-          DOCKER_FILE_IDENTIFIER: 'plugins'
