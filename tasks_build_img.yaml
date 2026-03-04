@@ -223,7 +223,7 @@ tasks:
     desc: "  Push one the multi-platform image."
     requires:
       vars:
-        - SINGLE_IMAGE_NAME
+        - IMAGE_NAME
         - VERSION
         - DOCKER_FILE_IDENTIFIER
     vars:
@@ -240,12 +240,12 @@ tasks:
         vars:
           OS: '{{.ITEM.OS}}'
           ARCH: '{{.ITEM.ARCH}}'
-          BASE_IMAGE: '{{.IMAGE_BASE}}/{{.SINGLE_IMAGE_NAME}}'
+          BASE_IMAGE: '{{.IMAGE_BASE}}/{{.IMAGE_NAME}}'
           DOCKER_FILE_IDENTIFIER: '{{.DOCKER_FILE_IDENTIFIER}'
           VERSION: '{{.VERSION}'
         task: _build-and-push-one-internal
       - vars:
-          BASE_IMAGE: '{{.IMAGE_BASE}}/{{.SINGLE_IMAGE_NAME}}'
+          BASE_IMAGE: '{{.IMAGE_BASE}}/{{.IMAGE_NAME}}'
         task: push-multi-internal
 
   _build-and-push-one-internal:
@@ -341,15 +341,10 @@ tasks:
       - sh: '[ -n "{{.SINGLE_DOCKER_FILE_IDENTIFIER}}" ]'
         msg: "Error: SINGLE_DOCKER_FILE_IDENTIFIER must be specified for this mode."
     cmds:
-      - |
-        echo "SINGLE_IMAGE_NAME={{.SINGLE_IMAGE_NAME}}"
-        echo "SINGLE_DOCKER_FILE_IDENTIFIER={{.SINGLE_DOCKER_FILE_IDENTIFIER}}"
-        echo "DOCKER_FILE_IDENTIFIER={{.DOCKER_FILE_IDENTIFIER}}"
-
       - task: build-and-push-one
         vars:
           VERSION: '{{.VERSION}}'
-          SINGLE_IMAGE_NAME: '{{.SINGLE_IMAGE_NAME}}'
+          IMAGE_NAME: '{{.SINGLE_IMAGE_NAME}}'
           DOCKER_FILE_IDENTIFIER: '{{.DOCKER_FILE_IDENTIFIER}}'
 
   multi-image-mode:
