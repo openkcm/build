@@ -333,7 +333,7 @@ tasks:
     vars:
       # Ensure we capture the external variable, defaulting to empty for the check
       SINGLE_IMAGE_NAME: '{{.SINGLE_IMAGE_NAME}}'
-      DOCKER_FILE_IDENTIFIER: '{{.DOCKER_FILE_IDENTIFIER}}'
+      DOCKER_FILE_IDENTIFIER: '{{ if .SINGLE_DOCKER_FILE_IDENTIFIER }}{{.SINGLE_DOCKER_FILE_IDENTIFIER}}{{else}}{{.DOCKER_FILE_IDENTIFIER}}{{ end }}'
     preconditions:
       # Standard POSIX shell check: -n tests if the string length is non-zero
       - sh: '[ -n "{{.SINGLE_IMAGE_NAME}}" ]'
@@ -349,17 +349,23 @@ tasks:
 
   multi-image-mode:
     desc: "Build binaries and images for multiple operating systems and architectures."
-    vars:
-      DOCKER_FILE_IDENTIFIER: '{{ if .COMPONENT_DOCKER_FILE_IDENTIFIER }}{{.COMPONENT_DOCKER_FILE_IDENTIFIER}}{{else}}{{.DOCKER_FILE_IDENTIFIER}}{{ end }}'
     cmds:
       - task: build-multi
       - task: push-multi
 
-  all:
-    desc: "Build and push. Defaults to multi-image mode unless SINGLE_IMAGE_MODE=true."
+  single-and-multi-image-mode:
+    desc: "Build binaries and images."
     cmds:
-      - echo "Executing branch logic for SINGLE_IMAGE_MODE={{.SINGLE_IMAGE_MODE}}"
-      - task: single-image-mode
-        if: '[ "{{.SINGLE_IMAGE_MODE}}" == "true" ]'
       - task: multi-image-mode
-        if: '[ "{{.SINGLE_IMAGE_MODE}}" != "true" ]'
+      - task: single-image-mode
+
+  all:
+    desc: "Build and push."
+    cmds:
+      - echo "Executing branch logic for BUILD_IMAGE_MODE={{.BUILD_IMAGE_MODE}}"
+      - task: single-image-mode
+        if: '[ "{{.BUILD_IMAGE_MODE}}" == "single" ]'
+      - task: multi-image-mode
+        if: '[ "{{.BUILD_IMAGE_MODE}}" == "multi" ]'
+      - task: single-and-multi-image-mode
+        if: '[ "{{.BUILD_IMAGE_MODE}}" == "single-multi" ]'
