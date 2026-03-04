@@ -242,7 +242,7 @@ tasks:
           ARCH: '{{.ITEM.ARCH}}'
           BASE_IMAGE: '{{.IMAGE_BASE}}/{{.IMAGE_NAME}}'
           DOCKER_FILE_IDENTIFIER: '{{.DOCKER_FILE_IDENTIFIER}}'
-          VERSION: '{{.VERSION}'
+          VERSION: '{{.VERSION}}'
         task: _build-and-push-one-internal
       - vars:
           BASE_IMAGE: '{{.IMAGE_BASE}}/{{.IMAGE_NAME}}'
