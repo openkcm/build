@@ -1,4 +1,4 @@
-ARG CMK_TASK_SCHEDULER_IMAGE
+ARG TASK_SCHEDULER_IMAGE
 ARG DUMMY_PLUGINS_IMAGE
 
 
@@ -19,7 +19,7 @@ RUN mkdir -p /rootfs/bin /rootfs/lib /rootfs/binaries && \
 FROM ghcr.io/openkcm/dummy-plugins/images/dummy-plugins:${DUMMY_PLUGINS_IMAGE} AS dummy-plugins
 
 # --- Stage 2: main base image ---
-FROM ghcr.io/openkcm/dummy-service/images/task-scheduler:${CMK_TASK_SCHEDULER_IMAGE}
+FROM ghcr.io/openkcm/dummy-service/images/task-scheduler:${TASK_SCHEDULER_IMAGE}
 
 WORKDIR /
 
