@@ -98,6 +98,8 @@ tasks:
         vars:
           BASE_IMAGE: '{{.ROOT_IMAGE}}/{{.COMPOSITE_COMPONENT_NAME}}'
           COMPOSITE_BASE_IMAGE_NAME: '{{.COMPOSITE_BASE_IMAGE_NAME}}'
+          COMPOSITE_COMPONENT_NAME: '{{.COMPOSITE_COMPONENT_NAME}}'
+          IMAGE_SIGNING_ENABLED: '{{.IMAGE_SIGNING_ENABLED}}'
 
   push-multi-internal:
     desc: "  Build a the composite image."
@@ -299,6 +301,7 @@ tasks:
       vars:
         - BASE_IMAGE
         - COMPOSITE_BASE_IMAGE_NAME
+        - COMPOSITE_COMPONENT_NAME
         - IMAGE_SIGNING_ENABLED
         - GHCR_PAT
         - GITHUB_ACTOR
