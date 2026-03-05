@@ -386,7 +386,7 @@ tasks:
   all:
     desc: "Build and push."
     cmds:
-      - echo "Executing branch logic for BUILD_IMAGE_MODE={{.BUILD_IMAGE_MODE}} MAIN={{.MAIN_DIR}}"
+      - echo "Executing branch logic for BUILD_IMAGE_MODE={{.BUILD_IMAGE_MODE}}"
       - task: single-image-mode
         if: '[ "{{.BUILD_IMAGE_MODE}}" == "single" ]'
       - task: multi-image-mode
