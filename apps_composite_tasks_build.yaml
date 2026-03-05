@@ -134,7 +134,7 @@ tasks:
           echo "✅ Using project-specific ${FILE_NAME}"
           cat "{{.PROJECT_ROOT_DIR}}/${FILE_NAME}" > "{{.ROOT_DIR2}}/Dockerfile.tmp"
         elif [ -f "{{.TASKFILE_DIR2}}/docker/${FILE_NAME}" ]; then
-          echo "✅ Using shared ${FILE_NAME} from build/docker directory"
+          echo "✅ Using shared ${FILE_NAME} from {{.TASKFILE_DIR2}}/docker directory"
           cat "{{.TASKFILE_DIR2}}/docker/${FILE_NAME}" > "{{.ROOT_DIR2}}/Dockerfile.tmp"
         else
           echo "❌ Error: ${FILE_NAME} not found in project or shared directory."
