@@ -15,7 +15,11 @@ ARG TARGETOS
 ARG TARGETARCH
 
 COPY bin/** /binaries/
-RUN find /binaries -type f ! -name "*.$TARGETOS-$TARGETARCH" -delete
+WORKDIR /binaries
+RUN find . -type f ! -name "*.$TARGETOS-$TARGETARCH" -delete && \
+    for f in *."$TARGETOS-$TARGETARCH"; do \
+      [ -e "$f" ] && mv "$f" "${f%.$TARGETOS-$TARGETARCH}"; \
+    done
 
 FROM scratch
 
