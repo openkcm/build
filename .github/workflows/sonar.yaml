@@ -5,6 +5,10 @@ on:
     types:
       - completed
 
+permissions:
+  contents: read
+  statuses: write
+
 jobs:
   sonarcloud:
     name: Sonar Scanning
