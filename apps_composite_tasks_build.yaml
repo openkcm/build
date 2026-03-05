@@ -124,7 +124,22 @@ tasks:
         - COMPOSITE_DOCKER_FILE_IDENTIFIER
     cmds:
       - '[[ "{{.OS}}" == "linux" ]] || { echo "The distroless base image does only support linux as operating system."; exit 1; }'
-      - 'cat "{{.TASKFILE_DIR2}}/docker/Dockerfile.{{.COMPOSITE_DOCKER_FILE_IDENTIFIER}}" > "{{.ROOT_DIR2}}/Dockerfile.tmp"'
+      - |
+        FILE_NAME="Dockerfile.{{.COMPOSITE_DOCKER_FILE_IDENTIFIER}}"
+        
+        if [ -f "{{.PROJECT_ROOT_DIR}}/${FILE_NAME}" ]; then
+          if [[ "${FILE_NAME}" == "Dockerfile.single" ]]; then
+            FILE_NAME="Dockerfile"
+          fi
+          echo "✅ Using project-specific ${FILE_NAME}"
+          cat "{{.PROJECT_ROOT_DIR}}/${FILE_NAME}" > "{{.ROOT_DIR2}}/Dockerfile.tmp"
+        elif [ -f "{{.TASKFILE_DIR2}}/docker/${FILE_NAME}" ]; then
+          echo "✅ Using shared ${FILE_NAME} from build/docker directory"
+          cat "{{.TASKFILE_DIR2}}/docker/${FILE_NAME}" > "{{.ROOT_DIR2}}/Dockerfile.tmp"
+        else
+          echo "❌ Error: ${FILE_NAME} not found in project or shared directory."
+          exit 1
+        fi
       - |
         set -euo pipefail
         

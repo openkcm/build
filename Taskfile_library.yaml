@@ -46,7 +46,7 @@ vars:
   DOCKER_FILE_IDENTIFIER: '{{ .DOCKER_FILE_IDENTIFIER | default "single" }}'
   SINGLE_DOCKER_FILE_IDENTIFIER: '{{ .SINGLE_DOCKER_FILE_IDENTIFIER | default .DOCKER_FILE_IDENTIFIER}}'
 
-  MAIN_DIR: '{{.PWD}}'
+  PROJECT_ROOT_DIR: '{{.PWD}}'
 
   # whacky workarounds for incorrect paths in the special variables
   # see https://github.com/go-task/task/issues/2056 and https://github.com/go-task/task/issues/2057
