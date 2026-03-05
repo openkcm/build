@@ -238,12 +238,12 @@ tasks:
     desc: "  Push one the multi-platform image."
     requires:
       vars:
-        - IMAGE_NAME
         - VERSION
         - DOCKER_FILE_IDENTIFIER
     vars:
       IMAGE_BASE:
         sh: 'PROJECT_ROOT="{{.ROOT_DIR2}}" REPO_NAME="{{.REPO_NAME}}" {{.TASKFILE_DIR2}}/get-registry.sh --image'
+      IMAGE_NAME: '{{.IMAGE_NAME | default .SINGLE_IMAGE_NAME}}'
     deps:
       - build:bin:all
     cmds:
