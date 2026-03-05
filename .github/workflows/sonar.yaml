@@ -1,9 +1,7 @@
 name: Sonar Analysis Secure
+
 on:
-  workflow_run:
-    workflows: ["ci"]
-    types:
-      - completed
+  workflow_call:
     secrets:
       SONAR_TOKEN:
         required: true
@@ -21,22 +19,38 @@ jobs:
     steps:
       - name: Download coverage artifact
         uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3 # v8.0.0
+        continue-on-error: true
+        id: download-artifact
         with:
           name: coverage-report
           github-token: ${{ secrets.GITHUB_TOKEN }}
           run-id: ${{ github.event.workflow_run.id }}
 
+      - name: Check if Sonar Scan is required
+        id: check-scan
+        run: |
+          if [ "${{ steps.download-artifact.outcome }}" == "success" ]; then
+            echo "run_scan=true" >> $GITHUB_OUTPUT
+          else
+            echo "run_scan=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: Read PR Metadata
+        if: steps.check-scan.outputs.run_scan == 'true'
         id: pr-metadata
         run: |
           if [ -d "pr-metadata" ]; then
+            echo "is_pr=true" >> $GITHUB_OUTPUT
             echo "pr_number=$(cat pr-metadata/pr_number)" >> $GITHUB_OUTPUT
             echo "pr_head_ref=$(cat pr-metadata/pr_head_ref)" >> $GITHUB_OUTPUT
             echo "pr_base_ref=$(cat pr-metadata/pr_base_ref)" >> $GITHUB_OUTPUT
             echo "pr_head_sha=$(cat pr-metadata/pr_head_sha)" >> $GITHUB_OUTPUT
+          else
+            echo "is_pr=false" >> $GITHUB_OUTPUT
           fi
 
       - name: Checkout repository at PR commit
+        if: steps.check-scan.outputs.run_scan == 'true'
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           repository: ${{ github.event.workflow_run.head_repository.full_name }}
@@ -45,6 +59,7 @@ jobs:
           persist-credentials: false
 
       - name: SonarQube Scan
+        if: steps.check-scan.outputs.run_scan == 'true'
         uses: SonarSource/sonarqube-scan-action@a31c9398be7ace6bbfaf30c0bd5d415f843d45e9 # v7.0.0
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
@@ -60,6 +75,7 @@ jobs:
             -Dsonar.pullrequest.base=${{ steps.pr-metadata.outputs.pr_base_ref }}
 
       - name: SonarQube Quality Gate check
+        if: steps.check-scan.outputs.run_scan == 'true'
         uses: SonarSource/sonarqube-quality-gate-action@cf038b0e0cdecfa9e56c198bbb7d21d751d62c3b # v1.2.0
         with:
           pollingTimeoutSec: 600
