@@ -28,11 +28,6 @@ on:
         required: false
         type: boolean
         default: false
-      sonar_go_coverage_report_paths:
-        description: "Path to Go coverage file"
-        required: false
-        type: string
-        default: "cover.out"
 
 permissions:
   contents: read
@@ -103,33 +98,22 @@ jobs:
           # Run Makefile tests
           make "${{ inputs.makefile_test_name }}"
 
-      - name: SonarQube Scan
-        if: ${{ github.ref_type != 'tag' && inputs.enable_sonar_scan }}
-        uses: SonarSource/sonarqube-scan-action@a31c9398be7ace6bbfaf30c0bd5d415f843d45e9 # v7.0.0
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        with:
-          args: >
-            -Dsonar.projectKey=${{ github.repository_owner }}_${{ github.event.repository.name }}
-            -Dsonar.projectName=${{ github.event.repository.name }}
-            -Dsonar.organization=${{ github.repository_owner }}
-            -Dsonar.go.coverage.reportPaths=${{ inputs.sonar_go_coverage_report_paths }}
+      - name: Save Pull Request Metadata
+        if: ${{ github.event_name == 'pull_request' && github.ref_type != 'tag' && inputs.enable_sonar_scan }}
+        run: |
+          mkdir -p pr-metadata
+          echo "${{ github.event.pull_request.number }}" > pr-metadata/pr_number
+          echo "${{ github.event.pull_request.head.ref }}" > pr-metadata/pr_head_ref
+          echo "${{ github.event.pull_request.base.ref }}" > pr-metadata/pr_base_ref
+          echo "${{ github.event.pull_request.head.sha }}" > pr-metadata/pr_head_sha
 
-      - name: SonarQube Quality Gate check
+      - name: Upload Coverages and PR Metadata
         if: ${{ github.ref_type != 'tag' && inputs.enable_sonar_scan }}
-        id: sonarqube-quality-gate-check
-        uses: SonarSource/sonarqube-quality-gate-action@cf038b0e0cdecfa9e56c198bbb7d21d751d62c3b # v1.2.0
-        with:
-          pollingTimeoutSec: 600
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-
-      - name: upload coverages
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
           name: coverage-report
           path: |
             ${{ inputs.makefile_test_coverage_report_paths }}
-            ${{ inputs.sonar_go_coverage_report_paths }}
+            pr-metadata/
           if-no-files-found: warn
-          retention-days: 30
+          retention-days: 1
