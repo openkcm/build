@@ -66,12 +66,14 @@ jobs:
       - name: Report Action Status to PR
         if: always() && steps.check-scan.outputs.run_scan == 'true' && steps.pr-metadata.outputs.is_pr == 'true'
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        env:
+          PR_HEAD_SHA: ${{ steps.pr-metadata.outputs.pr_head_sha }}
+          JOB_STATUS: ${{ job.status }}
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const sha = '${{ steps.pr-metadata.outputs.pr_head_sha }}';
-            // Translate the job status to the GitHub API expected states
-            const state = '${{ job.status }}' === 'success' ? 'success' : 'failure';
+            const sha = process.env.PR_HEAD_SHA;
+            const state = process.env.JOB_STATUS === 'success' ? 'success' : 'failure';
             
             await github.rest.repos.createCommitStatus({
               owner: context.repo.owner,
