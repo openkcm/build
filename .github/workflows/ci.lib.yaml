@@ -98,14 +98,35 @@ jobs:
           # Run Makefile tests
           make "${{ inputs.makefile_test_name }}"
 
-      - name: Save Pull Request Metadata
-        if: ${{ github.event_name == 'pull_request' && github.ref_type != 'tag' && inputs.enable_sonar_scan }}
+      - name: Save Metadata and Move Coverages
+        if: always()
         run: |
           mkdir -p pr-metadata
-          echo "${{ github.event.pull_request.number }}" > pr-metadata/pr_number
-          echo "${{ github.event.pull_request.head.ref }}" > pr-metadata/pr_head_ref
-          echo "${{ github.event.pull_request.base.ref }}" > pr-metadata/pr_base_ref
-          echo "${{ github.event.pull_request.head.sha }}" > pr-metadata/pr_head_sha
+          mkdir -p coverage
+          
+          # Safely evaluate GitHub contexts inside bash using double brackets
+          if [[ "${{ github.event_name }}" == "pull_request" && "${{ github.ref_type }}" != "tag" && "${{ inputs.enable_sonar_scan }}" == "true" ]]; then
+            echo "${{ github.event.pull_request.number }}" > pr-metadata/pr_number
+            echo "${{ github.event.pull_request.head.ref }}" > pr-metadata/pr_head_ref
+            echo "${{ github.event.pull_request.base.ref }}" > pr-metadata/pr_base_ref
+            echo "${{ github.event.pull_request.head.sha }}" > pr-metadata/pr_head_sha
+          fi
+          
+          # Move coverage files and build a comma-separated list for Sonar
+          SONAR_PATHS=""
+          for file in ${{ inputs.sonar_go_coverage_report_paths }}; do
+            if [ -f "$file" ]; then
+              mv "$file" coverage/
+              if [ -z "$SONAR_PATHS" ]; then
+                SONAR_PATHS="coverage/$file"
+              else
+                SONAR_PATHS="$SONAR_PATHS,coverage/$file"
+              fi
+            fi
+          done
+          
+          # Save the dynamic paths into the metadata folder
+          echo "$SONAR_PATHS" > pr-metadata/coverage_paths
 
       - name: Upload Coverages and PR Metadata
         if: ${{ github.ref_type != 'tag' && inputs.enable_sonar_scan }}
@@ -113,7 +134,7 @@ jobs:
         with:
           name: coverage-report
           path: |
-            ${{ inputs.makefile_test_coverage_report_paths }}
+            coverage/
             pr-metadata/
           if-no-files-found: warn
           retention-days: 1

@@ -39,7 +39,15 @@ jobs:
         if: steps.check-scan.outputs.run_scan == 'true'
         id: pr-metadata
         run: |
-          if [ -d "pr-metadata" ]; then
+          # 1. Read the dynamic coverage paths (runs on both PRs and main branch)
+          if [ -f "pr-metadata/coverage_paths" ]; then
+            echo "coverage_paths=$(cat pr-metadata/coverage_paths)" >> $GITHUB_OUTPUT
+          else
+            echo "coverage_paths=" >> $GITHUB_OUTPUT
+          fi
+          
+          # 2. Read PR specific data (only exists on PRs)
+          if [ -f "pr-metadata/pr_number" ]; then
             echo "is_pr=true" >> $GITHUB_OUTPUT
             echo "pr_number=$(cat pr-metadata/pr_number)" >> $GITHUB_OUTPUT
             echo "pr_head_ref=$(cat pr-metadata/pr_head_ref)" >> $GITHUB_OUTPUT
@@ -62,13 +70,14 @@ jobs:
         if: steps.check-scan.outputs.run_scan == 'true'
         id: build-args
         run: |
-          # Ensure this exact string matches the Project Key in your Sonar UI
-          PROJECT_KEY="${{ github.repository_owner }}_${{ github.event.repository.name }}"
+          ORG_KEY=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          PROJECT_KEY="${ORG_KEY}_${{ github.event.repository.name }}"
           
+          # Use the dynamic coverage paths from the metadata step
           ARGS="-Dsonar.projectKey=$PROJECT_KEY \
                 -Dsonar.projectName=${{ github.event.repository.name }} \
-                -Dsonar.organization=${{ github.repository_owner }} \
-                -Dsonar.go.coverage.reportPaths=cover.out \
+                -Dsonar.organization=$ORG_KEY \
+                -Dsonar.go.coverage.reportPaths=${{ steps.pr-metadata.outputs.coverage_paths }} \
                 -Dsonar.scm.revision=${{ steps.pr-metadata.outputs.pr_head_sha || github.event.workflow_run.head_sha }}"
           
           if [ "${{ steps.pr-metadata.outputs.is_pr }}" == "true" ]; then
@@ -78,7 +87,6 @@ jobs:
                   -Dsonar.pullrequest.base=${{ steps.pr-metadata.outputs.pr_base_ref }}"
           else
             BRANCH_NAME="${{ github.event.workflow_run.head_branch }}"
-            # Omit the branch flag entirely if it is the default branch to establish the baseline
             if [ "$BRANCH_NAME" != "main" ] && [ "$BRANCH_NAME" != "master" ]; then
               ARGS="$ARGS -Dsonar.branch.name=$BRANCH_NAME"
             fi
