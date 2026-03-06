@@ -73,13 +73,19 @@ jobs:
           ORG_KEY=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
           PROJECT_KEY="${ORG_KEY}_${{ github.event.repository.name }}"
           
-          # Use the dynamic coverage paths from the metadata step
+          # Start with the baseline required arguments
           ARGS="-Dsonar.projectKey=$PROJECT_KEY \
                 -Dsonar.projectName=${{ github.event.repository.name }} \
                 -Dsonar.organization=$ORG_KEY \
-                -Dsonar.go.coverage.reportPaths=${{ steps.pr-metadata.outputs.coverage_paths }} \
                 -Dsonar.scm.revision=${{ steps.pr-metadata.outputs.pr_head_sha || github.event.workflow_run.head_sha }}"
           
+          # Conditionally append the coverage paths flag ONLY if paths exist
+          COVERAGE_PATHS="${{ steps.pr-metadata.outputs.coverage_paths }}"
+          if [ -n "$COVERAGE_PATHS" ]; then
+            ARGS="$ARGS -Dsonar.go.coverage.reportPaths=$COVERAGE_PATHS"
+          fi
+          
+          # Handle PR vs Branch logic
           if [ "${{ steps.pr-metadata.outputs.is_pr }}" == "true" ]; then
             ARGS="$ARGS \
                   -Dsonar.pullrequest.key=${{ steps.pr-metadata.outputs.pr_number }} \
