@@ -114,7 +114,7 @@ jobs:
           
           # Move coverage files and build a comma-separated list for Sonar
           SONAR_PATHS=""
-          for file in ${{ inputs.sonar_go_coverage_report_paths }}; do
+          for file in ${{ inputs.makefile_test_coverage_report_paths }}; do
             if [ -f "$file" ]; then
               mv "$file" coverage/
               if [ -z "$SONAR_PATHS" ]; then
@@ -128,6 +128,15 @@ jobs:
           # Save the dynamic paths into the metadata folder
           echo "$SONAR_PATHS" > pr-metadata/coverage_paths
 
+      - name: Debug Coverage Generation
+        if: always()
+        run: |
+          echo "Looking for files defined in input: ${{ inputs.makefile_test_coverage_report_paths }}"
+          echo "Current directory contents:"
+          ls -la
+          echo "Searching for any coverage files in all subdirectories:"
+          find . -name "cover.out" -o -name "cover.html" -o -name "*.out"
+          
       - name: Upload Coverages and PR Metadata
         if: ${{ github.ref_type != 'tag' && inputs.enable_sonar_scan }}
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
