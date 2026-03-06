@@ -22,7 +22,7 @@ on:
         description: "Coverage report paths (space-separated)"
         required: false
         type: string
-        default: "cover.html cover.out"
+        default: "cover.html cover.out cover.root.out cover.root.html"
       enable_sonar_scan:
         description: "Enabling Sonar Scan task"
         required: false
@@ -135,8 +135,8 @@ jobs:
           echo "Current directory contents:"
           ls -la
           echo "Searching for any coverage files in all subdirectories:"
-          find . -name "cover.out" -o -name "cover.html" -o -name "*.out"
-          
+          find . -name "*.html" -o -name "*.out"
+
       - name: Upload Coverages and PR Metadata
         if: ${{ github.ref_type != 'tag' && inputs.enable_sonar_scan }}
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
