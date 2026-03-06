@@ -51,6 +51,10 @@ tasks:
 
   all-single:
     internal: true
+    status:
+      # If any of these variables are empty (-z), this evaluates to true (exit code 0).
+      # Task considers exit code 0 in 'status' as "up-to-date" and silently skips the task.
+      - '[ -z "{{.COMPOSITE_COMPONENT_NAME}}" ] || [ -z "{{.COMPOSITE_DOCKER_FILE_IDENTIFIER}}" ] || [ -z "{{.COMPOSITE_BASE_IMAGE_NAME}}" ] || [ -z "{{.COMPOSITE_PLUGINS_IMAGE_NAME}}" ]'
     requires:
       vars:
         - VERSION
