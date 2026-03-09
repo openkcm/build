@@ -66,6 +66,13 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
+      - name: Debug Coverage Generation
+        run: |
+          echo "Current directory contents:"
+          ls -la
+          echo "Searching for any coverage files in all subdirectories:"
+          find . -name "*.html" -o -name "*.out" -o -name "*.zip"
+
       - name: Build Sonar Arguments
         if: steps.check-scan.outputs.run_scan == 'true'
         id: build-args
