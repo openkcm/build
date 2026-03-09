@@ -65,6 +65,7 @@ jobs:
           ref: ${{ steps.pr-metadata.outputs.pr_head_sha || github.event.workflow_run.head_sha }}
           fetch-depth: 0
           persist-credentials: false
+          clean: false
 
       - name: Debug Coverage Generation
         run: |
@@ -107,10 +108,11 @@ jobs:
           
           echo "sonar_args=$ARGS" >> $GITHUB_OUTPUT
 
-      - name: SonarQube Scan
+      - name: SonarCloud Scan
         if: steps.check-scan.outputs.run_scan == 'true'
         uses: SonarSource/sonarqube-scan-action@a31c9398be7ace6bbfaf30c0bd5d415f843d45e9 # v7.0.0
         env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
           args: ${{ steps.build-args.outputs.sonar_args }}
