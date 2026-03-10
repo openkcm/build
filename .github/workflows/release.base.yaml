@@ -60,3 +60,10 @@ jobs:
         with:
           release-type: ${{inputs.release-type}}
           token: ${{ steps.generate-token.outputs.token }}
+
+      - name: Stop if no release was created
+        if: ${{ steps.github_release.outputs.release_created != 'true' }}
+        run: |
+          echo "❌ No release was created — a release PR was likely opened instead."
+          echo "ℹ️ Please merge the release PR and re-run the workflow to publish the release."
+          exit 1
