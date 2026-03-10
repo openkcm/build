@@ -1,0 +1,62 @@
+name: Release
+
+on:
+  workflow_call:
+    inputs:
+      release-type:
+        required: false
+        default: "go"
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  tag:
+    if: |
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.merged == true &&
+      contains(github.event.pull_request.title, 'chore(main)') &&
+      contains(github.event.pull_request.title, 'release') &&
+      contains(github.event.pull_request.labels.*.name, 'release')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate token from GitHub App
+        id: generate-token
+        uses: actions/create-github-app-token@29824e69f54612133e76f7eaac726eef6c875baf  # v2.2.1
+        with:
+          app-id: ${{ secrets.APP_PUSH_TAG_ID }}
+          private-key: ${{ secrets.APP_PUSH_TAG_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          token: ${{ steps.generate-token.outputs.token }}
+          fetch-tags: true
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Import GPG key
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+        run: |
+          echo "$GPG_PRIVATE_KEY" | gpg --batch --import
+          echo "use-agent" >> ~/.gnupg/gpg.conf
+          echo "pinentry-mode loopback" >> ~/.gnupg/gpg.conf
+          echo "allow-loopback-pinentry" >> ~/.gnupg/gpg-agent.conf
+          echo RELOADAGENT | gpg-connect-agent
+          git config --global user.name "GitHub CI Bot"
+          git config --global user.email "github-ci[bot]@users.noreply.github.com"
+          git config --global user.signingkey "${{ secrets.GPG_KEY_ID }}"
+          git config --global commit.gpgsign true
+          git config --global tag.gpgSign true
+          git config --global gpg.program gpg
+
+
+      - name: Release Please
+        id: github_release
+        uses: googleapis/release-please-action@16a9c90856f42705d54a6fda1823352bdc62cf38 #v4.4.0
+        with:
+          release-type: ${{inputs.release-type}}
+          token: ${{ steps.generate-token.outputs.token }}
