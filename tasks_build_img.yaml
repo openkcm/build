@@ -234,6 +234,24 @@ tasks:
       silent: true
     internal: true
 
+  push-multi-no-osarch-internal:
+    desc: "  Push a single component's image."
+    requires:
+      vars:
+        - VERSION
+        - BASE_IMAGE
+    cmds:
+      - 'docker manifest create {{.BASE_IMAGE}}:{{.VERSION}}'
+      - 'echo "Pushing manifest {{.BASE_IMAGE}}:{{.VERSION}}"'
+      - 'docker manifest push {{.BASE_IMAGE}}:{{.VERSION}}'
+      - vars:
+          VERSION: '{{.VERSION}}'
+          BASE_IMAGE: '{{.BASE_IMAGE}}'
+          CRANE_PLATFORM: ''
+        task: sign
+        silent: true
+    internal: true
+
   build-and-push-one:
     desc: "  Push one the multi-platform image."
     requires:
@@ -301,6 +319,45 @@ tasks:
           VERSION: '{{.VERSION}}-{{.OS}}-{{.ARCH}}'
           BASE_IMAGE: '{{.BASE_IMAGE}}'
           CRANE_PLATFORM: '--platform={{.OS}}/{{.ARCH}}'
+        task: sign
+        silent: true
+    internal: true
+
+  _build-and-push-one-noosarch-internal:
+    desc: "  Build a single image."
+    requires:
+      vars:
+        - BASE_IMAGE
+        - VERSION
+        - DOCKER_BUILDER_NAME
+        - DOCKER_FILE_IDENTIFIER
+    vars:
+      IMAGE: '{{.BASE_IMAGE}}:{{.VERSION}}'
+    cmds:
+      - 'echo "Building image {{.IMAGE}}"'
+      - |
+        FILE_NAME="Dockerfile.{{.DOCKER_FILE_IDENTIFIER}}"
+        if [ -f "{{.PROJECT_ROOT_DIR}}/Dockerfile" ]; then
+          FILE_NAME="Dockerfile"
+        fi
+
+        if [ -f "{{.PROJECT_ROOT_DIR}}/${FILE_NAME}" ]; then
+          echo "✅ Using project-specific ${FILE_NAME}"
+          cat "{{.PROJECT_ROOT_DIR}}/${FILE_NAME}" > "{{.ROOT_DIR2}}/Dockerfile.tmp"
+        elif [ -f "{{.TASKFILE_DIR2}}/docker/${FILE_NAME}" ]; then
+          echo "✅ Using shared ${FILE_NAME} from {{.TASKFILE_DIR2}}/docker directory"
+          cat "{{.TASKFILE_DIR2}}/docker/${FILE_NAME}" > "{{.ROOT_DIR2}}/Dockerfile.tmp"
+        else
+          echo "❌ Error: ${FILE_NAME} not found in project or shared directory."
+          exit 1
+        fi
+      - '( cd "{{.ROOT_DIR2}}"; docker buildx build --builder {{.DOCKER_BUILDER_NAME}} --load -t {{.IMAGE}} -f Dockerfile.tmp . )'
+      - 'docker push {{.IMAGE}}'
+      - 'rm -f "{{.ROOT_DIR2}}/Dockerfile.tmp"'
+      - vars:
+          VERSION: '{{.VERSION}}'
+          BASE_IMAGE: '{{.BASE_IMAGE}}'
+          CRANE_PLATFORM: ''
         task: sign
         silent: true
     internal: true
@@ -391,20 +448,14 @@ tasks:
       IMAGE_NAME: '{{.IMAGE_NAME | default .SINGLE_IMAGE_NAME}}'
     cmds:
       - task: prepare-docker-builder
-      - for:
-          matrix:
-            OS: [ "linux" ] # distroless base image only supports linux
-            ARCH: [ "amd64", "arm64" ]
-        vars:
-          OS: '{{.ITEM.OS}}'
-          ARCH: '{{.ITEM.ARCH}}'
+      - vars:
           BASE_IMAGE: '{{.IMAGE_BASE}}/{{.IMAGE_NAME}}'
           DOCKER_FILE_IDENTIFIER: '{{.DOCKER_FILE_IDENTIFIER}}'
           VERSION: '{{.VERSION}}'
-        task: _build-and-push-one-internal
+        task: _build-and-push-one-noosarch-internal
       - vars:
           BASE_IMAGE: '{{.IMAGE_BASE}}/{{.IMAGE_NAME}}'
-        task: push-multi-internal
+        task: push-multi-no-osarch-internal
 
   all:
     desc: "Build and push."
