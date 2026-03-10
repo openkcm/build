@@ -241,7 +241,7 @@ tasks:
         - VERSION
         - BASE_IMAGE
     cmds:
-      - 'docker manifest create {{.BASE_IMAGE}}:{{.VERSION}}'
+      - 'docker manifest create {{.BASE_IMAGE}}:{{.VERSION}} --amend {{.BASE_IMAGE}}:{{.VERSION}}'
       - 'echo "Pushing manifest {{.BASE_IMAGE}}:{{.VERSION}}"'
       - 'docker manifest push {{.BASE_IMAGE}}:{{.VERSION}}'
       - vars:
