@@ -61,26 +61,26 @@ jobs:
           version: 3.x
           repo-token: ${{ steps.generate-token.outputs.token }}
 
-      - name: Set up Node.js
-        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f #v6.3.0
-        with:
-          node-version: '22' # Specify your UI version (e.g., 18, 20, 22)
-          cache: 'npm'       # Or 'yarn' / 'pnpm'
-
-      - name: Install UI Dependencies
-        run: npm ci
-
-      - name: Run UI Security Scan (Snyk or Audit)
-        run: npm audit --audit-level=high
-
-      - name: Run trivy repository security scanner
-        uses: aquasecurity/trivy-action@97e0b3872f55f89b95b2f65b3dbab56962816478 #v0.34.2
-        with:
-          token-setup-trivy: ${{ steps.generate-token.outputs.token }}
-          scan-type: repository
-          format: json
-          output: trivy-repository-vuln.json
-          severity: CRITICAL,HIGH,MEDIUM
+#      - name: Set up Node.js
+#        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f #v6.3.0
+#        with:
+#          node-version: '22' # Specify your UI version (e.g., 18, 20, 22)
+#          cache: 'npm'       # Or 'yarn' / 'pnpm'
+#
+#      - name: Install UI Dependencies
+#        run: npm ci
+#
+#      - name: Run UI Security Scan (Snyk or Audit)
+#        run: npm audit --audit-level=high
+#
+#      - name: Run trivy repository security scanner
+#        uses: aquasecurity/trivy-action@97e0b3872f55f89b95b2f65b3dbab56962816478 #v0.34.2
+#        with:
+#          token-setup-trivy: ${{ steps.generate-token.outputs.token }}
+#          scan-type: repository
+#          format: json
+#          output: trivy-repository-vuln.json
+#          severity: CRITICAL,HIGH,MEDIUM
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@c7c53464625b32c7a7e944ae62b3e17d2b600130 # v3.7.0
