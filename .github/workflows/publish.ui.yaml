@@ -62,9 +62,9 @@ jobs:
           repo-token: ${{ steps.generate-token.outputs.token }}
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f #v6.3.0
         with:
-          node-version: '20' # Specify your UI version (e.g., 18, 20, 22)
+          node-version: '22' # Specify your UI version (e.g., 18, 20, 22)
           cache: 'npm'       # Or 'yarn' / 'pnpm'
 
       - name: Install UI Dependencies
