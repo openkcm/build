@@ -37,33 +37,9 @@ jobs:
           fetch-depth: 0
           submodules: recursive
 
-      - name: Import GPG key
-        env:
-          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
-        run: |
-          echo "$GPG_PRIVATE_KEY" | gpg --batch --import
-          echo "use-agent" >> ~/.gnupg/gpg.conf
-          echo "pinentry-mode loopback" >> ~/.gnupg/gpg.conf
-          echo "allow-loopback-pinentry" >> ~/.gnupg/gpg-agent.conf
-          echo RELOADAGENT | gpg-connect-agent
-          git config --global user.name "GitHub CI Bot"
-          git config --global user.email "github-ci[bot]@users.noreply.github.com"
-          git config --global user.signingkey "${{ secrets.GPG_KEY_ID }}"
-          git config --global commit.gpgsign true
-          git config --global tag.gpgSign true
-          git config --global gpg.program gpg
-
-
       - name: Release Please
         id: github_release
         uses: googleapis/release-please-action@16a9c90856f42705d54a6fda1823352bdc62cf38 #v4.4.0
         with:
           release-type: ${{inputs.release-type}}
           token: ${{ steps.generate-token.outputs.token }}
-
-      - name: Stop if no release was created
-        if: ${{ steps.github_release.outputs.release_created != 'true' }}
-        run: |
-          echo "❌ No release was created — a release PR was likely opened instead."
-          echo "ℹ️ Please merge the release PR and re-run the workflow to publish the release."
-          exit 1
