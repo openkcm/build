@@ -25,6 +25,7 @@ jobs:
           name: coverage-report
           github-token: ${{ secrets.GITHUB_TOKEN }}
           run-id: ${{ github.event.workflow_run.id }}
+          path: ${{ runner.temp }}/safe-artifacts
 
       - name: Check if Sonar Scan is required
         id: check-scan
@@ -40,24 +41,40 @@ jobs:
         id: pr-metadata
         run: |
           # 1. Read the dynamic coverage paths (runs on both PRs and main branch)
-          if [ -f "pr-metadata/coverage_paths" ]; then
-            echo "coverage_paths=$(cat pr-metadata/coverage_paths)" >> $GITHUB_OUTPUT
+          if [ -f "${{ runner.temp }}/safe-artifacts/pr-metadata/coverage_paths" ]; then
+            echo "coverage_paths=$(cat ${{ runner.temp }}/safe-artifacts/pr-metadata/coverage_paths)" >> $GITHUB_OUTPUT
           else
             echo "coverage_paths=" >> $GITHUB_OUTPUT
           fi
           
           # 2. Read PR specific data (only exists on PRs)
-          if [ -f "pr-metadata/pr_number" ]; then
+          if [ -f "${{ runner.temp }}/safe-artifacts/pr-metadata/pr_number" ]; then
             echo "is_pr=true" >> $GITHUB_OUTPUT
-            echo "pr_number=$(cat pr-metadata/pr_number)" >> $GITHUB_OUTPUT
-            echo "pr_head_ref=$(cat pr-metadata/pr_head_ref)" >> $GITHUB_OUTPUT
-            echo "pr_base_ref=$(cat pr-metadata/pr_base_ref)" >> $GITHUB_OUTPUT
-            echo "pr_head_sha=$(cat pr-metadata/pr_head_sha)" >> $GITHUB_OUTPUT
+            echo "pr_number=$(cat ${{ runner.temp }}/safe-artifacts/pr-metadata/pr_number)" >> $GITHUB_OUTPUT
+            echo "pr_head_ref=$(cat ${{ runner.temp }}/safe-artifacts/pr-metadata/pr_head_ref)" >> $GITHUB_OUTPUT
+            echo "pr_base_ref=$(cat ${{ runner.temp }}/safe-artifacts/pr-metadata/pr_base_ref)" >> $GITHUB_OUTPUT
+            echo "pr_head_sha=$(cat ${{ runner.temp }}/safe-artifacts/pr-metadata/pr_head_sha)" >> $GITHUB_OUTPUT
           else
             echo "is_pr=false" >> $GITHUB_OUTPUT
           fi
 
+      - name: Checkout repository at PR commit
+        if: steps.check-scan.outputs.run_scan == 'true'
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          repository: ${{ github.event.workflow_run.head_repository.full_name }}
+          ref: ${{ steps.pr-metadata.outputs.pr_head_sha || github.event.workflow_run.head_sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Restore Artifacts to Workspace
+        if: steps.check-scan.outputs.run_scan == 'true'
+        run: |
+          cp -r ${{ runner.temp }}/safe-artifacts/coverage ./coverage
+          cp -r ${{ runner.temp }}/safe-artifacts/pr-metadata ./pr-metadata
+
       - name: Debug Coverage Generation
+        if: steps.check-scan.outputs.run_scan == 'true'
         run: |
           echo "Current directory contents:"
           ls -la
