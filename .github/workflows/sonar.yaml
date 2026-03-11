@@ -64,20 +64,17 @@ jobs:
             echo "is_pr=false" >> $GITHUB_OUTPUT
           fi
 
-      - name: Checkout repository at PR commit
-        if: steps.check-scan.outputs.run_scan == 'true'
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        with:
-          repository: ${{ github.event.workflow_run.head_repository.full_name }}
-          ref: ${{ steps.pr-metadata.outputs.pr_head_sha || github.event.workflow_run.head_sha }}
-          fetch-depth: 0
-          persist-credentials: false
-
       - name: Restore Artifacts to Workspace
         if: steps.check-scan.outputs.run_scan == 'true'
         run: |
-          cp -r ${{ runner.temp }}/safe-artifacts/coverage ./coverage
-          cp -r ${{ runner.temp }}/safe-artifacts/pr-metadata ./pr-metadata
+          # Only copy the directories if they were successfully downloaded
+          if [ -d "${{ runner.temp }}/safe-artifacts/coverage" ]; then
+            cp -r ${{ runner.temp }}/safe-artifacts/coverage ./coverage
+          fi
+          
+          if [ -d "${{ runner.temp }}/safe-artifacts/pr-metadata" ]; then
+            cp -r ${{ runner.temp }}/safe-artifacts/pr-metadata ./pr-metadata
+          fi
 
       - name: Debug Coverage Generation
         if: steps.check-scan.outputs.run_scan == 'true'
