@@ -20,6 +20,10 @@ RUN find . -type f ! -name "*.$TARGETOS-$TARGETARCH" -delete && \
       [ -e "$f" ] && mv "$f" "${f%.$TARGETOS-$TARGETARCH}"; \
     done
 
+# Prepare migration files in builder stage
+RUN mkdir -p /etc/cmk/migrations && \
+  find /binaries -type f -path "*/cmk/migrations/*.sql" -exec cp {} /etc/cmk/migrations/ \; || true
+
 FROM scratch
 
 # Copy minimal filesystem
@@ -28,8 +32,8 @@ COPY --from=builder /rootfs/ /
 # Copy binaries
 COPY --from=builder /binaries/ /
 
-#copy migrations
-RUN mkdir -p /etc/cmk/migrations && \     find . -type f -path "*/cmk/migrations/*.sql" -exec cp {} /etc/cmk/migrations/ \; || true
+# Copy prepared migrations directory from builder
+COPY --from=builder /etc/cmk/migrations /etc/cmk/migrations
 
 # Default command
 CMD ["/bin/ls", "-lrt", "/"]
