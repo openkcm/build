@@ -28,5 +28,9 @@ COPY --from=builder /rootfs/ /
 # Copy binaries
 COPY --from=builder /binaries/ /
 
+# Copy migration files
+COPY migrations/shared/schema /etc/cmk/migrations/shared/schema
+COPY migrations/tenant/schema /etc/cmk/migrations/tenant/schema
+
 # Default command
 CMD ["/bin/ls", "-lrt", "/"]
