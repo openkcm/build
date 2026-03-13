@@ -22,7 +22,7 @@ RUN find . -type f ! -name "*.$TARGETOS-$TARGETARCH" -delete && \
 
 # Prepare migration files in builder stage
 RUN mkdir -p /etc/cmk/migrations && \
-  find /binaries -type f -path "*/cmk/migrations/*.sql" -exec cp {} /etc/cmk/migrations/ \; || true
+  find . -type f -path "*/cmk/migrations/*.sql" -exec cp {} /etc/cmk/migrations/ \; || true
 
 FROM scratch
 
