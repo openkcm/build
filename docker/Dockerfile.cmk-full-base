@@ -28,9 +28,8 @@ COPY --from=builder /rootfs/ /
 # Copy binaries
 COPY --from=builder /binaries/ /
 
-# Copy migration files
-COPY migrations/shared/schema /etc/cmk/migrations/shared/schema
-COPY migrations/tenant/schema /etc/cmk/migrations/tenant/schema
+#copy migrations
+RUN mkdir -p /etc/cmk/migrations && \     find . -type f -path "*/cmk/migrations/*.sql" -exec cp {} /etc/cmk/migrations/ \; || true
 
 # Default command
 CMD ["/bin/ls", "-lrt", "/"]
