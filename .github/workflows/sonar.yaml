@@ -37,6 +37,13 @@ jobs:
           else
             echo "run_scan=false" >> $GITHUB_OUTPUT
           fi
+          
+          # Detect Tags (matches formats like v1.0, v0.5.0, etc.)
+          if [[ "${{ github.event.workflow_run.head_branch }}" =~ ^v[0-9]+ ]]; then
+            echo "is_tag=true" >> $GITHUB_OUTPUT
+          else
+            echo "is_tag=false" >> $GITHUB_OUTPUT
+          fi
 
       - name: Read PR Metadata
         if: steps.check-scan.outputs.run_scan == 'true'
@@ -92,7 +99,7 @@ jobs:
           find . -name "*.html" -o -name "*.out" -o -name "*.zip" || true
 
       - name: Build Sonar Arguments
-        if: steps.check-scan.outputs.run_scan == 'true' && !contains(github.event.workflow_run.actor.login, 'dependabot')
+        if: steps.check-scan.outputs.run_scan == 'true' && !contains(github.event.workflow_run.actor.login, 'dependabot') && steps.check-scan.outputs.is_tag == 'false'
         id: build-args
         run: |
           ORG_KEY=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
@@ -127,7 +134,7 @@ jobs:
           echo "sonar_args=$ARGS" >> $GITHUB_OUTPUT
 
       - name: SonarCloud Scan
-        if: steps.check-scan.outputs.run_scan == 'true' && !contains(github.event.workflow_run.actor.login, 'dependabot')
+        if: steps.check-scan.outputs.run_scan == 'true' && !contains(github.event.workflow_run.actor.login, 'dependabot') && steps.check-scan.outputs.is_tag == 'false'
         uses: SonarSource/sonarqube-scan-action@a31c9398be7ace6bbfaf30c0bd5d415f843d45e9 #v7.0.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -136,7 +143,7 @@ jobs:
           args: ${{ steps.build-args.outputs.sonar_args }}
 
       - name: SonarCloud Quality Gate check
-        if: steps.check-scan.outputs.run_scan == 'true' && !contains(github.event.workflow_run.actor.login, 'dependabot')
+        if: steps.check-scan.outputs.run_scan == 'true' && !contains(github.event.workflow_run.actor.login, 'dependabot') && steps.check-scan.outputs.is_tag == 'false'
         uses: SonarSource/sonarqube-quality-gate-action@cf038b0e0cdecfa9e56c198bbb7d21d751d62c3b # v1.2.0
         with:
           pollingTimeoutSec: 600
