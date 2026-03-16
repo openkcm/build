@@ -8,7 +8,6 @@ source "$(realpath "$(dirname $0)/environment.sh")"
 
 function run_test() {
   go test "$@" -coverprofile cover.root.out
-  go tool cover --html=cover.root.out -o cover.root.html
   go tool cover -func cover.root.out | tail -n 1
 }
 
