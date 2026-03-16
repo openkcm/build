@@ -90,11 +90,11 @@ tasks:
     - '[[ "{{.OS}}" == "linux" ]] || { echo "The distroless base image does only support linux as operating system."; exit 1; }'
     - |
       FILE_NAME="Dockerfile.{{.DOCKER_FILE_IDENTIFIER}}"
-      if [ -f "{{.PROJECT_ROOT_DIR}}/Dockerfile" ]; then
-        FILE_NAME="Dockerfile"
-      fi
       
       if [ -f "{{.PROJECT_ROOT_DIR}}/${FILE_NAME}" ]; then
+        if [[ "${FILE_NAME}" == "Dockerfile.single" ]]; then
+          FILE_NAME="Dockerfile"
+        fi
         echo "✅ Using project-specific ${FILE_NAME}"
         cat "{{.PROJECT_ROOT_DIR}}/${FILE_NAME}" | sed "s|<component>|{{.BINARY_NAME}}|g" > "{{.ROOT_DIR2}}/Dockerfile.tmp"
       elif [ -f "{{.TASKFILE_DIR2}}/docker/${FILE_NAME}" ]; then
@@ -298,11 +298,11 @@ tasks:
       - '[[ "{{.OS}}" == "linux" ]] || { echo "The distroless base image does only support linux as operating system."; exit 1; }'
       - |
         FILE_NAME="Dockerfile.{{.DOCKER_FILE_IDENTIFIER}}"
-        if [ -f "{{.PROJECT_ROOT_DIR}}/Dockerfile" ]; then
-          FILE_NAME="Dockerfile"
-        fi
         
         if [ -f "{{.PROJECT_ROOT_DIR}}/${FILE_NAME}" ]; then
+          if [[ "${FILE_NAME}" == "Dockerfile.single" ]]; then
+            FILE_NAME="Dockerfile"
+          fi
           echo "✅ Using project-specific ${FILE_NAME}"
           cat "{{.PROJECT_ROOT_DIR}}/${FILE_NAME}" > "{{.ROOT_DIR2}}/Dockerfile.tmp"
         elif [ -f "{{.TASKFILE_DIR2}}/docker/${FILE_NAME}" ]; then
@@ -337,11 +337,11 @@ tasks:
       - 'echo "Building image {{.IMAGE}}"'
       - |
         FILE_NAME="Dockerfile.{{.DOCKER_FILE_IDENTIFIER}}"
-        if [ -f "{{.PROJECT_ROOT_DIR}}/Dockerfile" ]; then
-          FILE_NAME="Dockerfile"
-        fi
-
+        
         if [ -f "{{.PROJECT_ROOT_DIR}}/${FILE_NAME}" ]; then
+          if [[ "${FILE_NAME}" == "Dockerfile.single" ]]; then
+            FILE_NAME="Dockerfile"
+          fi
           echo "✅ Using project-specific ${FILE_NAME}"
           cat "{{.PROJECT_ROOT_DIR}}/${FILE_NAME}" > "{{.ROOT_DIR2}}/Dockerfile.tmp"
         elif [ -f "{{.TASKFILE_DIR2}}/docker/${FILE_NAME}" ]; then
