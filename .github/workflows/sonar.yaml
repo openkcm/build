@@ -105,11 +105,10 @@ jobs:
           ORG_KEY=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
           PROJECT_KEY="${ORG_KEY}_${{ github.event.repository.name }}"
           
-          # Added the exclusions flag to the baseline arguments
           ARGS="-Dsonar.projectKey=$PROJECT_KEY \
                 -Dsonar.projectName=${{ github.event.repository.name }} \
                 -Dsonar.organization=$ORG_KEY \
-                -Dsonar.scm.revision=${{ steps.pr-metadata.outputs.pr_head_sha || github.event.workflow_run.head_sha }}
+                -Dsonar.scm.revision=${{ steps.pr-metadata.outputs.pr_head_sha || github.event.workflow_run.head_sha }}"
           
           # Conditionally append the coverage paths flag ONLY if paths exist
           COVERAGE_PATHS="${{ steps.pr-metadata.outputs.coverage_paths }}"
