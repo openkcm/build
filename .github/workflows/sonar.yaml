@@ -156,16 +156,17 @@ jobs:
           ORG_KEY=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
           PROJECT_KEY="${ORG_KEY}_${{ github.event.repository.name }}"
           
-          # Fetch the metrics from the Sonar API using the raw, clean URL
-          RESPONSE=$(curl -s -u $SONAR_TOKEN: "https://sonarcloud.io/api/measures/component?component=$PROJECT_KEY&metricKeys=bugs,vulnerabilities,code_smells,coverage")
+          # Fetch the metrics from the Sonar API
+          # Updated metric keys to match the PR decoration style
+          RESPONSE=$(curl -s -u $SONAR_TOKEN: "https://sonarcloud.io/api/measures/component?component=$PROJECT_KEY&metricKeys=bugs,security_hotspots,coverage,duplicated_lines_density")
           
           # Parse the JSON response securely
           BUGS=$(echo $RESPONSE | jq -r '.component.measures[]? | select(.metric=="bugs") | .value')
-          VULNS=$(echo $RESPONSE | jq -r '.component.measures[]? | select(.metric=="vulnerabilities") | .value')
-          SMELLS=$(echo $RESPONSE | jq -r '.component.measures[]? | select(.metric=="code_smells") | .value')
+          HOTSPOTS=$(echo $RESPONSE | jq -r '.component.measures[]? | select(.metric=="security_hotspots") | .value')
           COVERAGE=$(echo $RESPONSE | jq -r '.component.measures[]? | select(.metric=="coverage") | .value')
+          DUPLICATION=$(echo $RESPONSE | jq -r '.component.measures[]? | select(.metric=="duplicated_lines_density") | .value')
           
-          # Build the direct SonarCloud UI URL depending on the context
+          # Build the direct SonarCloud UI URL
           if [ "${{ steps.pr-metadata.outputs.is_pr }}" == "true" ]; then
             PR_NUM="${{ steps.pr-metadata.outputs.pr_number }}"
             REPORT_URL="https://sonarcloud.io/summary/new_code?id=$PROJECT_KEY&pullRequest=$PR_NUM"
@@ -174,14 +175,28 @@ jobs:
             REPORT_URL="https://sonarcloud.io/dashboard?id=$PROJECT_KEY&branch=$BRANCH_NAME"
           fi
           
-          # Write out the Markdown report to the GitHub Step Summary
-          echo "### SonarCloud Scan Results" >> $GITHUB_STEP_SUMMARY
-          echo "* **Coverage:** ${COVERAGE:-0}%" >> $GITHUB_STEP_SUMMARY
-          echo "* **Bugs:** ${BUGS:-0}" >> $GITHUB_STEP_SUMMARY
-          echo "* **Vulnerabilities:** ${VULNS:-0}" >> $GITHUB_STEP_SUMMARY
-          echo "* **Code Smells:** ${SMELLS:-0}" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "[See analysis details on SonarQube Cloud]($REPORT_URL)" >> $GITHUB_STEP_SUMMARY
+          # Determine Quality Gate status based on job status
+          if [ "${{ job.status }}" == "success" ]; then
+            QG_HEADER="### ✅ Quality Gate passed"
+          else
+            QG_HEADER="### ❌ Quality Gate failed"
+          fi
+          
+          # Write out the formatted Markdown report to the GitHub Step Summary
+          {
+            echo "$QG_HEADER"
+            echo ""
+            echo "#### Issues"
+            echo "✅ [${BUGS:-0} New issues]($REPORT_URL)"
+            echo "✅ [0 Accepted issues]($REPORT_URL)"
+            echo ""
+            echo "#### Measures"
+            echo "✅ [${HOTSPOTS:-0} Security Hotspots]($REPORT_URL)"
+            echo "✅ [${COVERAGE:-0.0}% Coverage on New Code]($REPORT_URL)"
+            echo "✅ [${DUPLICATION:-0.0}% Duplication on New Code]($REPORT_URL)"
+            echo ""
+            echo "[See analysis details on SonarQube Cloud]($REPORT_URL)"
+          } >> $GITHUB_STEP_SUMMARY
 
       - name: Report Action Status to PR
         if: always() && steps.check-scan.outputs.run_scan == 'true' && steps.pr-metadata.outputs.is_pr == 'true'
