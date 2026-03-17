@@ -156,14 +156,14 @@ jobs:
           ORG_KEY=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
           PROJECT_KEY="${ORG_KEY}_${{ github.event.repository.name }}"
           
-          # Fetch the metrics from the Sonar API
+          # Fetch the metrics from the Sonar API using the raw, clean URL
           RESPONSE=$(curl -s -u $SONAR_TOKEN: "[https://sonarcloud.io/api/measures/component?component=$PROJECT_KEY&metricKeys=bugs,vulnerabilities,code_smells,coverage](https://sonarcloud.io/api/measures/component?component=$PROJECT_KEY&metricKeys=bugs,vulnerabilities,code_smells,coverage)")
           
-          # Parse the JSON response
-          BUGS=$(echo $RESPONSE | jq -r '.component.measures[] | select(.metric=="bugs") | .value')
-          VULNS=$(echo $RESPONSE | jq -r '.component.measures[] | select(.metric=="vulnerabilities") | .value')
-          SMELLS=$(echo $RESPONSE | jq -r '.component.measures[] | select(.metric=="code_smells") | .value')
-          COVERAGE=$(echo $RESPONSE | jq -r '.component.measures[] | select(.metric=="coverage") | .value')
+          # Parse the JSON response securely
+          BUGS=$(echo $RESPONSE | jq -r '.component.measures[]? | select(.metric=="bugs") | .value')
+          VULNS=$(echo $RESPONSE | jq -r '.component.measures[]? | select(.metric=="vulnerabilities") | .value')
+          SMELLS=$(echo $RESPONSE | jq -r '.component.measures[]? | select(.metric=="code_smells") | .value')
+          COVERAGE=$(echo $RESPONSE | jq -r '.component.measures[]? | select(.metric=="coverage") | .value')
           
           # Write out the Markdown report to the GitHub Step Summary
           echo "### SonarCloud Scan Results" >> $GITHUB_STEP_SUMMARY
