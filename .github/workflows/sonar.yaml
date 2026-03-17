@@ -148,6 +148,30 @@ jobs:
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
+      - name: SonarCloud Status Report
+        if: always() && steps.check-scan.outputs.run_scan == 'true' && !contains(github.event.workflow_run.actor.login, 'dependabot') && steps.check-scan.outputs.is_tag == 'false'
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          ORG_KEY=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          PROJECT_KEY="${ORG_KEY}_${{ github.event.repository.name }}"
+          
+          # Fetch the metrics from the Sonar API
+          RESPONSE=$(curl -s -u $SONAR_TOKEN: "[https://sonarcloud.io/api/measures/component?component=$PROJECT_KEY&metricKeys=bugs,vulnerabilities,code_smells,coverage](https://sonarcloud.io/api/measures/component?component=$PROJECT_KEY&metricKeys=bugs,vulnerabilities,code_smells,coverage)")
+          
+          # Parse the JSON response
+          BUGS=$(echo $RESPONSE | jq -r '.component.measures[] | select(.metric=="bugs") | .value')
+          VULNS=$(echo $RESPONSE | jq -r '.component.measures[] | select(.metric=="vulnerabilities") | .value')
+          SMELLS=$(echo $RESPONSE | jq -r '.component.measures[] | select(.metric=="code_smells") | .value')
+          COVERAGE=$(echo $RESPONSE | jq -r '.component.measures[] | select(.metric=="coverage") | .value')
+          
+          # Write out the Markdown report to the GitHub Step Summary
+          echo "### SonarCloud Scan Results" >> $GITHUB_STEP_SUMMARY
+          echo "* **Coverage:** ${COVERAGE:-0}%" >> $GITHUB_STEP_SUMMARY
+          echo "* **Bugs:** ${BUGS:-0}" >> $GITHUB_STEP_SUMMARY
+          echo "* **Vulnerabilities:** ${VULNS:-0}" >> $GITHUB_STEP_SUMMARY
+          echo "* **Code Smells:** ${SMELLS:-0}" >> $GITHUB_STEP_SUMMARY
+
       - name: Report Action Status to PR
         if: always() && steps.check-scan.outputs.run_scan == 'true' && steps.pr-metadata.outputs.is_pr == 'true'
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
