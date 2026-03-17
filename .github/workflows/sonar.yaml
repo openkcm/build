@@ -165,12 +165,23 @@ jobs:
           SMELLS=$(echo $RESPONSE | jq -r '.component.measures[]? | select(.metric=="code_smells") | .value')
           COVERAGE=$(echo $RESPONSE | jq -r '.component.measures[]? | select(.metric=="coverage") | .value')
           
+          # Build the direct SonarCloud UI URL depending on the context
+          if [ "${{ steps.pr-metadata.outputs.is_pr }}" == "true" ]; then
+            PR_NUM="${{ steps.pr-metadata.outputs.pr_number }}"
+            REPORT_URL="https://sonarcloud.io/summary/new_code?id=$PROJECT_KEY&pullRequest=$PR_NUM"
+          else
+            BRANCH_NAME="${{ github.event.workflow_run.head_branch }}"
+            REPORT_URL="https://sonarcloud.io/dashboard?id=$PROJECT_KEY&branch=$BRANCH_NAME"
+          fi
+          
           # Write out the Markdown report to the GitHub Step Summary
           echo "### SonarCloud Scan Results" >> $GITHUB_STEP_SUMMARY
           echo "* **Coverage:** ${COVERAGE:-0}%" >> $GITHUB_STEP_SUMMARY
           echo "* **Bugs:** ${BUGS:-0}" >> $GITHUB_STEP_SUMMARY
           echo "* **Vulnerabilities:** ${VULNS:-0}" >> $GITHUB_STEP_SUMMARY
           echo "* **Code Smells:** ${SMELLS:-0}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "[See analysis details on SonarQube Cloud]($REPORT_URL)" >> $GITHUB_STEP_SUMMARY
 
       - name: Report Action Status to PR
         if: always() && steps.check-scan.outputs.run_scan == 'true' && steps.pr-metadata.outputs.is_pr == 'true'
