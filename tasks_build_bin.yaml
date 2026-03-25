@@ -65,7 +65,7 @@ tasks:
           echo "❌ Error: Source directory does not exist for component: ${SRC_DIR}"
           exit 1
         else
-          CGO_ENABLED=0 GOOS={{.OS}} GOARCH={{.ARCH}} go build {{.BUILD_TAGS}} -a -o "$FILE_PATH" -ldflags "{{.BUILD_LDFLAGS}}" "${SRC_DIR}/"
+          CGO_ENABLED=0 GOOS={{.OS}} GOARCH={{.ARCH}} go build {{.BUILD_TAGS}} -a -o "$FILE_PATH" -ldflags "-s -w {{.BUILD_LDFLAGS}}" "${SRC_DIR}/"
           echo "✅ Binary ${FILE_PATH} has been built with success!"
         fi
 
