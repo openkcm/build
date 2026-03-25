@@ -60,21 +60,26 @@ jobs:
           version: 3.x
           repo-token: ${{ steps.generate-token.outputs.token }}
 
-      - name: Run trivy repository security scanner
-        uses: aquasecurity/trivy-action@97e0b3872f55f89b95b2f65b3dbab56962816478 #v0.34.2
+      - name: Run Trivy repository security scanner
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 #v0.35.0
         with:
           token-setup-trivy: ${{ steps.generate-token.outputs.token }}
           scan-type: repository
+          scan-ref: '.'
           format: json
           output: trivy-repository-vuln.json
           severity: CRITICAL,HIGH,MEDIUM
 
-      - name: Run tfsec security scanner
-        uses: aquasecurity/tfsec-action@b466648d6e39e7c75324f25d83891162a721f2d6 #v1.0.3
+      - name: Run Trivy security scanner
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 #v0.35.0
         with:
-          github_token:  ${{ steps.generate-token.outputs.token }}
+          token-setup-trivy: ${{ steps.generate-token.outputs.token }}
+          scan-type: fs
+          scan-ref: '.'
           format: json
-          version: v1.28.14
+          output: trivy-iac-vuln.json
+          severity: CRITICAL,HIGH,MEDIUM
+          additional-args: '--scanners misconfig,secret'
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@c7c53464625b32c7a7e944ae62b3e17d2b600130 # v3.7.0

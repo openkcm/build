@@ -76,29 +76,34 @@ jobs:
           GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
 
 
-      - name: Run Trivy sbom vulnerability scanner
-        uses: aquasecurity/trivy-action@97e0b3872f55f89b95b2f65b3dbab56962816478 #v0.34.2
+      - name: Run Trivy SBOM vulnerability scanner
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # v0.35.0
         with:
           scan-type: 'sbom'
           scan-ref: "./assets/sbom.json"
           format: 'json'
           output: './assets/trivy-sbom-vuln.json'
 
-      - name: Run trivy repository security scanner
-        uses: aquasecurity/trivy-action@97e0b3872f55f89b95b2f65b3dbab56962816478 #v0.34.2
+      - name: Run Trivy repository scan (dependencies from lock files)
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # v0.35.0
         with:
           token-setup-trivy: ${{ steps.generate-token.outputs.token }}
           scan-type: repository
+          scan-ref: '.'
           format: json
           output: ./assets/trivy-repository-vuln.json
           severity: CRITICAL,HIGH,MEDIUM
 
-      - name: Run tfsec security scanner
-        uses: aquasecurity/tfsec-action@b466648d6e39e7c75324f25d83891162a721f2d6 #v1.0.3
+      - name: Run Trivy security scanner
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # v0.35.0
         with:
-          github_token: ${{ steps.generate-token.outputs.token }}
+          token-setup-trivy: ${{ steps.generate-token.outputs.token }}
+          scan-type: fs
+          scan-ref: '.'
           format: json
-          version: v1.28.14
+          output: ./assets/trivy-iac-vuln.json
+          severity: CRITICAL,HIGH,MEDIUM
+          additional-args: '--scanners misconfig,secret'
 
       - name: Upload Release Artifact
         env:
