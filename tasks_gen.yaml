@@ -18,22 +18,31 @@ tasks:
     run: once
     vars:
       GO_VERSION:
-        sh: grep -E 'go [0-9]+\.[0-9]+\.[0-9]+' <{{.ROOT_DIR2}}/go.mod | sed 's/go //' # extract go version from go.mod
+        sh: grep -E '^go [0-9]+\.[0-9]+' <{{.ROOT_DIR2}}/go.mod | sed 's/go //' | tr -d '[:space:]'
+      TOOLCHAIN_VERSION:
+        sh: |
+          TC=$(grep -E '^toolchain go' <{{.ROOT_DIR2}}/go.mod | sed 's/toolchain go//' | tr -d '[:space:]')
+          if [ -z "$TC" ]; then
+            echo "{{.GO_VERSION}}"
+          else
+            echo "$TC"
+          fi
+
     cmds:
-    - for:
-        var: NESTED_MODULES
-        as: MODULE
-      cmd: '"{{.TASKFILE_DIR2}}/sed.sh" -E "s/go [0-9]+\.[0-9]+\.[0-9]+/go {{.GO_VERSION}}/" "{{.ROOT_DIR2}}/{{.MODULE}}/go.mod"' # align go version in nested modules
-    - for:
-        var: NESTED_MODULES
-        as: MODULE
-      cmd: ( cd {{.ROOT_DIR2}}/{{.MODULE}}; go mod tidy )
-    - cmd: ( cd {{.ROOT_DIR2}}; go mod tidy )
-    - cmd: '"{{.TASKFILE_DIR2}}/sed.sh" -E "s/toolchain go[0-9]+\.[0-9]+\.[0-9]+/toolchain go{{.GO_VERSION}}/" "{{.ROOT_DIR2}}/go.mod"' # overwrite toolchain in root go.mod file
-    - for:
-        var: NESTED_MODULES
-        as: MODULE
-      cmd: '"{{.TASKFILE_DIR2}}/sed.sh" -E "s/toolchain go[0-9]+\.[0-9]+\.[0-9]+/toolchain go{{.GO_VERSION}}/" "{{.ROOT_DIR2}}/{{.MODULE}}/go.mod"' # overwrite toolchain in nested go.mod files
+      - for:
+          var: NESTED_MODULES
+          as: MODULE
+        cmd: go mod edit -go={{.GO_VERSION}} -toolchain=go{{.TOOLCHAIN_VERSION}} "{{.ROOT_DIR2}}/{{.MODULE}}/go.mod"
+
+      - for:
+          var: NESTED_MODULES
+          as: MODULE
+        cmd: ( cd "{{.ROOT_DIR2}}/{{.MODULE}}" && go mod tidy )
+
+      # Ensure the root module toolchain is explicitly aligned if it was missing
+      - cmd: go mod edit -toolchain=go{{.TOOLCHAIN_VERSION}} "{{.ROOT_DIR2}}/go.mod"
+
+      - cmd: ( cd "{{.ROOT_DIR2}}" && go mod tidy )
 
   all:
     desc: "  Combines all code generation tasks, including formatting."
