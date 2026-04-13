@@ -10,6 +10,14 @@ function run_lint() {
   "$LINTER" run -c "$PROJECT_ROOT/.golangci.yaml" "$@"
 }
 
+function check_go_mod_tidy() {
+  echo "> Checking go mod tidy ..." | indent 2
+  if ! go mod tidy --diff; then
+    echo "❌ go.mod/go.sum not tidy. Run 'go mod tidy'." >&2
+    exit 1
+  fi
+}
+
 echo "> Running linter ..."
 
 # NESTED_MODULES must be set to the list of nested go modules, e.g. 'api,nested2,nested3'
@@ -36,5 +44,6 @@ done
 echo "> Linting root module ..." | indent 1
 (
   cd "$PROJECT_ROOT"
+  check_go_mod_tidy
   run_lint "${paths[@]}"
 )
