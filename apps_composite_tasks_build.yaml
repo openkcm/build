@@ -174,9 +174,11 @@ tasks:
         mkdir -p .ghcr_state
         
         WATCHED_IMAGES="$BASE_IMAGE_NAME $PLUGIN_IMAGES"
-        declare -A DIGESTS
-        declare -A TAGS
         CHANGED=0
+
+        safe_var_name() {
+          echo "$1" | sed 's/[^a-zA-Z0-9]/_/g'
+        }
 
         for image in $WATCHED_IMAGES; do
           read -r image_repo image_name <<< $(parse_image_repo "${image}")
@@ -218,8 +220,8 @@ tasks:
             exit 1
           fi
 
-          DIGESTS[$image]="$DIGEST"
-          TAGS[$image]="$TAG"
+          SAFE_IMG=$(safe_var_name "$image")
+          eval "TAGS_${SAFE_IMG}=\"${TAG}\""
 
           STATE_FILE=".ghcr_state/${image}.digest"
           LAST_DIGEST=$(cat "$STATE_FILE" 2>/dev/null || echo "")
@@ -229,7 +231,8 @@ tasks:
           fi
         done
         
-        MAIN_TAG="${TAGS[$BASE_IMAGE_NAME]}"
+        SAFE_BASE=$(safe_var_name "$BASE_IMAGE_NAME")
+        eval "MAIN_TAG=\"\$TAGS_${SAFE_BASE}\""
         
         # Start with the clean MAIN_TAG (no numbers)
         CANDIDATE_TAG="${MAIN_TAG}"
@@ -272,7 +275,8 @@ tasks:
           read -r image_repo image_name <<< $(parse_image_repo "${image}")
         
           VAR_NAME=$(echo "$image_name" | tr '[:lower:]-' '[:upper:]_')
-          VALUE=${TAGS[$image]}
+          SAFE_IMG=$(safe_var_name "$image")
+          eval "VALUE=\"\$TAGS_${SAFE_IMG}\""
           if [ -z "$VALUE" ]; then
             echo "❌ Tag missing for image: $image"
             exit 1
