@@ -23,5 +23,9 @@ VERSION="$(cat "${PROJECT_ROOT}/VERSION")"
     VERSION="$VERSION-$(git rev-parse HEAD)"
   fi
 
+  if [[ -n "${VERSION_PREFIX:-}" ]]; then
+    VERSION="${VERSION_PREFIX}${VERSION}"
+  fi
+
   echo "$VERSION"
 )

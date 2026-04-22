@@ -1,0 +1,35 @@
+name: Cleanup PR Container Images
+
+on:
+  workflow_call:
+  schedule:
+    # Runs at 00:00 UTC every day
+    - cron: '0 0 * * *'
+  workflow_dispatch: # Allows manual triggering
+jobs:
+  prune-images:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Prune old PR images from GHCR
+        uses: snok/container-retention-policy@3b0972b2276b171b212f8c4efbca59ebba26eceb #v3.0.1
+        with:
+          # The organization name
+          account: openkcm
+          
+          # Your authentication token
+          token: ${{ secrets.GITHUB_TOKEN }}
+          
+          # Delete images older than 7 days
+          cut-off: 7d
+          
+          # The name of the GHCR package (usually matches the repo name)
+          image-names: ${{ github.event.repository.name }}
+          
+          # Target only tags that start with 'pr-'
+          image-tags: "pr-dev-*"
+          
+          # We specify tagged images here
+          tag-selection: tagged
+          
+          # Safety net: always keep at least 1 image around
+          keep-n-most-recent: 1
