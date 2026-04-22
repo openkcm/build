@@ -7,6 +7,10 @@ on:
         required: false
         default: "go"
         type: string
+      target-branch:
+        required: false
+        type: string
+        description: 'Branch to target for release-please PR and release creation. Defaults to the branch the workflow is triggered on.'
 
 permissions:
   contents: read
@@ -36,4 +40,5 @@ jobs:
         uses: googleapis/release-please-action@16a9c90856f42705d54a6fda1823352bdc62cf38 #v4.4.0
         with:
           release-type: ${{inputs.release-type}}
+          target-branch: ${{ inputs.target-branch || github.ref_name }}
           token: ${{ steps.generate-token.outputs.token }}
