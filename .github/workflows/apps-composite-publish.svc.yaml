@@ -28,6 +28,7 @@ permissions:
 jobs:
   push-composite:
     runs-on: ubuntu-latest
+    environment: production
     steps:
       - name: Generate token from GitHub App
         id: generate-token
