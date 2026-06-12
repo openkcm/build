@@ -40,9 +40,13 @@ jobs:
     steps:
       - name: Init
         id: init
+        env:
+          HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+          REPO: ${{ github.repository }}
+          EVENT: ${{ github.event_name }}
         run: |
-          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-            echo "internal_pr=$([[ '${{ github.event.pull_request.head.repo.full_name }}' == '${{ github.repository }}' ]] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+          if [[ "$EVENT" == "pull_request" ]]; then
+            echo "internal_pr=$([[ "$HEAD_REPO" == "$REPO" ]] && echo true || echo false)" >> "$GITHUB_OUTPUT"
           else
             echo "internal_pr=true" >> "$GITHUB_OUTPUT"
           fi
@@ -55,6 +59,8 @@ jobs:
           app-id: ${{ secrets.APP_PUSH_TAG_ID }}
           private-key: ${{ secrets.APP_PUSH_TAG_PRIVATE_KEY }}
           owner: ${{ github.repository_owner }}
+          repositories: "${{ github.event.repository.name }}"
+          permission-contents: read
 
       - name: Checkout code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -63,6 +69,7 @@ jobs:
           fetch-tags: true
           fetch-depth: 0
           submodules: recursive
+          persist-credentials: false
 
       - name: Set up Go
         uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417 # v6.3.0
@@ -88,33 +95,42 @@ jobs:
 
       - name: makefile advanced tests
         if: ${{ inputs.run_makefile_tests }}
+        env:
+          MAKEFILE_TEST_NAME: ${{ inputs.makefile_test_name }}
         run: |
           # Install bash if missing
           if ! command -v bash >/dev/null 2>&1; then
             sudo apt-get update
             sudo apt-get install -y bash
           fi
-          
+
           # Run Makefile tests
-          make "${{ inputs.makefile_test_name }}"
+          make "$MAKEFILE_TEST_NAME"
 
       - name: Save Metadata and Move Coverages
         if: always()
+        env:
+          EVENT: ${{ github.event_name }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          PR_BASE_REF: ${{ github.event.pull_request.base.ref }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          COVERAGE_PATHS_INPUT: ${{ inputs.makefile_test_coverage_report_paths }}
         run: |
           mkdir -p pr-metadata
           mkdir -p coverage
 
           # Only populate PR metadata if it is a Pull Request
-          if [ "${{ github.event_name }}" == "pull_request" ]; then
-            echo "${{ github.event.pull_request.number }}" > pr-metadata/pr_number
-            echo "${{ github.event.pull_request.head.ref }}" > pr-metadata/pr_head_ref
-            echo "${{ github.event.pull_request.base.ref }}" > pr-metadata/pr_base_ref
-            echo "${{ github.event.pull_request.head.sha }}" > pr-metadata/pr_head_sha
+          if [ "$EVENT" == "pull_request" ]; then
+            echo "$PR_NUMBER" > pr-metadata/pr_number
+            echo "$PR_HEAD_REF" > pr-metadata/pr_head_ref
+            echo "$PR_BASE_REF" > pr-metadata/pr_base_ref
+            echo "$PR_HEAD_SHA" > pr-metadata/pr_head_sha
           fi
 
           # Move coverage files and build a comma-separated list for Sonar
           SONAR_PATHS=""
-          for file in ${{ inputs.makefile_test_coverage_report_paths }}; do
+          for file in $COVERAGE_PATHS_INPUT; do
             if [ -f "$file" ]; then
               mv "$file" coverage/
               if [ -z "$SONAR_PATHS" ]; then
@@ -130,8 +146,10 @@ jobs:
 
       - name: Debug Coverage Generation
         if: always()
+        env:
+          COVERAGE_PATHS_INPUT: ${{ inputs.makefile_test_coverage_report_paths }}
         run: |
-          echo "Looking for files defined in input: ${{ inputs.makefile_test_coverage_report_paths }}"
+          echo "Looking for files defined in input: $COVERAGE_PATHS_INPUT"
           echo "Current directory contents:"
           ls -la
           echo "Searching for any coverage files in all subdirectories:"

@@ -9,6 +9,8 @@ on:
 jobs:
   prune-images:
     runs-on: ubuntu-latest
+    permissions:
+      packages: write
     steps:
       - name: Prune old PR images from GHCR
         uses: snok/container-retention-policy@3b0972b2276b171b212f8c4efbca59ebba26eceb #v3.0.1

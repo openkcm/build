@@ -9,4 +9,7 @@ updates:
     reviewers:
       - "openkcm/go-maintainers"
     schedule:
-      interval: "daily"
+      interval: "weekly"
+      day: "monday"
+    cooldown:
+      default-days: 7

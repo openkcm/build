@@ -28,6 +28,7 @@ jobs:
           fetch-tags: true
           fetch-depth: 0
           submodules: recursive
+          persist-credentials: false
 
       - shell: bash
         run: sudo apt-get install libbtrfs-dev -y

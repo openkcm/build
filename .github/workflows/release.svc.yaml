@@ -24,6 +24,8 @@ jobs:
           app-id: ${{ secrets.APP_PUSH_TAG_ID }}
           private-key: ${{ secrets.APP_PUSH_TAG_PRIVATE_KEY }}
           owner: ${{ github.repository_owner }}
+          repositories: "${{ github.event.repository.name }}"
+          permission-contents: write
 
       - name: Checkout code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -32,6 +34,7 @@ jobs:
           fetch-tags: true
           fetch-depth: 0
           submodules: recursive
+          persist-credentials: false
 
       - name: Import GPG key
         env:
@@ -110,5 +113,6 @@ jobs:
       - name: Upload Release Artifact
         env:
           GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
-        run: gh release upload ${{ steps.github_release.outputs.tag_name }} ./assets/**
+          RELEASE_TAG: ${{ steps.github_release.outputs.tag_name }}
+        run: gh release upload "$RELEASE_TAG" ./assets/**
 
