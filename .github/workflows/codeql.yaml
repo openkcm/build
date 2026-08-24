@@ -30,27 +30,39 @@ jobs:
           submodules: recursive
           persist-credentials: false
 
-      - shell: bash
+      - name: Install dependencies
+        shell: bash
         run: sudo apt-get install libbtrfs-dev -y
 
-      - uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417  # v6.3.0
+      - name: Set up Go
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version-file: go.mod
           cache: true
 
+      - name: Verify Go
+        shell: bash
+        run: |
+          which go
+          go version
+          go env GOROOT
+          go env GOTOOLCHAIN
+
       - name: Ensure Go in PATH for CodeQL
-        run: echo "$(go env GOROOT)/bin" >> $GITHUB_PATH
+        shell: bash
+        run: |
+          echo "$(go env GOROOT)/bin" >> "$GITHUB_PATH"
 
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@8aad20d150bbac5944a9f9d289da16a4b0d87c1e  # v4.36.2
+        uses: github/codeql-action/init@8aad20d150bbac5944a9f9d289da16a4b0d87c1e # v4.36.2
         with:
           languages: ${{ matrix.language }}
 
       - name: Autobuild
-        uses: github/codeql-action/autobuild@8aad20d150bbac5944a9f9d289da16a4b0d87c1e  # v4.36.2
+        uses: github/codeql-action/autobuild@8aad20d150bbac5944a9f9d289da16a4b0d87c1e # v4.36.2
 
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@8aad20d150bbac5944a9f9d289da16a4b0d87c1e  # v4.36.2
+        uses: github/codeql-action/analyze@8aad20d150bbac5944a9f9d289da16a4b0d87c1e # v4.36.2
         with:
-          category: "/language:${{matrix.language}}"
+          category: "/language:${{ matrix.language }}"
           upload: false
