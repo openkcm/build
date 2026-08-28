@@ -43,12 +43,16 @@
 #   - Defaults to COMPONENTS if BP_PATH is set and is empty otherwise.
 #   - Set this to "[]" to not add any blueprints to the component descriptor.
 # - CHART_COMPONENTS
-#   - Comma-separated list of components for which helm charts should be referenced in the component descriptor, optionally with version (separated by ":").
+#   - Comma-separated list of components for which helm charts should be referenced in the component descriptor,
+#     optionally with version and chart name (separated by ":"), i.e. "<component>[:<version>[:<chart name>]]".
 #   - Example: "apiserver-controller:v0.1.0,managedcontrolplane-controller:v0.2.0,landscaper-connector"
-#   - Each element will result in a resource entry of type 'helmChart' named '<component>-chart'. The chart is expected in the OCI registry at '<CHART_REGISTRY>/<component>:<version>'.
+#   - Each element will result in a resource entry of type 'helmChart' named '<component>-chart'. The chart is expected in the OCI registry at '<CHART_REGISTRY>/<chart name>:<version>'.
 #   - Defaults to COMPONENTS if not specified.
 #   - Set this to "[]" to not add any helm charts to the component descriptor.
 #   - Each chart's version defaults to CHART_VERSION if not specified.
+#   - Each chart's name defaults to the component name if not specified. It has to match the 'name' field of the
+#     chart's Chart.yaml, because that is the name 'helm push' publishes the chart under, which is not necessarily
+#     the name of the directory the chart lives in. The 'build:ocm' tasks resolve this automatically.
 # - IMG_COMPONENTS
 #   - Comma-separated list of components for which container images should be referenced in the component descriptor, optionally with version (separated by ":").
 #   - Example: "apiserver-controller:v0.1.0,managedcontrolplane-controller:v0.2.0,landscaper-connector"
@@ -73,7 +77,7 @@ sources:
     commit: (( values.COMMIT ))
 resources:
 - <<<: (( sum[funcs.splitIgnoreEmpty(",", funcs.ignoreDisabled(defaults.BP_COMPONENTS))|[]|s,comp|-> s *templates.blueprint] ))
-- <<<: (( sum[funcs.splitIgnoreEmpty(",", funcs.ignoreDisabled(defaults.CHART_COMPONENTS))|[]|s,cv|-> ("cvs" = split(":", cv)) ("comp" = cvs[0], "chart_version" = (cvs[1] || defaults.CHART_VERSION)) s *templates.chart] ))
+- <<<: (( sum[funcs.splitIgnoreEmpty(",", funcs.ignoreDisabled(defaults.CHART_COMPONENTS))|[]|s,cv|-> ("cvs" = split(":", cv)) ("comp" = cvs[0], "chart_version" = (cvs[1] || defaults.CHART_VERSION), "chart_name" = (cvs[2] || cvs[0])) s *templates.chart] ))
 - <<<: (( sum[funcs.splitIgnoreEmpty(",", replace(values.IMG_COMPONENTS, " ", ","))|[]|s,cv|->
     ("cvs" = split(":", cv))
     ("comp" = cvs[0])
@@ -109,12 +113,14 @@ templates:
       type: dir
   chart:
     <<<: (( &template ))
+    # The resource is named after the component, so that the descriptor's resource names stay
+    # stable, but it is looked up in the registry under the chart's own name.
     name: (( comp "-chart" ))
     type: helmChart
     version: (( chart_version ))
     access:
       type: ociArtifact
-      imageReference: (( values.CHART_REGISTRY "/" comp ":" chart_version ))
+      imageReference: (( values.CHART_REGISTRY "/" chart_name ":" chart_version ))
   image:
     <<<: (( &template ))
     name: (( comp "-image" ))
