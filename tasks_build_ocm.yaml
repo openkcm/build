@@ -156,6 +156,39 @@ tasks:
         fi
       done
       
+      # Resolve the chart components into the fully qualified "<comp>:<version>:<chart name>" form.
+      # The chart name is read from the component's Chart.yaml, because that is the name 'helm push'
+      # publishes the chart under -- it does not have to match the component (directory) name.
+      # Explicitly given versions/names are preserved.
+      CHART_LIST="{{.CHART_COMPONENTS | default ""}}"
+      if [ -z "$CHART_LIST" ]; then
+        CHART_LIST="{{.COMPONENTS | trimSuffix " " | replace " " ","}}"
+      fi
+
+      if [ "$CHART_LIST" = "[]" ]; then
+        RESOLVED_CHART_LIST="[]" # charts explicitly disabled, pass the sentinel through untouched
+      else
+        RESOLVED_CHART_LIST=""
+        for item in $(echo "$CHART_LIST" | tr ',' ' '); do
+          IFS=':' read -r CHART_COMP CHART_VER CHART_NAME <<< "$item"
+          CHART_FILE="{{.ROOT_DIR2}}/charts/${CHART_COMP}/Chart.yaml"
+
+          if [ -f "$CHART_FILE" ]; then
+            [ -z "${CHART_VER:-}" ] && CHART_VER=$(grep '^version:' "$CHART_FILE" | awk '{print $2}')
+            [ -z "${CHART_NAME:-}" ] && CHART_NAME=$(grep '^name:' "$CHART_FILE" | awk '{print $2}')
+          elif [ -z "${CHART_NAME:-}" ]; then
+            echo "   ⚠️  $CHART_COMP: no Chart.yaml at $CHART_FILE, assuming chart name '$CHART_COMP'." >&2
+          fi
+
+          # Fall back to the component name / the global chart version if still unresolved.
+          [ -z "${CHART_NAME:-}" ] && CHART_NAME="$CHART_COMP"
+          [ -z "${CHART_VER:-}" ] && CHART_VER="{{.CHART_VERSION | default ""}}"
+
+          echo "   📦 $CHART_COMP -> ${CHART_NAME}:${CHART_VER}"
+          RESOLVED_CHART_LIST="${RESOLVED_CHART_LIST:+$RESOLVED_CHART_LIST,}${CHART_COMP}:${CHART_VER}:${CHART_NAME}"
+        done
+      fi
+
       "{{.OCM}}" add componentversions --file "{{.compdir}}" --version "{{.VERSION}}" --create --force --templater spiff "{{.TASKFILE_DIR2}}/components.yaml" -- \
         VERSION="{{.VERSION}}" \
         ORG_NAME="{{.ORG_NAME}}" \
@@ -169,7 +202,7 @@ tasks:
         CHART_VERSION="{{.CHART_VERSION | default ""}}" \
         IMG_VERSION="{{.VERSION | default ""}}" \
         BP_COMPONENTS="{{.BP_COMPONENTS | default ""}}" \
-        CHART_COMPONENTS="{{.CHART_COMPONENTS | default ""}}" \
+        CHART_COMPONENTS="$RESOLVED_CHART_LIST" \
         IMG_COMPONENTS="$RESOLVED_LIST"
     - cmd: echo "Use '$(realpath --relative-base="{{.USER_WORKING_DIR}}" "{{.OCM}}") get cv $(realpath --relative-base="{{.USER_WORKING_DIR}}" "{{.compdir}}") -o yaml' to view the generated component descriptor."
       silent: true
