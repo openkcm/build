@@ -59,6 +59,10 @@ tasks:
     status:
     - 'test ! -f "{{.ROOT_DIR2}}/charts/{{.COMPONENT}}/Chart.yaml"'
     vars:
+      # The chart name is taken from Chart.yaml, since that is what 'helm package' names the
+      # archive after. It does not have to match the component (directory) name.
+      CHART_NAME:
+        sh: "grep '^name:' {{.ROOT_DIR2}}/charts/{{.COMPONENT}}/Chart.yaml | awk '{print $2}'"
       CHART_VERSION:
         sh: "grep '^version:' {{.ROOT_DIR2}}/charts/{{.COMPONENT}}/Chart.yaml | awk '{print $2}'"
     cmds:
@@ -101,7 +105,11 @@ tasks:
     status:
     - 'test ! -f "{{.ROOT_DIR2}}/charts/{{.COMPONENT}}/Chart.yaml"'
     vars:
-      CHART_NAME: '{{.COMPONENT}}' # this requires the chart name to be the same as the component name
+      # The chart name is taken from Chart.yaml, since that is what 'helm package' named the
+      # archive after and what 'helm push' publishes it as. It does not have to match the
+      # component (directory) name.
+      CHART_NAME:
+        sh: "grep '^name:' {{.ROOT_DIR2}}/charts/{{.COMPONENT}}/Chart.yaml | awk '{print $2}'"
       CHART_VERSION:
         sh: "grep '^version:' {{.ROOT_DIR2}}/charts/{{.COMPONENT}}/Chart.yaml | awk '{print $2}'"
     cmds:
