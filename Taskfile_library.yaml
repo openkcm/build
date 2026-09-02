@@ -72,6 +72,15 @@ vars:
     sh: '{{.TASKFILE_DIR2}}/generate-ldflags.sh'
   BUILD_TAGS: '{{ if .GO_BUILD_TAGS }}-tags {{ .GO_BUILD_TAGS }}{{ end }}'
 
+  # Distributable CLI binaries (see 'build:bin:build_cli').
+  # CLI_COMPONENTS is deliberately NOT declared here: like COMPONENTS, it comes from the
+  # including repo's Taskfile. Declaring it in this file would shadow the including repo's
+  # value, since a flattened include's vars take precedence over the parent's.
+  # Unset/empty means there is nothing to build and 'dist' does nothing.
+  # CLI_DIST_PLATFORMS is a space-separated list of '<os>/<arch>' pairs to cross-compile for.
+  CLI_DIST_PLATFORMS: '{{ .CLI_DIST_PLATFORMS | default "linux/amd64 linux/arm64 darwin/amd64 darwin/arm64 windows/amd64 windows/arm64" }}'
+  CLI_DIST_DIR: '{{ .CLI_DIST_DIR | default (print .ROOT_DIR2 "/dist") }}'
+
   SKIP_VALIDATION_TESTS: '{{ .SKIP_VALIDATION_TESTS | default "false" }}'
   BUILD_IMAGE_MODE: '{{.BUILD_IMAGE_MODE | default "multi"}}'
 

@@ -100,3 +100,118 @@ tasks:
         OS: '{{.ITEM.OS}}'
         ARCH: '{{.ITEM.ARCH}}'
       task: build
+
+  build_cli:
+    desc: "  Build and package the CLI binaries into release archives with checksums."
+    summary: |
+      Cross-compiles every entry in CLI_COMPONENTS for every '<os>/<arch>' pair in CLI_DIST_PLATFORMS
+      and packages each one into CLI_DIST_DIR as '<name>_<version>_<os>_<arch>.tar.gz' ('.zip' for
+      windows), together with the LICENSE and README. A single 'checksums.txt' holding the SHA-256
+      of every archive is written alongside them.
+
+      CLI_COMPONENTS is a space-separated list of '<source dir>[:<binary name>]' entries, where the
+      source directory is relative to the repository root. For example './cli:kryptonctl' builds
+      './cli' and names the binary 'kryptonctl'. Without the ':<binary name>' part, the source
+      directory's base name is used, so './cli' produces 'cli'.
+
+      CLI_COMPONENTS is declared by the including repo's Taskfile. Unset or empty means there is
+      nothing to build and this task does nothing.
+
+      Skips code generation/validation tasks, like 'build-raw'.
+    cmds:
+    - |
+      set -euo pipefail
+
+      CLI_LIST="{{.CLI_COMPONENTS}}"
+      if [ -z "$(echo "$CLI_LIST" | tr -d '[:space:]')" ]; then
+        echo "ℹ️  CLI_COMPONENTS is empty, nothing to build."
+        exit 0
+      fi
+
+      # sha256sum is GNU-only; macOS ships 'shasum -a 256'.
+      if command -v sha256sum >/dev/null 2>&1; then
+        SHA_CMD="sha256sum"
+      else
+        SHA_CMD="shasum -a 256"
+      fi
+
+      # Anchor a relative CLI_DIST_DIR to the repository root. Task runs these commands from the
+      # included taskfile's directory (hack/common), and CHECKSUMS below is re-resolved inside a
+      # 'cd "$CLI_DIST_DIR"' subshell, so a relative value would otherwise land in the wrong place.
+      CLI_DIST_DIR="{{.CLI_DIST_DIR}}"
+      case "$CLI_DIST_DIR" in
+        /*) ;;
+        *) CLI_DIST_DIR="{{.ROOT_DIR2}}/${CLI_DIST_DIR}" ;;
+      esac
+
+      STAGE_DIR="{{.LOCALTMP}}/build-cli-stage"
+      rm -rf "$STAGE_DIR"
+      mkdir -p "$CLI_DIST_DIR" "$STAGE_DIR" "{{.ROOT_DIR2}}/bin"
+
+      CHECKSUMS="${CLI_DIST_DIR}/checksums.txt"
+      : > "$CHECKSUMS"
+
+      for ENTRY in $CLI_LIST; do
+        # '<source dir>[:<binary name>]' -- the binary name defaults to the directory's base name.
+        SRC_REL="${ENTRY%%:*}"
+        if [ "$ENTRY" = "$SRC_REL" ]; then
+          BIN_NAME=""
+        else
+          BIN_NAME="${ENTRY##*:}"
+        fi
+        SRC_REL="${SRC_REL#./}"
+        SRC_REL="${SRC_REL%/}"
+        if [ -z "$BIN_NAME" ]; then
+          BIN_NAME=$(basename "$SRC_REL")
+        fi
+
+        SRC_DIR="{{.ROOT_DIR2}}/${SRC_REL}"
+        if [ ! -d "$SRC_DIR" ]; then
+          echo "❌ Error: CLI source directory does not exist: $SRC_DIR" >&2
+          exit 1
+        fi
+
+        for PLATFORM in {{.CLI_DIST_PLATFORMS}}; do
+          PLAT_OS="${PLATFORM%%/*}"
+          PLAT_ARCH="${PLATFORM##*/}"
+
+          OUT="{{.ROOT_DIR2}}/bin/${BIN_NAME}.${PLAT_OS}-${PLAT_ARCH}"
+          CGO_ENABLED=0 GOOS="$PLAT_OS" GOARCH="$PLAT_ARCH" go build {{.BUILD_TAGS}} -a \
+            -o "$OUT" -ldflags "-s -w {{.BUILD_LDFLAGS}}" "${SRC_DIR}/"
+
+          PKG="${BIN_NAME}_{{.VERSION}}_${PLAT_OS}_${PLAT_ARCH}"
+          PKG_DIR="${STAGE_DIR}/${PKG}"
+          mkdir -p "$PKG_DIR"
+
+          if [ "$PLAT_OS" = "windows" ]; then
+            cp "$OUT" "${PKG_DIR}/${BIN_NAME}.exe"
+          else
+            cp "$OUT" "${PKG_DIR}/${BIN_NAME}"
+            chmod +x "${PKG_DIR}/${BIN_NAME}"
+          fi
+
+          # Use an explicit 'if': a trailing '[ -f x ] && cp' would make the loop's exit status
+          # that of the last failed test, which 'set -e' turns into an abort of the whole task.
+          for EXTRA in LICENSE README.md; do
+            if [ -f "{{.ROOT_DIR2}}/${EXTRA}" ]; then
+              cp "{{.ROOT_DIR2}}/${EXTRA}" "${PKG_DIR}/"
+            fi
+          done
+
+          if [ "$PLAT_OS" = "windows" ]; then
+            ARCHIVE="${PKG}.zip"
+            ( cd "$STAGE_DIR" && zip -qr "$ARCHIVE" "$PKG" )
+          else
+            ARCHIVE="${PKG}.tar.gz"
+            ( cd "$STAGE_DIR" && tar -czf "$ARCHIVE" "$PKG" )
+          fi
+
+          mv "${STAGE_DIR}/${ARCHIVE}" "${CLI_DIST_DIR}/${ARCHIVE}"
+          ( cd "$CLI_DIST_DIR" && $SHA_CMD "$ARCHIVE" >> "$CHECKSUMS" )
+          echo "✅ Packaged ${ARCHIVE}"
+        done
+      done
+
+      rm -rf "$STAGE_DIR"
+      echo "📦 $(grep -c . "$CHECKSUMS") archive(s) written to ${CLI_DIST_DIR}"
+

@@ -42,6 +42,62 @@ includes:
 ```
 
 
+### CLI release binaries
+
+Service and controller repos (those including `Taskfile_service.yaml` or `Taskfile_controller.yaml`) can
+publish cross-compiled CLI binaries as release assets:
+
+```shell
+task build:bin:build_cli
+```
+
+This cross-compiles each entry in `CLI_COMPONENTS` and packages it into `CLI_DIST_DIR` as
+`<name>_<version>_<os>_<arch>.tar.gz` (`.zip` for Windows), containing the binary plus the
+`LICENSE` and `README.md`, along with a single `checksums.txt` holding the SHA-256 of every archive.
+
+`CLI_COMPONENTS` is declared in the including repo's `Taskfile.yaml`, the same way `COMPONENTS` is.
+Each entry is `<source dir>[:<binary name>]`, where the source directory is relative to the
+repository root. Without the `:<binary name>` part, the directory's base name is used:
+
+```yaml
+includes:
+  shared:
+    taskfile: hack/common/Taskfile_service.yaml
+    flatten: true
+    vars:
+      COMPONENTS: 'agent root'
+      CLI_COMPONENTS: './cli:kryptonctl'   # builds ./cli, names the binary 'kryptonctl'
+```
+
+| Entry | Source directory | Binary name |
+| --- | --- | --- |
+| `./cli:kryptonctl` | `./cli` | `kryptonctl` |
+| `./cli` | `./cli` | `cli` |
+| `./cmd/agent:agentctl` | `./cmd/agent` | `agentctl` |
+
+`CLI_COMPONENTS` is **unset by default, which means there is nothing to build** — repos that ship no
+CLI need no configuration and the task does nothing. A source directory that does not exist is an
+error rather than a silent skip.
+
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `CLI_COMPONENTS` | *unset* — nothing to build | Space-separated `<source dir>[:<binary name>]` entries. Set by the including repo. |
+| `CLI_DIST_PLATFORMS` | `linux/amd64 linux/arm64 darwin/amd64 darwin/arm64 windows/amd64 windows/arm64` | Space-separated `<os>/<arch>` pairs to cross-compile for. |
+| `CLI_DIST_DIR` | `<repo>/dist` | Where the archives and `checksums.txt` are written. |
+
+Note that variables set under `includes.<name>.vars` take precedence over the command line, so a repo
+pinning `CLI_DIST_PLATFORMS` there cannot override it with `task ... CLI_DIST_PLATFORMS=...`.
+
+For example, to publish only Linux builds:
+
+```shell
+task build:bin:build_cli CLI_DIST_PLATFORMS="linux/amd64 linux/arm64"
+```
+
+The binaries themselves are also written to `bin/<binary name>.<os>-<arch>`, matching the naming the
+image build and the Dockerfiles use.
+
+
 ### Makefile
 
 This repo contains a dummy Makefile that for any command prints the instructions for installing `task`:
