@@ -111,6 +111,9 @@ jobs:
         with:
           go-version-file: go.mod
 
+      - name: Build CLI
+        run: task build:bin:build_cli CLI_DIST_DIR="$GITHUB_WORKSPACE/assets"
+
       - name: Build and Push Images
         env:
           COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
