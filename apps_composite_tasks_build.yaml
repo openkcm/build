@@ -1,5 +1,20 @@
 version: 3
 
+# Builds "composite" images: a base image with one or more plugin images layered on top.
+#
+# Driven by COMPOSITE_COMPONENTS in the including repo's Taskfile, a list of:
+#
+#   - COMPONENT_NAME: cmk-full-plugins          # name of the resulting image
+#     DOCKER_FILE_IDENTIFIER: full-plugins      # uses Dockerfile.full-plugins
+#     BASE_IMAGE_NAME: cmk:cmk-full-base        # image to build on top of
+#     PLUGINS_IMAGE_NAME: keystore-plugins identity-management-plugins
+#
+# BASE_IMAGE_NAME and each space-separated entry of PLUGINS_IMAGE_NAME reference an image as
+# '<repo>:<image>', resolving to '<OCI_URL>/<repo>/images/<image>'. When the repository and the
+# image are named the same, the bare name is enough -- 'keystore-plugins' is equivalent to
+# 'keystore-plugins:keystore-plugins'. Use the explicit form when they differ, as for an image
+# built by this repo itself (e.g. 'cmk:cmk-full-base').
+
 includes:
   build:img:
     taskfile: tasks_build_img.yaml
@@ -149,15 +164,29 @@ tasks:
         set -euo pipefail
         
         parse_image_repo() {
+          # Accepts either '<repo>:<image>', or a bare '<name>' when the repository and the
+          # image are named the same, i.e. 'keystore-plugins' == 'keystore-plugins:keystore-plugins'.
+          # Splits on the FIRST colon, so '<repo>:<image>' is unambiguous.
           local raw="$1"
-          local default="{{.REPO_NAME}}"
-          local r="${raw%:*}"
-          local i="${raw#*:}"
-          
-          # If no colon was present, %:* returns the whole string
-          if [[ "$raw" != *":"* ]]; then r=""; i="$raw"; fi
-          
-          echo "${r:-$default}" "$i"
+          local r i
+
+          if [[ "$raw" == *":"* ]]; then
+            r="${raw%%:*}"
+            i="${raw#*:}"
+          else
+            r="$raw"
+            i="$raw"
+          fi
+
+          # Tolerate a half-written ':<image>' or '<repo>:' by mirroring the side that is set.
+          if [[ -z "$r" ]]; then
+            r="$i"
+          fi
+          if [[ -z "$i" ]]; then
+            i="$r"
+          fi
+
+          echo "$r" "$i"
         }
         
         BASE_IMAGE_NAME="{{.COMPOSITE_BASE_IMAGE_NAME}}"
@@ -342,15 +371,29 @@ tasks:
         }
       
         parse_image_repo() {
+          # Accepts either '<repo>:<image>', or a bare '<name>' when the repository and the
+          # image are named the same, i.e. 'keystore-plugins' == 'keystore-plugins:keystore-plugins'.
+          # Splits on the FIRST colon, so '<repo>:<image>' is unambiguous.
           local raw="$1"
-          local default="{{.REPO_NAME}}"
-          local r="${raw%:*}"
-          local i="${raw#*:}"
-        
-          # If no colon was present, %:* returns the whole string
-          if [[ "$raw" != *":"* ]]; then r=""; i="$raw"; fi
-        
-          echo "${r:-$default}" "$i"
+          local r i
+
+          if [[ "$raw" == *":"* ]]; then
+            r="${raw%%:*}"
+            i="${raw#*:}"
+          else
+            r="$raw"
+            i="$raw"
+          fi
+
+          # Tolerate a half-written ':<image>' or '<repo>:' by mirroring the side that is set.
+          if [[ -z "$r" ]]; then
+            r="$i"
+          fi
+          if [[ -z "$i" ]]; then
+            i="$r"
+          fi
+
+          echo "$r" "$i"
         }
         
         mkdir -p .ghcr_state
