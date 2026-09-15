@@ -52,7 +52,6 @@ tasks:
     cmds:
     - task: vet
     - task: lint
-    - task: format-imports
     - task: docs
 
   docs:

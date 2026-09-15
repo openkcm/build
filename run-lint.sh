@@ -6,8 +6,37 @@
 set -euo pipefail
 source "$(realpath "$(dirname $0)/environment.sh")"
 
+# Resolve the linter config once.
+# Passing '-c' with a path that does not exist makes golangci-lint fail hard ("can't read viper
+# config", exit 3) rather than falling back to anything, and golangci-lint accepts several config
+# file names, not just '.golangci.yaml'. So look for all of them, and when the repo has none, fall
+# back to the shared openkcm default shipped alongside this script instead of letting golangci-lint
+# drop to its own 'standard' set of five linters.
+LINT_CONFIG=""
+for candidate in .golangci.yaml .golangci.yml .golangci.toml .golangci.json; do
+  if [[ -f "$PROJECT_ROOT/$candidate" ]]; then
+    LINT_CONFIG="$PROJECT_ROOT/$candidate"
+    break
+  fi
+done
+
+if [[ -z "$LINT_CONFIG" ]]; then
+  LINT_CONFIG="$COMMON_SCRIPT_DIR/golangci-default.yaml"
+  msg="No golangci-lint config in $PROJECT_ROOT; falling back to the shared openkcm default ($LINT_CONFIG). Add a .golangci.yaml to pin this repo's own rules."
+  # Surface this in the GitHub Actions UI, not just buried in the log.
+  if [[ -n "${GITHUB_ACTIONS:-}" ]]; then
+    echo "::warning title=No golangci-lint config::${msg}"
+  fi
+  echo "⚠️  ${msg}" >&2
+
+  if [[ ! -f "$LINT_CONFIG" ]]; then
+    echo "❌ Shared default linter config is missing: $LINT_CONFIG" >&2
+    exit 1
+  fi
+fi
+
 function run_lint() {
-  "$LINTER" run -c "$PROJECT_ROOT/.golangci.yaml" "$@"
+  "$LINTER" run -c "$LINT_CONFIG" "$@"
 }
 
 function check_go_mod_tidy() {
