@@ -1,0 +1,123 @@
+# Default golangci-lint configuration for openkcm repositories.
+#
+# This file is NOT this repository's own lint config -- it is the fallback that run-lint.sh uses
+# when the including repository has no '.golangci.yaml' (or .yml/.toml/.json) of its own. A repo
+# that adds its own config overrides this completely; golangci-lint takes a single config file
+# and does not merge them.
+#
+# It was derived from the configurations actually used across the openkcm repositories: every
+# linter disabled below is disabled by at least 16 of the 21 repos that have a config. Linters
+# disabled by fewer repos than that are deliberately left enabled here.
+#
+# Only long-established linter names are used. Version-suffixed names that appear in some repos
+# (wsl_v5, exhaustruct_v5, gomodguard_v2, noinlineerr, funcorder, ...) track newer golangci-lint
+# releases, and an unrecognised name is a hard error (exit 3), so they are avoided on purpose.
+
+version: "2"
+
+run:
+  timeout: 10m
+
+linters:
+  default: all
+  disable:
+    - contextcheck
+    - cyclop
+    - depguard
+    - dupl
+    - err113
+    - exhaustive
+    - exhaustruct
+    - forbidigo
+    - funlen
+    - ginkgolinter
+    - gochecknoglobals
+    - gochecknoinits
+    - gocognit
+    - gocritic
+    - godot
+    - godox
+    - gosec
+    - ireturn
+    - lll
+    - mnd
+    - musttag
+    - nestif
+    - nlreturn
+    - revive
+    - tagalign
+    - testpackage
+    - unparam
+    - varnamelen
+    - wrapcheck
+    # 'wsl' and 'wsl_v5' are the same whitespace linter, old and new name. 'default: all' enables
+    # both, so disabling only 'wsl' would leave the successor firing. 'exhaustruct_v5' is the
+    # equivalent successor for 'exhaustruct', but it does not exist in every golangci-lint version
+    # this config may run under, and an unknown name is a hard error -- so it is left out.
+    - wsl
+    - wsl_v5
+  settings:
+    paralleltest:
+      ignore-missing: true
+      ignore-missing-subtests: true
+    tagliatelle:
+      case:
+        rules:
+          json: camel
+        use-field-name: true
+    testifylint:
+      disable:
+        - require-error
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    rules:
+      - linters:
+          - dupl
+          - funlen
+          - maintidx
+        source: ^func Test
+      - linters:
+          - dupl
+          - funlen
+          - gocognit
+          - goconst
+          - maintidx
+          - prealloc
+        path: (.+)_test\.go
+    paths:
+      # 'tmp' is the build system's LOCALTMP working directory.
+      - tmp
+      - vendor
+      - third_party$
+      - builtin$
+      - examples$
+
+formatters:
+  enable:
+    - gci
+    - gofmt
+    - goimports
+  settings:
+    gci:
+      # 'localmodule' resolves the including repo's own module path, so this stays generic --
+      # no hardcoded 'prefix(github.com/openkcm/<repo>)' is needed.
+      sections:
+        - standard
+        - default
+        - blank
+        - dot
+        - alias
+        - localmodule
+  exclusions:
+    generated: lax
+    paths:
+      - tmp
+      - vendor
+      - third_party$
+      - builtin$
+      - examples$
