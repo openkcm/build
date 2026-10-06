@@ -104,9 +104,23 @@ tasks:
         echo "❌ Error: ${FILE_NAME} not found in project or shared directory."
         exit 1
       fi
-    - '( cd "{{.ROOT_DIR2}}"; docker buildx build --builder {{.DOCKER_BUILDER_NAME}} --load --build-arg COMPONENT={{.BINARY_NAME}} --platform {{.OS}}/{{.ARCH}} -t {{.IMAGE}} -f Dockerfile.tmp . )'
+    - |
+      # Stage only the binary in a temp dir to isolate the Docker context from
+      # the project's .dockerignore (which may exclude bin/).
+      STAGE="{{.LOCALTMP}}/docker-stage-{{.BINARY_NAME}}-{{.OS}}-{{.ARCH}}"
+      rm -rf "${STAGE}"
+      mkdir -p "${STAGE}/bin"
+      cp "{{.ROOT_DIR2}}/bin/{{.BINARY_NAME}}.{{.OS}}-{{.ARCH}}" "${STAGE}/bin/"
+      docker buildx build --builder {{.DOCKER_BUILDER_NAME}} --load \
+        --build-arg COMPONENT={{.BINARY_NAME}} \
+        --platform {{.OS}}/{{.ARCH}} \
+        -t {{.IMAGE}} \
+        -f "{{.ROOT_DIR2}}/Dockerfile.tmp" \
+        "${STAGE}"
+      BUILD_RC=$?
+      rm -rf "${STAGE}" "{{.ROOT_DIR2}}/Dockerfile.tmp"
+      exit ${BUILD_RC}
     - 'docker push {{.IMAGE}}'
-    - 'rm -f "{{.ROOT_DIR2}}/Dockerfile.tmp"'
     - vars:
         VERSION: '{{.VERSION}}-{{.OS}}-{{.ARCH}}'
         BASE_IMAGE: '{{.IMAGE_BASE}}/{{.COMPONENT}}'
