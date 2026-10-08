@@ -108,8 +108,8 @@ tasks:
   format-imports:
     desc: "  Check if 'goimports' has been run."
     run: once
-    deps:
-    - tools:goimports
+#    deps:
+#    - tools:goimports
     requires:
       vars:
       - CODE_DIRS

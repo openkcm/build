@@ -101,7 +101,6 @@ formatters:
   enable:
     - gci
     - gofmt
-    - goimports
   settings:
     gci:
       # 'localmodule' resolves the including repo's own module path, so this stays generic --

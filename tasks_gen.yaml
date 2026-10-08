@@ -145,8 +145,8 @@ tasks:
   format-imports:
     desc: "  Run 'goimports'."
     run: once
-    deps:
-    - tools:goimports
+#    deps:
+#    - tools:goimports
     requires:
       vars:
       - CODE_DIRS
@@ -162,4 +162,4 @@ tasks:
     run: once
     cmds:
     - task: fmt
-    - task: format-imports
+#    - task: format-imports
