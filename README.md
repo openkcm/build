@@ -125,7 +125,7 @@ We as members, contributors, and leaders pledge to make participation in our com
 
 ## Licensing
 
-Copyright OpenControlPlane contributors. Please see our [LICENSE](LICENSE) for copyright and license information. Detailed information including third-party components and their licensing/copyright information is available [via the REUSE tool](https://api.reuse.software/info/github.com/openkcm/build).
+Copyright OpenKCM contributors. Please see our [LICENSE](LICENSE) for copyright and license information. Detailed information including third-party components and their licensing/copyright information is available [via the REUSE tool](https://api.reuse.software/info/github.com/openkcm/build).
 
 ---
 
@@ -136,7 +136,7 @@ Copyright OpenControlPlane contributors. Please see our [LICENSE](LICENSE) for c
 </p>
 
 <p align="center">
-  OpenControlPlane is part of <a href="https://apeirora.eu/content/projects/">ApeiroRA</a>, an EU Important Project of Common European Interest (IPCEI-CIS).
+  OpenKCM is part of <a href="https://apeirora.eu/content/projects/">ApeiroRA</a>, an EU Important Project of Common European Interest (IPCEI-CIS).
 </p>
 
 <p align="center">
