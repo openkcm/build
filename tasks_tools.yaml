@@ -143,7 +143,8 @@ tasks:
       - test -x {{.YQ}}
       - '{{.YQ}} --version | grep -q "{{.YQ_VERSION | trimPrefix "v"}}"'
     cmds:
-      - 'curl -sfL "https://github.com/mikefarah/yq/releases/download/{{.YQ_VERSION | trimPrefix "v"}}/yq_{{.OS}}_{{.ARCH}}" --output "{{.YQ}}"'
+      # yq's release tags keep the leading 'v' -- stripping it 404s. Only '--version' output omits it.
+      - 'curl -sfL "https://github.com/mikefarah/yq/releases/download/{{.YQ_VERSION}}/yq_{{.OS}}_{{.ARCH}}" --output "{{.YQ}}"'
       - 'chmod +x "{{.YQ}}"'
     internal: true
 

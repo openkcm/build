@@ -98,6 +98,26 @@ The binaries themselves are also written to `bin/<binary name>.<os>-<arch>`, mat
 image build and the Dockerfiles use.
 
 
+### Testing this repository
+
+Every workflow in `.github/workflows` here is `workflow_call` only, so nothing in this repo used to
+exercise its own taskfiles and scripts — a defect could only surface in a consuming repo's release.
+`self-test.sh` closes that gap by driving the build system against a throwaway consuming repo
+(this repo checked out at `hack/common`, a `Taskfile.yaml` including `Taskfile_service.yaml`):
+
+```shell
+./self-test.sh
+```
+
+It checks that every shell script parses, that `task` runs outside GitHub Actions, that the version
+lookup returns the highest tag rather than the most recently committed one, that each pinned tool
+download URL resolves, that the CLI archives and helm chart are produced, and that the OCM component
+descriptor renders with the right provider and chart reference. `.github/workflows/self-test.yaml`
+runs it on every pull request.
+
+Add a check here whenever you fix something in this repo — that is what stops it regressing.
+
+
 ### Makefile
 
 This repo contains a dummy Makefile that for any command prints the instructions for installing `task`:
