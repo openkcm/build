@@ -57,16 +57,12 @@ tasks:
       - VERSION
       - OS
       - ARCH
-    vars:
-      IMAGE_BASE:
-        sh: 'PROJECT_ROOT="{{.ROOT_DIR2}}" REPO_NAME="{{.REPO_NAME}}" {{.TASKFILE_DIR2}}/get-registry.sh --image'
     cmds:
     - task: prepare-docker-builder
     - for:
         var: COMPONENTS
       vars:
         COMPONENT: '{{.ITEM}}'
-        IMAGE_BASE: '{{.IMAGE_BASE}}'
         OS: '{{.IMAGE_OS}}'
         ARCH: '{{.ARCH}}'
       task: build-internal
@@ -79,9 +75,12 @@ tasks:
       - VERSION
       - OS
       - ARCH
-      - IMAGE_BASE
       - DOCKER_BUILDER_NAME
     vars:
+      # Resolved per component: get-registry.sh drops the repository segment when the image is
+      # named after its repository, so '<base>/<component>' stays correct in both cases.
+      IMAGE_BASE:
+        sh: 'PROJECT_ROOT="{{.ROOT_DIR2}}" REPO_NAME="{{.REPO_NAME}}" {{.TASKFILE_DIR2}}/get-registry.sh --image "{{.COMPONENT}}"'
       IMAGE: '{{.IMAGE_BASE}}/{{.COMPONENT}}:{{.VERSION}}-{{.OS}}-{{.ARCH}}'
       BINARY_NAME: '{{(regexReplaceAll "\\/" .COMPONENT "-") | lower}}'
       DOCKER_FILE_IDENTIFIER: '{{.DOCKER_FILE_IDENTIFIER}}'
@@ -112,6 +111,7 @@ tasks:
       mkdir -p "${STAGE}/bin"
       cp "{{.ROOT_DIR2}}/bin/{{.BINARY_NAME}}.{{.OS}}-{{.ARCH}}" "${STAGE}/bin/"
       docker buildx build --builder {{.DOCKER_BUILDER_NAME}} --load \
+        --label org.opencontainers.image.source={{.REPO_URL}} --label org.opencontainers.image.version={{.VERSION}} \
         --build-arg COMPONENT={{.BINARY_NAME}} \
         --platform {{.OS}}/{{.ARCH}} \
         -t {{.IMAGE}} \
@@ -189,7 +189,7 @@ tasks:
       - ARCH
     vars:
       IMAGE_BASE:
-        sh: 'PROJECT_ROOT="{{.ROOT_DIR2}}" REPO_NAME="{{.REPO_NAME}}" {{.TASKFILE_DIR2}}/get-registry.sh --image'
+        sh: 'PROJECT_ROOT="{{.ROOT_DIR2}}" REPO_NAME="{{.REPO_NAME}}" {{.TASKFILE_DIR2}}/get-registry.sh --image "{{.COMPONENT}}"'
     cmds:
     - 'echo "Pushing image {{.COMPONENT}}:{{.VERSION}}-{{.OS}}-{{.ARCH}}"'
     - 'docker push {{.IMAGE_BASE}}/{{.COMPONENT}}:{{.VERSION}}-{{.OS}}-{{.ARCH}}'
@@ -203,9 +203,6 @@ tasks:
 
   push-multi:
     desc: "  Push the multi-platform image. Images must have been built before."
-    vars:
-      IMAGE_BASE:
-        sh: 'PROJECT_ROOT="{{.ROOT_DIR2}}" REPO_NAME="{{.REPO_NAME}}" {{.TASKFILE_DIR2}}/get-registry.sh --image'
     requires:
       vars:
       - COMPONENTS
@@ -223,7 +220,7 @@ tasks:
         var: COMPONENTS
         as: COMPONENT
       vars:
-        BASE_IMAGE: '{{.IMAGE_BASE}}/{{.COMPONENT}}'
+        COMPONENT: '{{.COMPONENT}}'
       task: push-multi-internal
 
   push-multi-internal:
@@ -231,7 +228,12 @@ tasks:
     requires:
       vars:
       - VERSION
-      - BASE_IMAGE
+    vars:
+      # BASE_IMAGE may be supplied directly (composite images); otherwise derive it from COMPONENT,
+      # resolving the registry base per image so a repo-named image loses the repeated segment.
+      IMAGE_BASE:
+        sh: 'PROJECT_ROOT="{{.ROOT_DIR2}}" REPO_NAME="{{.REPO_NAME}}" {{.TASKFILE_DIR2}}/get-registry.sh --image "{{.COMPONENT}}"'
+      BASE_IMAGE: '{{ .BASE_IMAGE | default (printf "%s/%s" .IMAGE_BASE .COMPONENT) }}'
     cmds:
     - for:
         matrix:
@@ -273,9 +275,9 @@ tasks:
         - VERSION
         - DOCKER_FILE_IDENTIFIER
     vars:
-      IMAGE_BASE:
-        sh: 'PROJECT_ROOT="{{.ROOT_DIR2}}" REPO_NAME="{{.REPO_NAME}}" {{.TASKFILE_DIR2}}/get-registry.sh --image'
       IMAGE_NAME: '{{.IMAGE_NAME | default .SINGLE_IMAGE_NAME}}'
+      IMAGE_BASE:
+        sh: 'PROJECT_ROOT="{{.ROOT_DIR2}}" REPO_NAME="{{.REPO_NAME}}" {{.TASKFILE_DIR2}}/get-registry.sh --image "{{.IMAGE_NAME | default .SINGLE_IMAGE_NAME}}"'
     deps:
       - build:bin:all
     cmds:
@@ -326,7 +328,7 @@ tasks:
           echo "❌ Error: ${FILE_NAME} not found in project or shared directory."
           exit 1
         fi
-      - '( cd "{{.ROOT_DIR2}}"; docker buildx build --builder {{.DOCKER_BUILDER_NAME}} --load --platform {{.OS}}/{{.ARCH}} -t {{.IMAGE}} -f Dockerfile.tmp . )'
+      - '( cd "{{.ROOT_DIR2}}"; docker buildx build --builder {{.DOCKER_BUILDER_NAME}} --load --label org.opencontainers.image.source={{.REPO_URL}} --label org.opencontainers.image.version={{.VERSION}} --platform {{.OS}}/{{.ARCH}} -t {{.IMAGE}} -f Dockerfile.tmp . )'
       - 'docker push {{.IMAGE}}'
       - 'rm -f "{{.ROOT_DIR2}}/Dockerfile.tmp"'
       - vars:
@@ -365,7 +367,7 @@ tasks:
           echo "❌ Error: ${FILE_NAME} not found in project or shared directory."
           exit 1
         fi
-      - '( cd "{{.ROOT_DIR2}}"; docker buildx build --builder {{.DOCKER_BUILDER_NAME}} --load -t {{.IMAGE}} -f Dockerfile.tmp . )'
+      - '( cd "{{.ROOT_DIR2}}"; docker buildx build --builder {{.DOCKER_BUILDER_NAME}} --load --label org.opencontainers.image.source={{.REPO_URL}} --label org.opencontainers.image.version={{.VERSION}} -t {{.IMAGE}} -f Dockerfile.tmp . )'
       - 'docker push {{.IMAGE}}'
       - 'rm -f "{{.ROOT_DIR2}}/Dockerfile.tmp"'
       - vars:
@@ -417,8 +419,6 @@ tasks:
     - sh: '[[ "{{index (.CLI_ARGS | splitList " ") 0}}" != "" ]]'
       msg: "No tag specified. Do so by calling 'task {{.TASK}} -- <tag>'."
     vars:
-      IMAGE_BASE:
-        sh: 'PROJECT_ROOT="{{.ROOT_DIR2}}" REPO_NAME="{{.REPO_NAME}}" {{.TASKFILE_DIR2}}/get-registry.sh --image'
       TAG: '{{index (.CLI_ARGS | splitList " ") 0}}'
     requires:
       vars:
@@ -426,10 +426,14 @@ tasks:
       - VERSION
       - TAG
     cmds:
+    # The registry base is resolved per component inside the loop, because it depends on whether
+    # the image is named after its repository.
     - for:
         var: COMPONENTS
         as: COMPONENT
-      cmd: 'docker buildx imagetools create "{{.IMAGE_BASE}}/{{.COMPONENT}}:{{.VERSION}}" --tag "{{.IMAGE_BASE}}/{{.COMPONENT}}:{{.TAG}}"'
+      cmd: |
+        IMAGE_BASE="$(PROJECT_ROOT="{{.ROOT_DIR2}}" REPO_NAME="{{.REPO_NAME}}" "{{.TASKFILE_DIR2}}/get-registry.sh" --image "{{.COMPONENT}}")"
+        docker buildx imagetools create "${IMAGE_BASE}/{{.COMPONENT}}:{{.VERSION}}" --tag "${IMAGE_BASE}/{{.COMPONENT}}:{{.TAG}}"
 
   single-image-mode:
     desc: "Build binaries and one image for multiple operating systems and architectures."
@@ -457,9 +461,9 @@ tasks:
   ui-build:
     desc: "Build and push multi-arch UI images"
     vars:
-      IMAGE_BASE:
-        sh: 'PROJECT_ROOT="{{.ROOT_DIR2}}" REPO_NAME="{{.REPO_NAME}}" {{.TASKFILE_DIR2}}/get-registry.sh --image'
       IMAGE_NAME: '{{.IMAGE_NAME | default .SINGLE_IMAGE_NAME}}'
+      IMAGE_BASE:
+        sh: 'PROJECT_ROOT="{{.ROOT_DIR2}}" REPO_NAME="{{.REPO_NAME}}" {{.TASKFILE_DIR2}}/get-registry.sh --image "{{.IMAGE_NAME | default .SINGLE_IMAGE_NAME}}"'
     cmds:
       - task: prepare-docker-builder
       - vars:
