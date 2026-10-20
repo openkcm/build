@@ -93,7 +93,11 @@ tasks:
         local image_name="$1"
         local main_tag="{{.VERSION}}"
       
-        local repo="{{.ORG_NAME}}/{{.REPO_NAME}}/images/$image_name"
+        # Registry path without the host, resolved by get-registry.sh so the repository segment is
+        # dropped for an image named after its repository.
+        local base
+        base="$(PROJECT_ROOT="{{.ROOT_DIR2}}" REPO_NAME="{{.REPO_NAME}}" "{{.TASKFILE_DIR2}}/get-registry.sh" --image "$image_name")"
+        local repo="${base#*/}/$image_name"
         local token=$(curl -fsSL "https://ghcr.io/token?scope=repository:$repo:pull"  -u "$GITHUB_ACTOR:$GHCR_PAT" | {{.JQ}} -r '.token')
       
         local candidate_tag="${main_tag}"
@@ -101,7 +105,7 @@ tasks:
         local counter=1
       
         while true; do
-          local url="https://ghcr.io/v2/{{.ORG_NAME}}/{{.REPO_NAME}}/images/${image_name}/manifests/${candidate_tag}"
+          local url="https://ghcr.io/v2/${repo}/manifests/${candidate_tag}"
           local status=$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: Bearer $token" -H "Accept: application/vnd.oci.image.manifest.v1+json" "$url")
           
           if [ "$status" -eq 200 ]; then
@@ -146,8 +150,15 @@ tasks:
           
           echo "      ✅ Found: $COMP_VERSION"
           RESOLVED_ITEM="${COMP_NAME}:${COMP_VERSION}"
-        fi  
-      
+        fi
+
+        # Append the fully resolved image reference as a third field, so components.yaml does not
+        # have to reconstruct it. get-registry.sh is the single place that knows whether the
+        # repository segment is dropped (image named after its repo) or kept.
+        ITEM_NAME="${RESOLVED_ITEM%%:*}"
+        ITEM_BASE="$(PROJECT_ROOT="{{.ROOT_DIR2}}" REPO_NAME="{{.REPO_NAME}}" "{{.TASKFILE_DIR2}}/get-registry.sh" --image "$ITEM_NAME")"
+        RESOLVED_ITEM="${RESOLVED_ITEM}:${ITEM_BASE}/${ITEM_NAME}"
+
         if [ "$FIRST" = true ]; then
           RESOLVED_LIST="$RESOLVED_ITEM"
           FIRST=false

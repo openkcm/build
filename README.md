@@ -98,6 +98,48 @@ The binaries themselves are also written to `bin/<binary name>.<os>-<arch>`, mat
 image build and the Dockerfiles use.
 
 
+### Where artifacts are published
+
+| artifact | path |
+| --- | --- |
+| container images | `ghcr.io/openkcm/images/<repo>/<image>`, or `ghcr.io/openkcm/images/<repo>` when the image is named after its repository |
+| helm charts | `ghcr.io/openkcm/charts/<chart>` |
+| OCM components | `ghcr.io/openkcm/components/<component>` |
+
+Each artifact type has its own top-level namespace, so images, charts and components never mix.
+Within `images/`, a repository publishing a single image named after itself gets a short
+`ghcr.io/openkcm/images/registry`, while one publishing several keeps them namespaced underneath it:
+
+```
+ghcr.io/openkcm/images/registry                # repo 'registry',  image 'registry'
+ghcr.io/openkcm/images/cmk/cmkd                # repo 'cmk',       image 'cmkd'
+ghcr.io/openkcm/images/cmk/cmk-full-base       # repo 'cmk',       image 'cmk-full-base'
+ghcr.io/openkcm/images/crypto                  # repo 'crypto',    image 'crypto'
+ghcr.io/openkcm/images/crypto/tenant-manager   # repo 'crypto',    image 'tenant-manager'
+```
+
+The decision is made **per image**, not per repository, so adding a second image to a repository
+never moves the first one. The repository segment is what keeps images apart across repos — several
+repositories publish an image called `tenant-manager`, which is why images are not published into a
+single flat namespace.
+
+`get-registry.sh` is the only place that implements this; everything else asks it:
+
+```shell
+REPO_NAME=crypto ./get-registry.sh --image tenant-manager   # -> ghcr.io/openkcm/images/crypto
+REPO_NAME=crypto ./get-registry.sh --image crypto           # -> ghcr.io/openkcm/images
+```
+
+It prints the **base** to prepend, so callers keep concatenating `<base>/<image>` unchanged. Set
+`IMAGE_REGISTRY` to override the result entirely, or `BASE_REGISTRY` to publish to another
+organisation or registry.
+
+Images are labelled with `org.opencontainers.image.source`, which is what links a package to its
+repository on GitHub (and lets it inherit that repository's permissions).
+
+`./test-image-paths.sh` asserts the resulting paths for all three cases.
+
+
 ### Makefile
 
 This repo contains a dummy Makefile that for any command prints the instructions for installing `task`:

@@ -10,7 +10,8 @@ version: 3
 #     PLUGINS_IMAGE_NAME: keystore-plugins identity-management-plugins
 #
 # BASE_IMAGE_NAME and each space-separated entry of PLUGINS_IMAGE_NAME reference an image as
-# '<repo>:<image>', resolving to '<OCI_URL>/<repo>/images/<image>'. When the repository and the
+# '<repo>:<image>', resolving to '<OCI_URL>/<repo>/<image>' (or '<OCI_URL>/<repo>' when the image
+# is named after its repository). When the repository and the
 # image are named the same, the bare name is enough -- 'keystore-plugins' is equivalent to
 # 'keystore-plugins:keystore-plugins'. Use the explicit form when they differ, as for an image
 # built by this repo itself (e.g. 'cmk:cmk-full-base').
@@ -212,7 +213,10 @@ tasks:
         for image in $WATCHED_IMAGES; do
           read -r image_repo image_name <<< $(parse_image_repo "${image}")
         
-          FULL_PATH="{{.ORG_NAME}}/${image_repo}/images/${image_name}"
+          # get-registry.sh decides whether the repository segment is kept; strip the host to get
+          # the registry path. REPO_NAME is the image's own repo here, not the current one.
+          FULL_PATH="$(PROJECT_ROOT="{{.ROOT_DIR2}}" REPO_NAME="${image_repo}" "{{.TASKFILE_DIR2}}/get-registry.sh" --image "${image_name}")"
+          FULL_PATH="${FULL_PATH#*/}/${image_name}"
         
           echo "Getting token for: ${FULL_PATH}"
         
@@ -266,9 +270,13 @@ tasks:
         # Start with the clean MAIN_TAG (no numbers)
         CANDIDATE_TAG="${MAIN_TAG}"
         COUNTER=1
-        
+
+        # Registry path of the composite image itself, host stripped.
+        COMPOSITE_REPO_PATH="$(PROJECT_ROOT="{{.ROOT_DIR2}}" REPO_NAME="{{.REPO_NAME}}" "{{.TASKFILE_DIR2}}/get-registry.sh" --image "{{.COMPOSITE_COMPONENT_NAME}}")"
+        COMPOSITE_REPO_PATH="${COMPOSITE_REPO_PATH#*/}/{{.COMPOSITE_COMPONENT_NAME}}"
+
         while true; do
-          COMPOSITE_PATH="https://ghcr.io/v2/{{.ORG_NAME}}/{{.REPO_NAME}}/images/{{.COMPOSITE_COMPONENT_NAME}}/manifests/${CANDIDATE_TAG}"
+          COMPOSITE_PATH="https://ghcr.io/v2/${COMPOSITE_REPO_PATH}/manifests/${CANDIDATE_TAG}"
         
           # Check status
           STATUS=$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: Bearer $TOKEN" -H "Accept: application/vnd.oci.image.manifest.v1+json" "$COMPOSITE_PATH")
@@ -412,10 +420,15 @@ tasks:
         # 1. Initialize variables
         CANDIDATE_TAG="${TAG}"
         COUNTER=1
-        TOKEN=$(get_ghcr_token "{{.ORG_NAME}}/{{.REPO_NAME}}/images/{{.COMPOSITE_COMPONENT_NAME}}")
+
+        # Registry path of the composite image itself, host stripped.
+        COMPOSITE_REPO_PATH="$(PROJECT_ROOT="{{.ROOT_DIR2}}" REPO_NAME="{{.REPO_NAME}}" "{{.TASKFILE_DIR2}}/get-registry.sh" --image "{{.COMPOSITE_COMPONENT_NAME}}")"
+        COMPOSITE_REPO_PATH="${COMPOSITE_REPO_PATH#*/}/{{.COMPOSITE_COMPONENT_NAME}}"
+
+        TOKEN=$(get_ghcr_token "${COMPOSITE_REPO_PATH}")
         while true; do
           # Check if this specific tag already exists in the registry
-          COMPOSITE_PATH="https://ghcr.io/v2/{{.ORG_NAME}}/{{.REPO_NAME}}/images/{{.COMPOSITE_COMPONENT_NAME}}/manifests/${CANDIDATE_TAG}"
+          COMPOSITE_PATH="https://ghcr.io/v2/${COMPOSITE_REPO_PATH}/manifests/${CANDIDATE_TAG}"
         
           STATUS=$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: Bearer $TOKEN" -H "Accept: application/vnd.oci.image.manifest.v1+json" "$COMPOSITE_PATH")
           

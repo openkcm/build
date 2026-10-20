@@ -78,10 +78,11 @@ sources:
 resources:
 - <<<: (( sum[funcs.splitIgnoreEmpty(",", funcs.ignoreDisabled(defaults.BP_COMPONENTS))|[]|s,comp|-> s *templates.blueprint] ))
 - <<<: (( sum[funcs.splitIgnoreEmpty(",", funcs.ignoreDisabled(defaults.CHART_COMPONENTS))|[]|s,cv|-> ("cvs" = split(":", cv)) ("comp" = cvs[0], "chart_version" = (cvs[1] || defaults.CHART_VERSION), "chart_name" = (cvs[2] || cvs[0])) s *templates.chart] ))
-- <<<: (( sum[funcs.splitIgnoreEmpty(",", replace(values.IMG_COMPONENTS, " ", ","))|[]|s,cv|->
+- <<<: (( sum[funcs.splitIgnoreEmpty(",", funcs.ignoreDisabled(defaults.IMG_COMPONENTS))|[]|s,cv|->
     ("cvs" = split(":", cv))
     ("comp" = cvs[0])
     ("img_version" = (cvs[1] || defaults.CD_VERSION))
+    ("img_ref" = (cvs[2] || values.IMG_REGISTRY "/" cvs[0]))
     s *templates.image] ))
 
 # ##########################################################################
@@ -127,7 +128,7 @@ templates:
     type: ociImage
     version: (( img_version ))
     access:
-      imageReference: (( values.IMG_REGISTRY "/" comp ":" img_version ))
+      imageReference: (( img_ref ":" img_version ))
       type: ociArtifact
 
 
