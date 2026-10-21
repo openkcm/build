@@ -64,9 +64,10 @@ jobs:
           release-type: ${{inputs.release-type}}
           token: ${{ steps.generate-token.outputs.token }}
 
-      - name: Stop if no release was created
+      # Not an error: release-please either cuts a release or opens/updates the release PR.
+      # It also needs a second run to tag a release PR that was merged in the meantime, so failing
+      # here turned a normal first pass red and forced a manual re-trigger.
+      - name: Report that no release was cut
         if: ${{ steps.github_release.outputs.release_created != 'true' }}
         run: |
-          echo "❌ No release was created — a release PR was likely opened instead."
-          echo "ℹ️ Please merge the release PR and re-run the workflow to publish the release."
-          exit 1
+          echo "::notice title=No release cut::release-please opened or updated the release PR instead of cutting a release. Merge it to publish; the following steps are skipped."

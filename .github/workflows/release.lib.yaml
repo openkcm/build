@@ -59,18 +59,21 @@ jobs:
           release-type: go
           token: ${{ steps.generate-token.outputs.token }}
 
-      - name: Stop if no release was created
+      # Not an error: release-please either cuts a release or opens/updates the release PR.
+      # It also needs a second run to tag a release PR that was merged in the meantime, so failing
+      # here turned a normal first pass red and forced a manual re-trigger.
+      - name: Report that no release was cut
         if: ${{ steps.github_release.outputs.release_created != 'true' }}
         run: |
-          echo "❌ No release was created — a release PR was likely opened instead."
-          echo "ℹ️ Please merge the release PR and re-run the workflow to publish the release."
-          exit 1
+          echo "::notice title=No release cut::release-please opened or updated the release PR instead of cutting a release. Merge it to publish; the following steps are skipped."
 
       - name: Setup
+        if: ${{ steps.github_release.outputs.release_created == 'true' }}
         run: |
           mkdir assets
 
       - name: Generate SBOM
+        if: ${{ steps.github_release.outputs.release_created == 'true' }}
         uses: CycloneDX/gh-gomod-generate-sbom@efc74245d6802c8cefd925620515442756c70d8f #v2.0.0
         with:
           version: v1
@@ -80,6 +83,7 @@ jobs:
 
 
       - name: Run Trivy SBOM vulnerability scanner
+        if: ${{ steps.github_release.outputs.release_created == 'true' }}
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           scan-type: 'sbom'
@@ -88,6 +92,7 @@ jobs:
           output: './assets/trivy-sbom-vuln.json'
 
       - name: Run Trivy repository scan (dependencies from lock files)
+        if: ${{ steps.github_release.outputs.release_created == 'true' }}
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           token-setup-trivy: ${{ steps.generate-token.outputs.token }}
@@ -98,6 +103,7 @@ jobs:
           severity: CRITICAL,HIGH,MEDIUM
 
       - name: Run Trivy security scanner
+        if: ${{ steps.github_release.outputs.release_created == 'true' }}
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           token-setup-trivy: ${{ steps.generate-token.outputs.token }}
@@ -109,6 +115,7 @@ jobs:
           additional-args: '--scanners misconfig,secret'
 
       - name: Upload Release Artifact
+        if: ${{ steps.github_release.outputs.release_created == 'true' }}
         env:
           GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
           RELEASE_TAG: ${{ steps.github_release.outputs.tag_name }}
