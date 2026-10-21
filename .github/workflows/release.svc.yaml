@@ -4,10 +4,7 @@ on:
   workflow_call:
 
 permissions:
-  # A reusable workflow's own block caps the token, so a caller declaring 'contents: write'
-  # has no effect unless it is granted here too. release-please creates tags and releases.
-  contents: write
-  pull-requests: write
+  contents: read
 
 jobs:
   tag:
