@@ -8,6 +8,14 @@ on:
         default: "go"
         type: string
 
+# Release-please is not safe to run twice at once: two invocations can both try to tag the same
+# merged release PR. Several repos call this on 'push' AND 'pull_request', which both fire when a
+# release PR is merged, so serialise per repo+branch. Queued rather than cancelled: a cancelled run
+# can leave a release PR merged but untagged.
+concurrency:
+  group: release-${{ github.repository }}-${{ github.ref }}
+  cancel-in-progress: false
+
 permissions:
   contents: read
 
