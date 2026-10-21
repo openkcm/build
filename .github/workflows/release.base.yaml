@@ -13,12 +13,23 @@ permissions:
 
 jobs:
   tag:
+    # Accepts three triggers, so a caller can pick any of them:
+    #
+    #   push (recommended)  - runs after the merge commit exists, which is settled enough for
+    #                         release-please to see a merged release PR and tag it in one go.
+    #   workflow_dispatch   - manual run.
+    #   pull_request        - the original trigger, kept so existing callers keep working. It fires
+    #                         the instant the PR closes, before the API consistently reports the
+    #                         merge, so release-please's tagging phase often finds nothing to do and
+    #                         the tag only appears on a later run.
     if: |
-      github.event_name == 'pull_request' &&
-      github.event.pull_request.merged == true &&
-      contains(github.event.pull_request.title, 'chore(main)') &&
-      contains(github.event.pull_request.title, 'release') &&
-      contains(github.event.pull_request.labels.*.name, 'release')
+      github.event_name == 'push' ||
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'pull_request' &&
+       github.event.pull_request.merged == true &&
+       contains(github.event.pull_request.title, 'chore(main)') &&
+       contains(github.event.pull_request.title, 'release') &&
+       contains(github.event.pull_request.labels.*.name, 'release'))
     runs-on: ubuntu-latest
     environment: production
     steps:
@@ -71,3 +82,16 @@ jobs:
         if: ${{ steps.github_release.outputs.release_created != 'true' }}
         run: |
           echo "::notice title=No release cut::release-please opened or updated the release PR instead of cutting a release. Merge it to publish; the following steps are skipped."
+
+      - name: Setup
+        if: ${{ steps.github_release.outputs.release_created == 'true' }}
+        run: |
+          mkdir assets
+          
+      - name: Upload Release Artifact
+        if: ${{ steps.github_release.outputs.release_created == 'true' }}
+        env:
+          GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
+          RELEASE_TAG: ${{ steps.github_release.outputs.tag_name }}
+        run: gh release upload "$RELEASE_TAG" ./assets/**
+

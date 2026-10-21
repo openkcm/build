@@ -8,12 +8,19 @@ permissions:
 
 jobs:
   tag:
+    # Accepts push / workflow_dispatch / pull_request, so a caller can pick any of them.
+    # 'push' is recommended: it runs after the merge commit exists, which is settled enough for
+    # release-please to see a merged release PR and tag it in the same run. 'pull_request' fires the
+    # instant the PR closes, before the API consistently reports the merge, so the tag often only
+    # appears on a later run. It is kept so existing callers keep working.
     if: |
-      github.event_name == 'pull_request' &&
-      github.event.pull_request.merged == true &&
-      contains(github.event.pull_request.title, 'chore(main)') &&
-      contains(github.event.pull_request.title, 'release') &&
-      contains(github.event.pull_request.labels.*.name, 'release')
+      github.event_name == 'push' ||
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'pull_request' &&
+       github.event.pull_request.merged == true &&
+       contains(github.event.pull_request.title, 'chore(main)') &&
+       contains(github.event.pull_request.title, 'release') &&
+       contains(github.event.pull_request.labels.*.name, 'release'))
     runs-on: ubuntu-latest
     environment: production
     steps:
