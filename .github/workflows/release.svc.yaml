@@ -2,6 +2,15 @@ name: Release
 
 on:
   workflow_call:
+    inputs:
+      # Declared because the 'Release Please' step below already reads inputs.target-branch. Without
+      # this declaration that reference is dead -- it always falls through to github.ref_name -- and
+      # any caller passing 'with: target-branch:' fails workflow validation outright. Mirrors the
+      # declaration in release.manual.yaml.
+      target-branch:
+        required: false
+        type: string
+        description: 'Branch to target for release-please PR and release creation. Defaults to the branch the workflow is triggered on.'
 
 # Release-please is not safe to run twice at once: two invocations can both try to tag the same
 # merged release PR. Several repos call this on 'push' AND 'pull_request', which both fire when a
@@ -86,7 +95,7 @@ jobs:
       - name: Setup
         if: ${{ steps.github_release.outputs.release_created == 'true' }}
         run: |
-          mkdir assets
+          mkdir -p assets
           echo "repo_name=$(basename "$GITHUB_REPOSITORY")" >> $GITHUB_ENV
 
       - name: Generate SBOM
@@ -136,5 +145,16 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
           RELEASE_TAG: ${{ steps.github_release.outputs.tag_name }}
-        run: gh release upload "$RELEASE_TAG" ./assets/**
+        run: |
+          # './assets/**' does not recurse in bash -- globstar is off by default, so it is just
+          # './assets/*' -- and an unmatched glob aborts the step. Kept identical to
+          # release.base.yaml and release.lib.yaml so the three siblings cannot drift again.
+          mapfile -t files < <(find ./assets -type f 2>/dev/null)
+          if [ "${#files[@]}" -eq 0 ]; then
+            echo "::notice title=No release assets::Nothing in ./assets to attach to ${RELEASE_TAG}."
+            exit 0
+          fi
+          echo "Attaching ${#files[@]} asset(s) to ${RELEASE_TAG}:"
+          printf '  %s\n' "${files[@]}"
+          gh release upload "${RELEASE_TAG}" "${files[@]}"
 
