@@ -54,7 +54,7 @@ jobs:
       - name: Generate token from GitHub App
         id: generate-token
         if: steps.init.outputs.internal_pr == 'true' && github.actor != 'dependabot[bot]'
-        uses: actions/create-github-app-token@29824e69f54612133e76f7eaac726eef6c875baf  # v2.2.1
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
         with:
           app-id: ${{ secrets.APP_PUSH_TAG_ID }}
           private-key: ${{ secrets.APP_PUSH_TAG_PRIVATE_KEY }}
@@ -63,7 +63,7 @@ jobs:
           permission-contents: read
 
       - name: Checkout code
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           token: ${{ steps.generate-token.outputs.token || github.token }}
           fetch-tags: true
@@ -81,7 +81,7 @@ jobs:
           rm -rf ./hack/common && git clone --branch main --single-branch https://github.com/openkcm/build.git ./hack/common
 
       - name: Install Task
-        uses: arduino/setup-task@b91d5d2c96a56797b48ac1e0e89220bf64044611 #v2.0.0
+        uses: arduino/setup-task@c0bc642852239c2689f73f4ea6459c29405f3c52 #v3.0.0
         with:
           version: 3.x
           repo-token: ${{ steps.generate-token.outputs.token || github.token }}
@@ -157,7 +157,7 @@ jobs:
 
       - name: Upload Coverages and PR Metadata
         if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: coverage-report
           path: |
