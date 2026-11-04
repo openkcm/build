@@ -48,8 +48,10 @@ jobs:
 
       - name: Release Please
         id: github_release
-        uses: googleapis/release-please-action@16a9c90856f42705d54a6fda1823352bdc62cf38 #v4.4.0
+        uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 #v5.0.0
         with:
           release-type: ${{inputs.release-type}}
           target-branch: ${{ inputs.target-branch || github.ref_name }}
           token: ${{ steps.generate-token.outputs.token }}
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
