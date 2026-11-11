@@ -78,7 +78,7 @@ vars:
   # value, since a flattened include's vars take precedence over the parent's.
   # Unset/empty means there is nothing to build and 'dist' does nothing.
   # CLI_DIST_PLATFORMS is a space-separated list of '<os>/<arch>' pairs to cross-compile for.
-  CLI_DIST_PLATFORMS: '{{ .CLI_DIST_PLATFORMS | default "linux/amd64 linux/arm64 darwin/amd64 darwin/arm64 windows/amd64 windows/arm64" }}'
+  CLI_DIST_PLATFORMS: '{{ .CLI_DIST_PLATFORMS | default "linux/amd64 linux/arm64 darwin/amd64 darwin/arm64" }}'
   CLI_DIST_DIR: '{{ .CLI_DIST_DIR | default (print .ROOT_DIR2 "/dist") }}'
 
   SKIP_VALIDATION_TESTS: '{{ .SKIP_VALIDATION_TESTS | default "false" }}'
